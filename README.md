@@ -1,36 +1,163 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Thunglish Script Generator
+
+A professional web application for Tamil tech YouTube creators to generate Thunglish scripts with AI-powered multi-stage generation, SEO optimization, and production notes.
+
+![Thunglish Script Generator](https://img.shields.io/badge/Next.js-14-black?style=flat-square&logo=next.js)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=flat-square&logo=typescript)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?style=flat-square&logo=tailwind-css)
+
+## Features
+
+### 🎬 Multi-Stage Script Generation
+- **4 separate API calls** ensure complete, comprehensive scripts
+- **Stage 1**: Hook & Intro - Grab attention from the first second
+- **Stage 2**: Main Content - Detailed explanations with code examples
+- **Stage 3**: Demo & Outro - Practical demonstrations and call-to-actions
+- **Stage 4**: Production Notes - B-roll, graphics, and editing guidelines
+- Live progress updates show generation status
+
+### 💻 Line-by-Line Code Explanations
+When "Include code examples" is enabled:
+- Complete working code shown first
+- Every single line explained separately
+- Thunglish format: `"Inga paaru, [explanation]"`
+- Expected output and common errors included
+
+### 🗣️ Natural Thunglish Generation
+- Adjustable ratio: **50-90% Tamil** (default 70%)
+- Tamil for emotions, explanations, connecting with audience
+- English for technical terms (React, API, useState, etc.)
+- Natural phrases: "paathen", "pannalam", "theriyuma", "solren", "parunga", "Dei", "Da"
+
+### ⏱️ Timestamp-Based Structure
+Precise timestamps calculated based on video duration (5-20 minutes):
+- Hook: 4% of total time
+- Intro: 8% of total time
+- Main Content: 58% of total time
+- Demo: 18% of total time
+- Outro: 12% of total time
+
+### 🔍 SEO Optimization
+- 5 alternative video titles
+- 200-300 word description with keywords
+- 15+ relevant tags
+- 3 thumbnail text suggestions
+- First comment template for engagement
+
+### 🎥 Production Notes
+- B-roll shots needed (5-7 items)
+- Graphics/animations requirements
+- Code display guidelines
+- Screen recording notes
+- Background music intensity suggestions
+- Text overlays and editing notes
+
+## Tech Stack
+
+- **Framework**: Next.js 14 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Icons**: Lucide React
+- **AI**: OpenAI GPT-4.1
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Node.js 18+ installed
+- OpenAI API key ([Get one here](https://platform.openai.com/api-keys))
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd thunglish-script-generator
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables**
+   ```bash
+   # Copy the example env file
+   cp .env.example .env.local
+   
+   # Edit .env.local and add your OpenAI API key
+   NEXT_PUBLIC_OPENAI_API_KEY=your_api_key_here
+   ```
+
+4. **Run the development server**
+   ```bash
+   npm run dev
+   ```
+
+5. **Open the application**
+   
+   Navigate to [http://localhost:3000](http://localhost:3000) in your browser.
+
+## Usage
+
+1. **Enter Video Title** (required) - The topic of your video
+2. **Set Channel Name** (optional) - For personalized introductions
+3. **Adjust Duration** - Slide to select 5-20 minutes
+4. **Select Content Type** - Tutorial, Story, Review, etc.
+5. **Choose Tone** - Casual, Professional, Humorous, etc.
+6. **Configure Advanced Options**:
+   - Difficulty Level (Beginner/Intermediate/Advanced)
+   - Thunglish Ratio (50-90% Tamil)
+   - Include Code Examples (checkbox)
+   - Add Tamil Nadu Context (checkbox)
+7. **Click Generate Script**
+8. **View Results** - Switch between Script and SEO Data tabs
+9. **Copy or Download** - Save your script for use
+
+## Project Structure
+
+```
+thunglish-script-generator/
+├── app/
+│   ├── globals.css          # Global styles and Tailwind config
+│   ├── layout.tsx           # Root layout with metadata
+│   ├── page.tsx             # Main page entry point
+│   └── ScriptGenerator.tsx  # Main component with all functionality
+├── public/                  # Static assets
+├── .env.example             # Environment variable template
+├── .gitignore               # Git ignore rules
+├── next.config.ts           # Next.js configuration
+├── package.json             # Dependencies and scripts
+├── postcss.config.mjs       # PostCSS configuration
+├── tailwind.config.ts       # Tailwind CSS configuration
+├── tsconfig.json            # TypeScript configuration
+└── README.md                # This file
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## API Configuration
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The application uses the OpenAI API with the following settings:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Endpoint**: `https://api.openai.com/v1/chat/completions`
+- **Model**: `gpt-4.1`
+- **Max Tokens**: 2500 per stage
+- **Headers**: Content-Type, Authorization (Bearer token)
 
-## Learn More
+## Design Philosophy
 
-To learn more about Next.js, take a look at the following resources:
+- **Professional, developer-grade design** - No flashy AI-generated aesthetics
+- **Clean and minimal** - Slate grays with blue accents
+- **Functional first** - Easy to use, responsive layout
+- **Two-column layout** - Configuration on left, output on right
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Contributing
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-## Deploy on Vercel
+## License
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+MIT License - feel free to use this for your own projects.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+Built with ❤️ for Tamil Tech YouTube Creators

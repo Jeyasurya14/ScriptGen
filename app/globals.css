@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f8fafc;
+  --foreground: #0f172a;
 }
 
 @theme inline {
@@ -12,15 +12,201 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Custom slider styling */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: #2563eb;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  background: #1d4ed8;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: #2563eb;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  transition: background 0.2s;
+}
+
+input[type="range"]::-moz-range-thumb:hover {
+  background: #1d4ed8;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Code block styling */
+.code-block {
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Tab styling */
+.tab-active {
+  border-bottom: 2px solid #2563eb;
+  color: #2563eb;
+}
+
+.tab-inactive {
+  border-bottom: 2px solid transparent;
+  color: #64748b;
+}
+
+.tab-inactive:hover {
+  color: #334155;
+}
+
+/* Responsive Tab Container - Horizontal scrolling on mobile */
+.tabs-container {
+  display: flex;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.tabs-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* Touch-friendly button sizing */
+@media (max-width: 640px) {
+
+  button,
+  input,
+  select,
+  textarea {
+    min-height: 44px;
+    font-size: 16px;
+    /* Prevents iOS zoom on focus */
+  }
+
+  /* Larger touch targets for checkboxes */
+  input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* Full-width form elements on mobile */
+  .form-input {
+    width: 100%;
+  }
+
+  /* Reduce padding on mobile */
+  .mobile-padding {
+    padding: 1rem;
+  }
+
+  /* Stack grid items on mobile */
+  .responsive-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Tablet styles */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .tablet-2-col {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Card responsive styling */
+.card-responsive {
+  padding: 1rem;
+}
+
+@media (min-width: 640px) {
+  .card-responsive {
+    padding: 1.5rem;
+  }
+}
+
+/* Responsive text sizing */
+.text-responsive-heading {
+  font-size: 1.125rem;
+}
+
+@media (min-width: 640px) {
+  .text-responsive-heading {
+    font-size: 1.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .text-responsive-heading {
+    font-size: 1.5rem;
+  }
+}
+
+/* Safe area for mobile notches */
+@supports (padding: max(0px)) {
+  .safe-area-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+}
+
+/* Improve mobile scrolling in output areas */
+.scroll-container {
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Animation for loading state */
+@keyframes pulse-subtle {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.loading-pulse {
+  animation: pulse-subtle 1.5s ease-in-out infinite;
 }
