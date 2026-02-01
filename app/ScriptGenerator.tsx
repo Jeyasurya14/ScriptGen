@@ -1809,173 +1809,163 @@ Output format: Translated script text ONLY. No other text.`;
                                         </select>
                                     </div>
 
-                                    {/* Advanced Options Toggle */}
-                                    <button
-                                        onClick={() => setShowAdvanced(!showAdvanced)}
-                                        className="flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 mb-4"
-                                    >
-                                        {showAdvanced ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                                        Advanced Options
-                                    </button>
-
-                                    {/* Advanced Options */}
-                                    {showAdvanced && (
-                                        <div className="bg-slate-50 rounded-lg p-4 mb-5 border border-slate-200">
-                                            {/* Difficulty Level */}
-                                            <div className="mb-4">
-                                                <label className="block text-sm font-medium text-slate-700 mb-2">
-                                                    Difficulty Level
-                                                </label>
-                                                <select
-                                                    value={formData.difficulty}
-                                                    onChange={(e) => setFormData({ ...formData, difficulty: e.target.value })}
-                                                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-900 bg-white"
-                                                >
-                                                    {difficulties.map((d) => (
-                                                        <option key={d.value} value={d.value}>
-                                                            {d.label}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            </div>
-
-                                            {/* Language Selector */}
-                                            <div className="mb-4">
-                                                <label className="block text-sm font-medium text-slate-700 mb-2">
-                                                    Output Language
-                                                </label>
-                                                <select
-                                                    value={formData.language}
-                                                    onChange={(e) => setFormData({ ...formData, language: e.target.value })}
-                                                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-900 bg-white"
-                                                >
-                                                    {languages.map((l) => (
-                                                        <option key={l.value} value={l.value}>
-                                                            {l.label}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            </div>
-
-                                            {/* Checkboxes */}
-                                            <div className="space-y-3">
-                                                <label className="flex items-center gap-3 cursor-pointer">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={formData.includeCode}
-                                                        onChange={(e) => setFormData({ ...formData, includeCode: e.target.checked })}
-                                                        className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
-                                                    />
-                                                    <span className="text-sm text-slate-700">Include code examples</span>
-                                                </label>
-                                                <label className="flex items-center gap-3 cursor-pointer">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={formData.localContext}
-                                                        onChange={(e) => setFormData({ ...formData, localContext: e.target.checked })}
-                                                        className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
-                                                    />
-                                                    <span className="text-sm text-slate-700">Add Tamil Nadu context</span>
-                                                </label>
-                                            </div>
-
-                                            {/* Image Settings Divider */}
-                                            <div className="mt-5 pt-4 border-t border-slate-200">
-                                                <h4 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
-                                                    <Sparkles className="w-4 h-4 text-purple-500" />
-                                                    Premium Features (₹9 each)
-                                                </h4>
-
-                                                {/* Chapters Toggle */}
-                                                <label className="flex items-center gap-3 cursor-pointer mb-3">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={formData.includeChapters}
-                                                        onChange={(e) => setFormData({ ...formData, includeChapters: e.target.checked })}
-                                                        className="w-4 h-4 text-purple-600 border-slate-300 rounded focus:ring-purple-500"
-                                                    />
-                                                    <div>
-                                                        <span className="text-sm text-slate-700">Generate YouTube Chapters</span>
-                                                        <p className="text-xs text-slate-500">Timestamps for video navigation</p>
-                                                    </div>
-                                                </label>
-
-                                                {/* B-Roll Toggle */}
-                                                <label className="flex items-center gap-3 cursor-pointer mb-3">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={formData.includeBRoll}
-                                                        onChange={(e) => setFormData({ ...formData, includeBRoll: e.target.checked })}
-                                                        className="w-4 h-4 text-purple-600 border-slate-300 rounded focus:ring-purple-500"
-                                                    />
-                                                    <div>
-                                                        <span className="text-sm text-slate-700">B-Roll Suggestions</span>
-                                                        <p className="text-xs text-slate-500">Visual ideas for each scene</p>
-                                                    </div>
-                                                </label>
-
-                                                {/* Shorts Toggle */}
-                                                <label className="flex items-center gap-3 cursor-pointer mb-4">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={formData.includeShorts}
-                                                        onChange={(e) => setFormData({ ...formData, includeShorts: e.target.checked })}
-                                                        className="w-4 h-4 text-purple-600 border-slate-300 rounded focus:ring-purple-500"
-                                                    />
-                                                    <div>
-                                                        <span className="text-sm text-slate-700">Viral Shorts Ideas</span>
-                                                        <p className="text-xs text-slate-500">Extract short content from main script</p>
-                                                    </div>
-                                                </label>
-
-                                                <h4 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2 mt-6 border-t border-slate-100 pt-4">
-                                                    <ImageIcon className="w-4 h-4" />
-                                                    Image Settings
-                                                </h4>
-
-                                                {/* Generate Images Toggle */}
-                                                <label className="flex items-center gap-3 cursor-pointer mb-4">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={formData.generateImages}
-                                                        onChange={(e) => setFormData({ ...formData, generateImages: e.target.checked })}
-                                                        className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
-                                                    />
-                                                    <div>
-                                                        <span className="text-sm text-slate-700">Generate AI Image Prompts</span>
-                                                        <p className="text-xs text-slate-500">Creates 10 production-ready prompts for AI image generators</p>
-                                                    </div>
-                                                </label>
-
-                                                {/* Image Format Selector - Only show if generateImages is true */}
-                                                {formData.generateImages && (
-                                                    <div>
-                                                        <label className="block text-sm font-medium text-slate-700 mb-2">
-                                                            Image Format
-                                                        </label>
-                                                        <select
-                                                            value={formData.imageFormat}
-                                                            onChange={(e) => setFormData({ ...formData, imageFormat: e.target.value })}
-                                                            className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-900 bg-white text-sm"
-                                                        >
-                                                            {imageFormats.map((format) => (
-                                                                <option key={format.value} value={format.value}>
-                                                                    {format.label}
-                                                                </option>
-                                                            ))}
-                                                        </select>
-                                                        <p className="text-xs text-slate-500 mt-1">
-                                                            {formData.imageFormat === "portrait"
-                                                                ? "Optimized for YouTube Shorts, Instagram Reels, TikTok"
-                                                                : formData.imageFormat === "square"
-                                                                    ? "Perfect for thumbnails and social media posts"
-                                                                    : "Standard YouTube and desktop video format"}
-                                                        </p>
-                                                    </div>
-                                                )}
-                                            </div>
+                                    {/* Advanced Options (Always Visible) */}
+                                    <div className="bg-slate-50 rounded-lg p-4 mb-5 border border-slate-200">
+                                        {/* Difficulty Level */}
+                                        <div className="mb-4">
+                                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                                                Difficulty Level
+                                            </label>
+                                            <select
+                                                value={formData.difficulty}
+                                                onChange={(e) => setFormData({ ...formData, difficulty: e.target.value })}
+                                                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-900 bg-white"
+                                            >
+                                                {difficulties.map((d) => (
+                                                    <option key={d.value} value={d.value}>
+                                                        {d.label}
+                                                    </option>
+                                                ))}
+                                            </select>
                                         </div>
-                                    )}
+
+                                        {/* Language Selector */}
+                                        <div className="mb-4">
+                                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                                                Output Language
+                                            </label>
+                                            <select
+                                                value={formData.language}
+                                                onChange={(e) => setFormData({ ...formData, language: e.target.value })}
+                                                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-900 bg-white"
+                                            >
+                                                {languages.map((l) => (
+                                                    <option key={l.value} value={l.value}>
+                                                        {l.label}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        {/* Checkboxes */}
+                                        <div className="space-y-3">
+                                            <label className="flex items-center gap-3 cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={formData.includeCode}
+                                                    onChange={(e) => setFormData({ ...formData, includeCode: e.target.checked })}
+                                                    className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+                                                />
+                                                <span className="text-sm text-slate-700">Include code examples</span>
+                                            </label>
+                                            <label className="flex items-center gap-3 cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={formData.localContext}
+                                                    onChange={(e) => setFormData({ ...formData, localContext: e.target.checked })}
+                                                    className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+                                                />
+                                                <span className="text-sm text-slate-700">Add Tamil Nadu context</span>
+                                            </label>
+                                        </div>
+
+                                        {/* Image Settings Divider */}
+                                        <div className="mt-5 pt-4 border-t border-slate-200">
+                                            <h4 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                                                <Sparkles className="w-4 h-4 text-purple-500" />
+                                                Premium Features (₹9 each)
+                                            </h4>
+
+                                            {/* Chapters Toggle */}
+                                            <label className="flex items-center gap-3 cursor-pointer mb-3">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={formData.includeChapters}
+                                                    onChange={(e) => setFormData({ ...formData, includeChapters: e.target.checked })}
+                                                    className="w-4 h-4 text-purple-600 border-slate-300 rounded focus:ring-purple-500"
+                                                />
+                                                <div>
+                                                    <span className="text-sm text-slate-700">Generate YouTube Chapters</span>
+                                                    <p className="text-xs text-slate-500">Timestamps for video navigation</p>
+                                                </div>
+                                            </label>
+
+                                            {/* B-Roll Toggle */}
+                                            <label className="flex items-center gap-3 cursor-pointer mb-3">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={formData.includeBRoll}
+                                                    onChange={(e) => setFormData({ ...formData, includeBRoll: e.target.checked })}
+                                                    className="w-4 h-4 text-purple-600 border-slate-300 rounded focus:ring-purple-500"
+                                                />
+                                                <div>
+                                                    <span className="text-sm text-slate-700">B-Roll Suggestions</span>
+                                                    <p className="text-xs text-slate-500">Visual ideas for each scene</p>
+                                                </div>
+                                            </label>
+
+                                            {/* Shorts Toggle */}
+                                            <label className="flex items-center gap-3 cursor-pointer mb-4">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={formData.includeShorts}
+                                                    onChange={(e) => setFormData({ ...formData, includeShorts: e.target.checked })}
+                                                    className="w-4 h-4 text-purple-600 border-slate-300 rounded focus:ring-purple-500"
+                                                />
+                                                <div>
+                                                    <span className="text-sm text-slate-700">Viral Shorts Ideas</span>
+                                                    <p className="text-xs text-slate-500">Extract short content from main script</p>
+                                                </div>
+                                            </label>
+
+                                            <h4 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2 mt-6 border-t border-slate-100 pt-4">
+                                                <ImageIcon className="w-4 h-4" />
+                                                Image Settings
+                                            </h4>
+
+                                            {/* Generate Images Toggle */}
+                                            <label className="flex items-center gap-3 cursor-pointer mb-4">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={formData.generateImages}
+                                                    onChange={(e) => setFormData({ ...formData, generateImages: e.target.checked })}
+                                                    className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+                                                />
+                                                <div>
+                                                    <span className="text-sm text-slate-700">Generate AI Image Prompts</span>
+                                                    <p className="text-xs text-slate-500">Creates 10 production-ready prompts for AI image generators</p>
+                                                </div>
+                                            </label>
+
+                                            {/* Image Format Selector - Only show if generateImages is true */}
+                                            {formData.generateImages && (
+                                                <div>
+                                                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                                                        Image Format
+                                                    </label>
+                                                    <select
+                                                        value={formData.imageFormat}
+                                                        onChange={(e) => setFormData({ ...formData, imageFormat: e.target.value })}
+                                                        className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-900 bg-white text-sm"
+                                                    >
+                                                        {imageFormats.map((format) => (
+                                                            <option key={format.value} value={format.value}>
+                                                                {format.label}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                    <p className="text-xs text-slate-500 mt-1">
+                                                        {formData.imageFormat === "portrait"
+                                                            ? "Optimized for YouTube Shorts, Instagram Reels, TikTok"
+                                                            : formData.imageFormat === "square"
+                                                                ? "Perfect for thumbnails and social media posts"
+                                                                : "Standard YouTube and desktop video format"}
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
 
                                     {/* Error Message */}
                                     {error && (
