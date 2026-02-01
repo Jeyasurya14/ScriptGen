@@ -1,0 +1,122 @@
+
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import {
+    constructSectionPrompt,
+    constructProductionNotesPrompt,
+    // ... imports
+    constructSEOPrompt,
+    constructImagePromptsPrompt,
+    constructChaptersPrompt,
+    constructBRollPrompt,
+    constructShortsPrompt,
+} from "@/lib/generation";
+
+// Validation Schema
+const GenerateSchema = z.object({
+    type: z.enum(["section", "production_notes", "seo", "image_prompts", "chapters", "broll", "shorts"]),
+    formData: z.any(), // validate deeper if needed, but 'any' allows flexibility for now
+    timestamps: z.any().optional(),
+    previousContent: z.string().optional(),
+    fullScript: z.string().optional(),
+    stage: z.string().optional(),
+});
+
+export async function POST(req: Request) {
+    try {
+        // Authenticate user
+        const session = await getServerSession(authOptions);
+        if (!session) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const body = await req.json();
+
+        // Validate input
+        const parseResult = GenerateSchema.safeParse(body);
+        if (!parseResult.success) {
+            return NextResponse.json({ error: "Invalid input", details: parseResult.error }, { status: 400 });
+        }
+
+        const { type, formData, timestamps, previousContent, fullScript, stage } = parseResult.data;
+
+
+        // Use server-side API key
+        const apiKey = process.env.OPENAI_API_KEY;
+        if (!apiKey) {
+            return NextResponse.json({ error: "Server API configuration missing" }, { status: 500 });
+        }
+
+        let promptConfig;
+
+        // Construct prompt based on type
+        switch (type) {
+            case "section":
+                if (!stage || !timestamps) return NextResponse.json({ error: "Missing stage or timestamps" }, { status: 400 });
+                promptConfig = constructSectionPrompt(stage, formData, timestamps, previousContent || "");
+                break;
+            case "production_notes":
+                if (!fullScript) return NextResponse.json({ error: "Missing fullScript" }, { status: 400 });
+                promptConfig = constructProductionNotesPrompt(formData, fullScript);
+                break;
+            case "seo":
+                promptConfig = constructSEOPrompt(formData);
+                break;
+            case "image_prompts":
+                if (!fullScript || !timestamps) return NextResponse.json({ error: "Missing script or timestamps" }, { status: 400 });
+                promptConfig = constructImagePromptsPrompt(formData, fullScript, timestamps);
+                break;
+            case "chapters":
+                if (!fullScript || !timestamps) return NextResponse.json({ error: "Missing script or timestamps" }, { status: 400 });
+                promptConfig = constructChaptersPrompt(formData, fullScript, timestamps);
+                break;
+            case "broll":
+                if (!fullScript || !timestamps) return NextResponse.json({ error: "Missing script or timestamps" }, { status: 400 });
+                promptConfig = constructBRollPrompt(formData, fullScript, timestamps);
+                break;
+            case "shorts":
+                if (!fullScript) return NextResponse.json({ error: "Missing fullScript" }, { status: 400 });
+                promptConfig = constructShortsPrompt(formData, fullScript);
+                break;
+            default:
+                return NextResponse.json({ error: "Invalid generation type" }, { status: 400 });
+        }
+
+        // Call OpenAI
+        const response = await fetch("https://api.openai.com/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${apiKey}`,
+            },
+            body: JSON.stringify({
+                model: promptConfig.model,
+                max_tokens: promptConfig.max_tokens,
+                temperature: 0.7,
+                messages: [
+                    { role: "system", content: promptConfig.systemPrompt },
+                    { role: "user", content: promptConfig.userPrompt },
+                ],
+            }),
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error?.message || "OpenAI API call failed");
+        }
+
+        const data = await response.json();
+        const content = data.choices[0].message.content;
+
+        return NextResponse.json({ content });
+
+    } catch (error: any) {
+        console.error("Generate API Error:", error);
+        return NextResponse.json(
+            { error: error.message || "Internal Server Error" },
+            { status: 500 }
+        );
+    }
+}

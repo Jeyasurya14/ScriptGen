@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
-import { jsPDF } from "jspdf";
+// import { jsPDF } from "jspdf"; // Dynamic import used instead
 import {
     FileText,
     Copy,
@@ -416,142 +416,27 @@ export default function ScriptGenerator() {
     const generateSection = async (
         stage: string,
         timestamps: Timestamps,
-        apiKey: string,
         previousContent: string = ""
     ): Promise<string> => {
-        const { language, includeCode, title, contentType, tone, difficulty, channelName, localContext } = formData;
-
-        // Build system message based on selected language
-        let languageInstruction = "";
-
-        if (language === "English") {
-            languageInstruction = `
-LANGUAGE STYLE: INTERNATIONAL ENGLISH
-- Use clear, energetic, universally understood English
-- Style: Like MKBHD or MrBeast - high retention, zero fluff
-- Simplify complex topics but don't dumb them down
-- Use "Guys", "Friends" for connection
-`;
-        } else if (language === "Hindi") {
-            languageInstruction = `
-LANGUAGE STYLE: HINGLISH (Hindi + English Tech Terms)
-- Speak like a friendly Indian tech YouTuber (e.g., Technical Guruji style)
-- Use natural connecting words: "Doston", "Yeh dekho", "Matlab", "Samjhe?"
-- Keep all technical terms in English (React, API, Code)
-- Start with high energy: "Namaste Doston!"
-`;
-        } else if (language === "Tamil") {
-            languageInstruction = `
-LANGUAGE STYLE: PURE TAMIL (With English Tech Terms)
-- Use clear, standard spoken Tamil
-- Avoid heavy Thunglish mixing - keep it more formal but friendly
-- Use English ONLY for technical identifiers (Variable names, libraries)
-`;
-        } else {
-            // Default: Thunglish
-            languageInstruction = `
-LANGUAGE STYLE: THUNGLISH (Tamil + English Mix - 60% Tamil, 40% English)
-- You know exactly how to blend Tamil and English naturally
-- Use Tamil for: "Dei!", "Macha!", "Theriyuma", "Kelunga", "Super ah irukku"
-- Use English for: Tech terms, connecting phrases ("So basically...", "Actually...")
-- Tone: Like explaining to a best friend over chai
-`;
-        }
-
-        const systemMessage = `You are a MASTER YouTube script writer with 10+ years of experience creating viral tech videos.
-
-YOUR EXPERTISE:
-- You understand the YouTube ecosystem perfectly
-- Your hooks have 95%+ retention rates
-- Your explanations are crystal clear yet entertaining
-
-${languageInstruction}
-
-FINAL OUTPUT RULE:
-Provide ONLY the raw script content for the requested section. Do not include markdown code blocks or JSON wrappers.
-`;
-
-        let userPrompt = "";
-
-        if (stage === "hook_intro") {
-            userPrompt = `Create a KILLER hook and intro for this Tamil tech YouTube video.
-
-VIDEO DETAILS:
-📌 Title: ${title}
-${channelName ? `📺 Channel: ${channelName}` : ""}
-🎯 Difficulty: ${difficulty}
-⏱️ Hook: ${formatTime(timestamps.hookStart)} - ${formatTime(timestamps.hookEnd)}
-⏱️ Intro: ${formatTime(timestamps.introStart)} - ${formatTime(timestamps.introEnd)}
-
-HOOK REQUIREMENTS:
-- Grab attention in FIRST 3 SECONDS
-- Use SHOCK, QUESTION, or PROMISE pattern
-- Sound excited!
-
-INTRO REQUIREMENTS:
-- Clear promise of value
-- Curiosity loop
-- Engagement hook
-
-FORMAT:
-[${formatTime(timestamps.hookStart)}-${formatTime(timestamps.hookEnd)}] 🎯 HOOK
-Visual: [...]
-[Script Content]
-
-[${formatTime(timestamps.introStart)}-${formatTime(timestamps.introEnd)}] 🎬 INTRO
-Visual: [...]
-[Script Content]`;
-
-        } else if (stage === "main_content") {
-            userPrompt = `Continue with MAIN CONTENT.
-previous: ${previousContent.substring(previousContent.length - 500)}
-
-REQUIREMENTS:
-- Break into subsections
-- Use analogies
-- High energy
-${includeCode ? "- SHOW WORKING CODE FIRST then explain line-by-line" : ""}
-
-FORMAT:
-[Timestamp] 📚 SUBSECTION
-[Content]`;
-        } else if (stage === "demo_outro") {
-            userPrompt = `Complete with DEMO and OUTRO.
-previous: ${previousContent.substring(previousContent.length - 500)}
-
-REQUIREMENTS:
-- Step-by-step practical demo
-- Strong outro with 3 key takeaways
-- Call to action
-
-FORMAT:
-[Timestamp] 🛠️ DEMO
-[Content]
-
-[Timestamp] 👋 OUTRO
-[Content]`;
-        }
-
-        const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        const response = await fetch("/api/generate", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${apiKey}`,
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                model: "gpt-4.0-mini", // Use mini for speed/cost effectiveness on sections
-                max_tokens: 2000,
-                temperature: 0.7,
-                messages: [
-                    { role: "system", content: systemMessage },
-                    { role: "user", content: userPrompt },
-                ],
+                type: "section",
+                stage,
+                formData,
+                timestamps,
+                previousContent
             }),
         });
 
-        if (!response.ok) throw new Error("Failed to generate section");
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || "Failed to generate section");
+        }
+
         const data = await response.json();
-        return data.choices[0].message.content;
+        return data.content;
     };
 
     // Main generate function
@@ -583,37 +468,33 @@ FORMAT:
         setActiveTab("script"); // Reset to script tab
 
         try {
-            const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+            // API Key is now handled securely on the server
+            // const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
 
-            if (!apiKey) {
-                // Try fetching securely if using backend proxy, otherwise fallback to env
-                // For now, assuming env is the way as per original implementation
-                throw new Error("API configuration missing");
-            }
 
             const timestamps = generateTimestamps(formData.duration);
             let fullScript = "";
 
             // Stage 1: Hook & Intro
-            const hookIntro = await generateSection("hook_intro", timestamps, apiKey);
+            const hookIntro = await generateSection("hook_intro", timestamps);
             fullScript = hookIntro;
             setScript(fullScript);
             setProgress("Stage 2/6: Generating Main Content...");
 
             // Stage 2: Main Content
-            const mainContent = await generateSection("main_content", timestamps, apiKey, fullScript);
+            const mainContent = await generateSection("main_content", timestamps, fullScript);
             fullScript += "\n\n" + mainContent;
             setScript(fullScript);
             setProgress("Stage 3/6: Generating Demo & Outro...");
 
             // Stage 3: Demo & Outro
-            const demoOutro = await generateSection("demo_outro", timestamps, apiKey, fullScript);
+            const demoOutro = await generateSection("demo_outro", timestamps, fullScript);
             fullScript += "\n\n" + demoOutro;
             setScript(fullScript);
             setProgress("Stage 4/6: Generating Production Notes...");
 
             // Stage 4: Production Notes
-            const productionNotes = await generateProductionNotes(apiKey, fullScript);
+            const productionNotes = await generateProductionNotes(fullScript);
             fullScript += "\n\n" + productionNotes;
             setScript(fullScript);
             setProgress("Stage 5/6: Generating SEO & Media Assets...");
@@ -623,7 +504,7 @@ FORMAT:
 
             // SEO Data (Always included)
             promises.push(
-                generateSEOData(apiKey)
+                generateSEOData()
                     .then((seo) => setSeoData(seo))
                     .catch(() => console.error("SEO generation failed"))
             );
@@ -631,7 +512,7 @@ FORMAT:
             // Image Prompts (if enabled)
             if (formData.generateImages) {
                 promises.push(
-                    generateImagePrompts(apiKey, fullScript, timestamps)
+                    generateImagePrompts(fullScript, timestamps)
                         .then((images) => setImagesData(images))
                         .catch(() => console.error("Image prompts generation failed"))
                 );
@@ -640,7 +521,7 @@ FORMAT:
             // Chapters (if enabled)
             if (formData.includeChapters) {
                 promises.push(
-                    generateChapters(apiKey, fullScript, timestamps)
+                    generateChapters(fullScript, timestamps)
                         .then((chapters) => setChaptersData(chapters))
                         .catch(() => console.error("Chapters generation failed"))
                 );
@@ -649,7 +530,7 @@ FORMAT:
             // B-Roll (if enabled)
             if (formData.includeBRoll) {
                 promises.push(
-                    generateBRoll(apiKey, fullScript, timestamps)
+                    generateBRoll(fullScript, timestamps)
                         .then((broll) => setBrollData(broll))
                         .catch(() => console.error("B-Roll generation failed"))
                 );
@@ -662,7 +543,7 @@ FORMAT:
             if (formData.includeShorts) {
                 setProgress("Stage 6/6: Generating Shorts Clips...");
                 try {
-                    const shorts = await generateShorts(apiKey, fullScript);
+                    const shorts = await generateShorts(fullScript);
                     setShortsData(shorts);
                 } catch {
                     console.error("Shorts generation failed");
@@ -724,182 +605,25 @@ FORMAT:
 
     // Generate production notes
     const generateProductionNotes = async (
-        apiKey: string,
         fullScript: string
     ): Promise<string> => {
-        const { title, includeCode } = formData;
-
-        const systemPrompt = `You are an expert YouTube video producer and editor who specializes in Tamil tech content. You understand exactly what makes tech tutorials visually engaging and easy to follow. Your production notes are used by professional video editors.`;
-
-        const userPrompt = `Create DETAILED production notes for this Tamil tech YouTube video.
-
-VIDEO TITLE: ${title}
-
-SCRIPT SUMMARY:
-${fullScript.substring(0, 2500)}
-
-Generate comprehensive production notes that a video editor can directly use:
-
-═══════════════════════════════════════════════════════════════
-📹 PRODUCTION NOTES: ${title}
-═══════════════════════════════════════════════════════════════
-
-🎬 B-ROLL SHOTS NEEDED:
-List 6-8 SPECIFIC B-roll shots with exact descriptions:
-1. [Timestamp range] - [Exact description of what to show]
-2. [Continue for each...]
-
-Example format:
-1. [0:15-0:20] - Close-up of hands typing on mechanical keyboard with code visible on screen
-2. [1:30-1:45] - Stock footage of server room with blinking lights
-
----
-
-🎨 GRAPHICS & ANIMATIONS:
-List 4-6 specific graphics to create:
-${includeCode ? `
-- Animated code snippet appearing line by line
-- Variable/function name callouts with arrows
-- Before/After code comparison split screen
-- Error message popup graphics
-- Console output overlay
-` : `
-- Key concept text animations
-- Diagram/flowchart for explaining concepts
-- List animations for main points
-`}
-
----
-
-${includeCode ? `
-💻 CODE DISPLAY REQUIREMENTS:
-- IDE Theme: Dark theme (Dracula/One Dark recommended)
-- Font: Fira Code or JetBrains Mono, 18px minimum
-- Line highlighting: Yellow/green glow on current line being explained
-- Zoom: 150% when explaining specific lines
-- Show line numbers: YES
-- Show file tabs: When switching between files
-- Terminal/Console: Side panel or bottom panel, clearly visible
-
-📍 CODE MOMENTS TO HIGHLIGHT:
-- Each import statement (briefly)
-- Function declarations (zoom in)
-- Variable assignments (highlight the value)
-- Return statements (emphasize)
-- Error-causing lines (red highlight)
-- Fixed code (green highlight with checkmark)
-
-` : `
-🖥️ SCREEN RECORDING NOTES:
-- Resolution: 1080p minimum
-- Cursor highlighting: Enable with yellow circle
-- Zoom on important elements
-- Clean desktop, hide personal items
-`}
-
----
-
-🎵 BACKGROUND MUSIC GUIDE:
-| Section | Music Style | Energy Level | Volume |
-|---------|-------------|--------------|--------|
-| Hook | Upbeat electronic | High 🔥 | 30% |
-| Intro | Motivational tech | Medium-High | 25% |
-| Main Content | Lo-fi ambient | Low-Medium | 15% |
-${includeCode ? `| Code Explanation | Minimal/None | Very Low | 10% |` : ''}
-| Demo | Building momentum | Medium | 20% |
-| Outro | Uplifting, achievement | High | 30% |
-
-Recommended: Epidemic Sound / Artlist tracks - search "tech tutorial", "coding", "productivity"
-
----
-
-📝 TEXT OVERLAYS TO ADD:
-List 6-8 key phrases that should appear on screen:
-${includeCode ? `
-1. Function/variable names when first introduced
-2. Key syntax to remember
-3. "Pro Tip:" callouts
-4. Common error messages
-5. Output examples
-` : `
-1. Main topic title
-2. Key points as bullet lists
-3. Important terms with definitions
-4. Step numbers for processes
-`}
-
----
-
-✂️ EDITING NOTES:
-
-TRANSITIONS:
-- Between sections: Simple cut or subtle zoom
-- Concept to example: Whip pan or dissolve
-- Code to output: Split second freeze + slide
-
-PACING:
-- Hook: Fast cuts, high energy
-- Explanation: Slower, let it breathe
-- Code walkthrough: Match narration speed exactly
-- Demo: Real-time with minor speedups for typing
-
-EFFECTS TO USE:
-${includeCode ? `
-- Code zoom: Smooth 1.5x zoom on specific lines
-- Highlight box: Rounded rectangle around important code
-- Arrow annotations: Point to specific syntax
-- Typing animation: For code reveal moments
-- Error shake: Screen shake for error demonstrations
-- Success pop: Confetti or checkmark for working code
-` : `
-- Zoom punches on key words
-- Lower thirds for topic labels
-- Callout boxes for definitions
-- Progress indicators for multi-step processes
-`}
-
----
-
-📱 THUMBNAIL NOTES:
-- Main subject: ${includeCode ? 'Code snippet or error message' : 'Key visual representing the topic'}
-- Expression: Excited/surprised face (if using face)
-- Text: Maximum 3-4 words, bold sans-serif
-- Colors: High contrast, brand consistent
-- Elements: Arrow pointing to key thing, emoji optional`;
-
-        const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        const response = await fetch("/api/generate", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${apiKey}`,
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                model: "gpt-4.1",
-                max_tokens: 3000,
-                temperature: 0.7,
-                messages: [
-                    {
-                        role: "system",
-                        content: systemPrompt,
-                    },
-                    {
-                        role: "user",
-                        content: userPrompt,
-                    },
-                ],
+                type: "production_notes",
+                formData,
+                fullScript
             }),
         });
 
-        if (!response.ok) {
-            throw new Error("Failed to generate production notes");
-        }
-
+        if (!response.ok) throw new Error("Failed to generate production notes");
         const data = await response.json();
-        return data.choices[0].message.content;
+        return data.content;
     };
 
     // Generate SEO data
-    const generateSEOData = async (apiKey: string): Promise<SEOData> => {
+    const generateSEOData = async (): Promise<SEOData> => {
         const { title, contentType } = formData;
 
         const systemPrompt = `You are a YouTube SEO expert who specializes in Tamil tech content. You understand the YouTube algorithm, trending keywords, and what makes Tamil tech videos go viral. You've helped channels grow from 0 to 1M+ subscribers.`;
@@ -984,26 +708,12 @@ Example format:
 
 Next video la [related topic] pathi paakalam, interested ah? 🤔"`;
 
-        const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        const response = await fetch("/api/generate", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${apiKey}`,
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                model: "gpt-4.1",
-                max_tokens: 2500,
-                temperature: 0.7,
-                messages: [
-                    {
-                        role: "system",
-                        content: systemPrompt,
-                    },
-                    {
-                        role: "user",
-                        content: userPrompt,
-                    },
-                ],
+                type: "seo",
+                formData
             }),
         });
 
@@ -1047,7 +757,6 @@ Next video la [related topic] pathi paakalam, interested ah? 🤔"`;
 
     // Generate Image Prompts
     const generateImagePrompts = async (
-        apiKey: string,
         fullScript: string,
         timestamps: Timestamps
     ): Promise<ImagePrompt[]> => {
@@ -1080,20 +789,14 @@ Requirements per prompt:
 ${includeCode ? "- Show: IDE screens, code snippets, terminal outputs, tech devices" : "- Show: Concept diagrams, infographics, professional visuals"}
 - Optimized for ${aspectRatio} framing`;
 
-        const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        const response = await fetch("/api/generate", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${apiKey}`,
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                model: "gpt-4.1",
-                max_tokens: 2500,
-                temperature: 0.7,
-                messages: [
-                    { role: "system", content: systemPrompt },
-                    { role: "user", content: userPrompt },
-                ],
+                type: "image_prompts",
+                formData,
+                fullScript,
+                timestamps
             }),
         });
 
@@ -1119,7 +822,6 @@ ${includeCode ? "- Show: IDE screens, code snippets, terminal outputs, tech devi
 
     // Generate YouTube Chapters
     const generateChapters = async (
-        apiKey: string,
         fullScript: string,
         timestamps: Timestamps
     ): Promise<Chapter[]> => {
@@ -1139,14 +841,14 @@ Rules:
 - Titles: engaging, curiosity-inducing
 - Cover all major topic transitions`;
 
-        const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        const response = await fetch("/api/generate", {
             method: "POST",
-            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                model: "gpt-4.1",
-                max_tokens: 1000,
-                temperature: 0.6,
-                messages: [{ role: "user", content: prompt }],
+                type: "chapters",
+                formData,
+                fullScript,
+                timestamps
             }),
         });
 
@@ -1163,7 +865,6 @@ Rules:
 
     // Generate B-Roll Suggestions
     const generateBRoll = async (
-        apiKey: string,
         fullScript: string,
         timestamps: Timestamps
     ): Promise<BRollSuggestion[]> => {
@@ -1187,14 +888,14 @@ Sources:
 
 ${includeCode ? "Focus on: IDE screenshots, terminal outputs, code animations, typing sequences" : "Focus on: concept visuals, reactions, professional footage"}`;
 
-        const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        const response = await fetch("/api/generate", {
             method: "POST",
-            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                model: "gpt-4.1",
-                max_tokens: 1500,
-                temperature: 0.7,
-                messages: [{ role: "user", content: prompt }],
+                type: "broll",
+                formData,
+                fullScript,
+                timestamps
             }),
         });
 
@@ -1211,7 +912,6 @@ ${includeCode ? "Focus on: IDE screenshots, terminal outputs, code animations, t
 
     // Generate Shorts/Clips
     const generateShorts = async (
-        apiKey: string,
         fullScript: string
     ): Promise<ShortClip[]> => {
         const { title, contentType } = formData;
@@ -1233,14 +933,13 @@ Viral Score criteria (1-100):
 
 Focus on: surprising facts, quick tips, relatable moments, controversy/opinions`;
 
-        const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        const response = await fetch("/api/generate", {
             method: "POST",
-            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                model: "gpt-4.1",
-                max_tokens: 2000,
-                temperature: 0.8,
-                messages: [{ role: "user", content: prompt }],
+                type: "shorts",
+                formData,
+                fullScript
             }),
         });
 
@@ -1310,7 +1009,8 @@ Aspect Ratio: ${prompt.aspectRatio}`;
     };
 
     // Download as PDF
-    const downloadAsPDF = () => {
+    const downloadAsPDF = async () => {
+        const { jsPDF } = await import("jspdf");
         const doc = new jsPDF();
         const lineHeight = 7;
         let y = 20;
