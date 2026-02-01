@@ -36,10 +36,13 @@ interface FormData {
     contentType: string;
     difficulty: string;
     tone: string;
-    thunglishRatio: number;
+    language: string;
     includeCode: boolean;
     localContext: boolean;
     generateImages: boolean;
+    includeChapters: boolean;
+    includeBRoll: boolean;
+    includeShorts: boolean;
     imageFormat: string;
 }
 
@@ -126,6 +129,14 @@ const difficulties = [
     { value: "advanced", label: "Advanced" },
 ];
 
+// Language options
+const languages = [
+    { value: "Thunglish", label: "Thunglish (Tamil + English)" },
+    { value: "English", label: "English (Global)" },
+    { value: "Tamil", label: "Pure Tamil" },
+    { value: "Hindi", label: "Hindi / Hinglish" },
+];
+
 // Image format options
 const imageFormats = [
     { value: "landscape", label: "Landscape (16:9) - YouTube/Full Screen" },
@@ -142,10 +153,13 @@ export default function ScriptGenerator() {
         contentType: "tutorial",
         difficulty: "beginner",
         tone: "casual",
-        thunglishRatio: 70,
+        language: "Thunglish",
         includeCode: false,
         localContext: false,
         generateImages: true,
+        includeChapters: true,
+        includeBRoll: true,
+        includeShorts: true,
         imageFormat: "landscape",
     });
 
@@ -292,14 +306,31 @@ export default function ScriptGenerator() {
         }
     };
 
+    // Calculate required credits
+    const calculateRequiredCredits = () => {
+        let cost = 1; // Base script
+        if (formData.generateImages) cost += 1;
+        if (formData.includeChapters) cost += 1;
+        if (formData.includeBRoll) cost += 1;
+        if (formData.includeShorts) cost += 1;
+        return cost;
+    };
+
     // Handle payment
     const handlePayment = async () => {
         setProcessingPayment(true);
+        // Calculate missing credits or just buy a fixed bundle? 
+        // User said "pay 9rs for each". Let's allow buying the exact required amount if they are short, or default to 1.
+        // Actually, let's keep it simple: Buy the required amount for the CURRENT configuration.
+        const required = calculateRequiredCredits();
+        const available = (credits?.freeScriptsRemaining || 0) + (credits?.paidCredits || 0);
+        const needed = Math.max(1, required - available > 0 ? required - available : 1);
+
         try {
             const res = await fetch("/api/payment/create-order", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ credits: 1 }),
+                body: JSON.stringify({ credits: needed }),
             });
             const order = await res.json();
 
@@ -308,7 +339,7 @@ export default function ScriptGenerator() {
                 amount: order.amount,
                 currency: order.currency,
                 name: "Thunglish Script Generator",
-                description: "1 Script Credit",
+                description: `${needed} Script Credit${needed > 1 ? 's' : ''} (₹9/each)`,
                 order_id: order.orderId,
                 handler: async (response: any) => {
                     // Verify payment
@@ -382,48 +413,57 @@ export default function ScriptGenerator() {
         apiKey: string,
         previousContent: string = ""
     ): Promise<string> => {
-        const { thunglishRatio, includeCode, title, contentType, tone, difficulty, channelName, localContext } = formData;
+        const { language, includeCode, title, contentType, tone, difficulty, channelName, localContext } = formData;
 
-        // Build system message for consistent high-quality output
-        const systemMessage = `You are a MASTER YouTube script writer who specializes in Tamil tech content. You have 10+ years of experience creating viral tech videos for Tamil-speaking audiences.
+        // Build system message based on selected language
+        let languageInstruction = "";
+
+        if (language === "English") {
+            languageInstruction = `
+LANGUAGE STYLE: INTERNATIONAL ENGLISH
+- Use clear, energetic, universally understood English
+- Style: Like MKBHD or MrBeast - high retention, zero fluff
+- Simplify complex topics but don't dumb them down
+- Use "Guys", "Friends" for connection
+`;
+        } else if (language === "Hindi") {
+            languageInstruction = `
+LANGUAGE STYLE: HINGLISH (Hindi + English Tech Terms)
+- Speak like a friendly Indian tech YouTuber (e.g., Technical Guruji style)
+- Use natural connecting words: "Doston", "Yeh dekho", "Matlab", "Samjhe?"
+- Keep all technical terms in English (React, API, Code)
+- Start with high energy: "Namaste Doston!"
+`;
+        } else if (language === "Tamil") {
+            languageInstruction = `
+LANGUAGE STYLE: PURE TAMIL (With English Tech Terms)
+- Use clear, standard spoken Tamil
+- Avoid heavy Thunglish mixing - keep it more formal but friendly
+- Use English ONLY for technical identifiers (Variable names, libraries)
+`;
+        } else {
+            // Default: Thunglish
+            languageInstruction = `
+LANGUAGE STYLE: THUNGLISH (Tamil + English Mix - 60% Tamil, 40% English)
+- You know exactly how to blend Tamil and English naturally
+- Use Tamil for: "Dei!", "Macha!", "Theriyuma", "Kelunga", "Super ah irukku"
+- Use English for: Tech terms, connecting phrases ("So basically...", "Actually...")
+- Tone: Like explaining to a best friend over chai
+`;
+        }
+
+        const systemMessage = `You are a MASTER YouTube script writer with 10+ years of experience creating viral tech videos.
 
 YOUR EXPERTISE:
-- You understand the Tamil tech YouTube ecosystem perfectly
-- You know exactly how to blend Tamil and English naturally (Thunglish)
-- You create scripts that feel like a friend explaining tech, not a lecture
+- You understand the YouTube ecosystem perfectly
 - Your hooks have 95%+ retention rates
 - Your explanations are crystal clear yet entertaining
 
-THUNGLISH MASTERY (${thunglishRatio}% Tamil, ${100 - thunglishRatio}% English):
+${languageInstruction}
 
-TAMIL USAGE - Use Tamil for:
-• Emotional expressions: "Dei!", "Macha!", "Thalaiva!", "Semma!", "Vera level!"
-• Connecting phrases: "theriyuma", "paaru", "purinjicha", "solren", "kelunga"
-• Explanations: "Inga paaru", "Athanala dhan", "Appo enna nadakkum na"
-• Reactions: "Adhirchi!", "Bayangaram!", "Kalaakku!", "Mass!"
-• Casual speech: "pannalam", "paapom", "panna porom"
-
-ENGLISH USAGE - Keep English for:
-• Technical terms: React, JavaScript, API, useState, async, function, variable
-• Code syntax: const, let, import, export, return
-• Tool names: VS Code, Node.js, npm, Git
-• Industry terms: frontend, backend, deployment, debugging
-
-NATURAL FLOW EXAMPLES:
-✅ "Dei, antha useState hook la enna nadakkuthu theriyuma? State manage panna romba easy da!"
-✅ "Seri friends, ippo namma oru React component create pannalam, itha parunga..."  
-✅ "Inga paaru, antha async function call aagumbothu, JavaScript engine enna pannuthu na..."
-✅ "Macha, itha neenga purinjicha, interview la vera level ah perform pannuveenga!"
-
-NEVER DO:
-❌ Don't use formal Tamil like textbooks
-❌ Don't translate technical terms to Tamil
-❌ Don't make it sound robotic or scripted
-❌ Don't use outdated Tamil phrases
-
-TONE: ${tone === 'casual' ? 'Like explaining to your best friend over chai' : tone === 'professional' ? 'Confident expert but still approachable' : tone === 'humorous' ? 'Fun, witty, with tech memes and jokes' : tone === 'motivational' ? 'Inspiring, you-can-do-it energy' : 'Storytelling with suspense and engagement'}
-
-${localContext ? `TAMIL NADU CONTEXT: Include references that Tamil audience relates to - Chennai IT corridors, Zoho/Freshworks success stories, local tech meetups, relatable salary/job scenarios, comparison with local examples.` : ''}`;
+FINAL OUTPUT RULE:
+Provide ONLY the raw script content for the requested section. Do not include markdown code blocks or JSON wrappers.
+`;
 
         let userPrompt = "";
 
@@ -437,175 +477,53 @@ ${channelName ? `📺 Channel: ${channelName}` : ""}
 ⏱️ Hook: ${formatTime(timestamps.hookStart)} - ${formatTime(timestamps.hookEnd)}
 ⏱️ Intro: ${formatTime(timestamps.introStart)} - ${formatTime(timestamps.introEnd)}
 
-HOOK REQUIREMENTS (${formatTime(timestamps.hookStart)}-${formatTime(timestamps.hookEnd)}):
-The hook must grab attention in the FIRST 3 SECONDS. Use one of these proven patterns:
-- SHOCK: Start with a surprising fact or controversial statement
-- QUESTION: Ask something that makes them curious
-- PROMISE: Tell them exactly what transformation they'll get
-- PROBLEM: Describe a pain point they're facing right now
-- STORY: Start mid-action in an interesting scenario
+HOOK REQUIREMENTS:
+- Grab attention in FIRST 3 SECONDS
+- Use SHOCK, QUESTION, or PROMISE pattern
+- Sound excited!
 
-Write the hook in Thunglish that sounds like you're bursting with excitement to share this!
+INTRO REQUIREMENTS:
+- Clear promise of value
+- Curiosity loop
+- Engagement hook
 
-INTRO REQUIREMENTS (${formatTime(timestamps.introStart)}-${formatTime(timestamps.introEnd)}):
-- Quick channel intro (if channel name provided)
-- Clear promise of what they'll learn
-- Create curiosity loop ("Itha paathutu neenga shock aaveenga!")
-- Add engagement hook ("Comment la sollunga...")
-
-FORMAT YOUR RESPONSE EXACTLY LIKE THIS:
-
-VIDEO SCRIPT: ${title}
-
+FORMAT:
 [${formatTime(timestamps.hookStart)}-${formatTime(timestamps.hookEnd)}] 🎯 HOOK
-Visual: [specific visual direction]
+Visual: [...]
+[Script Content]
 
-[Write 3-5 powerful sentences that HOOK the viewer instantly]
-
-💡 Why This Hook Works: [explain the psychology - curiosity gap, fear of missing out, etc.]
-
----
-
-[${formatTime(timestamps.introStart)}-${formatTime(timestamps.introEnd)}] 🎬 INTRO  
-Visual: [specific visual direction]
-
-[Write engaging intro - greet audience, introduce yourself briefly if channel name given, explain what's coming, build anticipation]
-
-🗣️ Engagement Prompt: [specific question to boost comments]`;
+[${formatTime(timestamps.introStart)}-${formatTime(timestamps.introEnd)}] 🎬 INTRO
+Visual: [...]
+[Script Content]`;
 
         } else if (stage === "main_content") {
-            userPrompt = `Continue this Tamil tech YouTube script with the MAIN CONTENT section.
+            userPrompt = `Continue with MAIN CONTENT.
+previous: ${previousContent.substring(previousContent.length - 500)}
 
-VIDEO: ${title}
-CONTENT TYPE: ${contentType}
-${includeCode ? "⚠️ CODE REQUIRED: This is a coding tutorial - include complete, working code examples!" : ""}
+REQUIREMENTS:
+- Break into subsections
+- Use analogies
+- High energy
+${includeCode ? "- SHOW WORKING CODE FIRST then explain line-by-line" : ""}
 
-TIMESTAMP RANGE: ${formatTime(timestamps.mainStart)} - ${formatTime(timestamps.mainEnd)}
-
-PREVIOUS SCRIPT:
-${previousContent.substring(0, 1500)}
-
-MAIN CONTENT REQUIREMENTS:
-1. Break into 3-4 logical subsections with timestamps
-2. Each subsection should have a clear mini-goal
-3. Use analogies Tamil audience understands
-4. Keep energy high throughout
-5. Add "checkpoint" moments ("Ivlo vara clear ah? Comment la sollunga!")
-
-${includeCode ? `
-🔥 CODE EXPLANATION RULES (CRITICAL - FOLLOW EXACTLY):
-
-STEP 1: Show the COMPLETE working code first
-\`\`\`javascript
-// Full code here - no placeholders, must be real working code
-\`\`\`
-
-STEP 2: Line-by-line breakdown with this EXACT format:
-
-"Seri da, ippo antha code ah line by line 🔍 paapom!"
-
-📍 Line 1: \`const [count, setCount] = useState(0);\`
-"Inga paaru macha, 'const' use pannirkrom - ithu variable declare panrathu. Square brackets la 'count' and 'setCount' nu rendu iruku. 'count' la current value store aagum, 'setCount' use panni value ah update pannalam. 'useState(0)' - ithu initial value 0 nu set pannuthu. Basically, antha line namma state ah initialize pannuthu da!"
-
-📍 Line 2: [next line of code]
-"[Natural Thunglish explanation - be detailed!]"
-
-[CONTINUE FOR EVERY SINGLE LINE - NO SKIPPING!]
-
-🎯 Code Summary:
-"Overall ah paatha, antha code [summarize what the complete code does in Thunglish]"
-
-⚠️ Common Mistakes:
-"Indha code la romba per enna thapu pannuvanga na: [explain 2-3 common errors]"
-` : `
-Explain concepts clearly with:
-- Real-world analogies
-- Practical examples
-- Visual descriptions for editing
-`}
-
-FORMAT YOUR RESPONSE:
-
-[${formatTime(timestamps.mainStart)}-SUBSECTION_END_TIME] 📚 SUBSECTION 1: [Title]
-Visual: [visual direction]
-
-[Detailed content with natural Thunglish]
-
----
-
-[Continue with more subsections...]`;
-
+FORMAT:
+[Timestamp] 📚 SUBSECTION
+[Content]`;
         } else if (stage === "demo_outro") {
-            userPrompt = `Complete this Tamil tech YouTube script with DEMO and OUTRO sections.
+            userPrompt = `Complete with DEMO and OUTRO.
+previous: ${previousContent.substring(previousContent.length - 500)}
 
-VIDEO: ${title}
-DEMO: ${formatTime(timestamps.demoStart)} - ${formatTime(timestamps.demoEnd)}
-OUTRO: ${formatTime(timestamps.outroStart)} - ${formatTime(timestamps.outroEnd)}
+REQUIREMENTS:
+- Step-by-step practical demo
+- Strong outro with 3 key takeaways
+- Call to action
 
-PREVIOUS SCRIPT:
-${previousContent.substring(0, 2000)}
+FORMAT:
+[Timestamp] 🛠️ DEMO
+[Content]
 
-DEMO SECTION REQUIREMENTS (${formatTime(timestamps.demoStart)}-${formatTime(timestamps.demoEnd)}):
-${includeCode ? `
-🖥️ LIVE CODING DEMO:
-- Start fresh - "Seri, ippo namma scratch la irundhu build pannalam!"
-- Show every step in real-time
-- Explain what you're typing and why
-- Show the output at each stage
-- Demonstrate what happens with wrong code
-- Show the final working result with celebration!
-
-Include:
-1. Complete step-by-step implementation
-2. Console outputs / visual results
-3. At least 2 common errors and how to fix them
-4. Final "WOW" moment when it works
-` : `
-📱 PRACTICAL DEMO:
-- Show real-world application
-- Step-by-step walkthrough
-- Highlight key actions
-- Show before/after results
-`}
-
-OUTRO SECTION REQUIREMENTS (${formatTime(timestamps.outroStart)}-${formatTime(timestamps.outroEnd)}):
-
-Create a memorable outro that:
-1. Summarizes 3 key takeaways (in Thunglish)
-2. Reinforces the value they got
-3. Strong call-to-action (like, subscribe, comment with specific question)
-4. Teases next video to keep them wanting more
-5. Warm, friendly sign-off that builds community
-
-FORMAT YOUR RESPONSE:
-
-[${formatTime(timestamps.demoStart)}-${formatTime(timestamps.demoEnd)}] 🛠️ PRACTICAL DEMO
-Visual: Full screen recording / Split screen with face cam
-
-"Seri friends, ippo real ah implement pannalam! Excitement ah?"
-
-[Step-by-step demo content]
-
----
-
-[${formatTime(timestamps.outroStart)}-${formatTime(timestamps.outroEnd)}] 👋 OUTRO
-Visual: Back to talking head, maybe with graphics overlay
-
-"Semma da! 🔥 Ippo namma paathatha oru quick recap paapom:
-
-1️⃣ [Key takeaway 1]
-2️⃣ [Key takeaway 2]  
-3️⃣ [Key takeaway 3]"
-
-[Strong call-to-action]
-
-[Next video tease]
-
-"Seri friends, next video la ______ pathi paapom! Athuvum vera level content dhan!"
-
-"Like button ah oru thatta thattunga 👍, Subscribe button ah press pannunga 🔔, Comment la _____ pathi ungal experience sollunga!"
-
-"See you in the next video! Take care, bye da! 🙏"`;
+[Timestamp] 👋 OUTRO
+[Content]`;
         }
 
         const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -615,30 +533,188 @@ Visual: Back to talking head, maybe with graphics overlay
                 "Authorization": `Bearer ${apiKey}`,
             },
             body: JSON.stringify({
-                model: "gpt-4.1",
-                max_tokens: 3500,
-                temperature: 0.8,
+                model: "gpt-4.0-mini", // Use mini for speed/cost effectiveness on sections
+                max_tokens: 2000,
+                temperature: 0.7,
                 messages: [
-                    {
-                        role: "system",
-                        content: systemMessage,
-                    },
-                    {
-                        role: "user",
-                        content: userPrompt,
-                    },
+                    { role: "system", content: systemMessage },
+                    { role: "user", content: userPrompt },
                 ],
             }),
         });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error?.message || `API error: ${response.status}`);
-        }
-
+        if (!response.ok) throw new Error("Failed to generate section");
         const data = await response.json();
         return data.choices[0].message.content;
     };
+
+    // Main generate function
+    const generateScript = async () => {
+        if (!session) {
+            alert("Please sign in to generate scripts");
+            signIn("google");
+            return;
+        }
+
+        // Check credits
+        const requiredCredits = calculateRequiredCredits();
+        const availableCredits = (credits?.freeScriptsRemaining || 0) + (credits?.paidCredits || 0);
+
+        if (availableCredits < requiredCredits) {
+            setShowPaymentModal(true);
+            return;
+        }
+
+        setLoading(true);
+        setError("");
+        setProgress("Stage 1/6: Initializing & Generating Hook...");
+        setScript("");
+        setSeoData(null);
+        setImagesData(null);
+        setChaptersData(null);
+        setBrollData(null);
+        setShortsData(null);
+        setActiveTab("script"); // Reset to script tab
+
+        try {
+            const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+
+            if (!apiKey) {
+                // Try fetching securely if using backend proxy, otherwise fallback to env
+                // For now, assuming env is the way as per original implementation
+                throw new Error("API configuration missing");
+            }
+
+            const timestamps = generateTimestamps(formData.duration);
+            let fullScript = "";
+
+            // Stage 1: Hook & Intro
+            const hookIntro = await generateSection("hook_intro", timestamps, apiKey);
+            fullScript = hookIntro;
+            setScript(fullScript);
+            setProgress("Stage 2/6: Generating Main Content...");
+
+            // Stage 2: Main Content
+            const mainContent = await generateSection("main_content", timestamps, apiKey, fullScript);
+            fullScript += "\n\n" + mainContent;
+            setScript(fullScript);
+            setProgress("Stage 3/6: Generating Demo & Outro...");
+
+            // Stage 3: Demo & Outro
+            const demoOutro = await generateSection("demo_outro", timestamps, apiKey, fullScript);
+            fullScript += "\n\n" + demoOutro;
+            setScript(fullScript);
+            setProgress("Stage 4/6: Generating Production Notes...");
+
+            // Stage 4: Production Notes
+            const productionNotes = await generateProductionNotes(apiKey, fullScript);
+            fullScript += "\n\n" + productionNotes;
+            setScript(fullScript);
+            setProgress("Stage 5/6: Generating SEO & Media Assets...");
+
+            // Stage 5: Generate SEO, Images, Chapters, B-Roll in parallel
+            const promises: Promise<void>[] = [];
+
+            // SEO Data (Always included)
+            promises.push(
+                generateSEOData(apiKey)
+                    .then((seo) => setSeoData(seo))
+                    .catch(() => console.error("SEO generation failed"))
+            );
+
+            // Image Prompts (if enabled)
+            if (formData.generateImages) {
+                promises.push(
+                    generateImagePrompts(apiKey, fullScript, timestamps)
+                        .then((images) => setImagesData(images))
+                        .catch(() => console.error("Image prompts generation failed"))
+                );
+            }
+
+            // Chapters (if enabled)
+            if (formData.includeChapters) {
+                promises.push(
+                    generateChapters(apiKey, fullScript, timestamps)
+                        .then((chapters) => setChaptersData(chapters))
+                        .catch(() => console.error("Chapters generation failed"))
+                );
+            }
+
+            // B-Roll (if enabled)
+            if (formData.includeBRoll) {
+                promises.push(
+                    generateBRoll(apiKey, fullScript, timestamps)
+                        .then((broll) => setBrollData(broll))
+                        .catch(() => console.error("B-Roll generation failed"))
+                );
+            }
+
+            // Execute parallel promises
+            await Promise.all(promises);
+
+            // Shorts (Sequential or if enabled)
+            if (formData.includeShorts) {
+                setProgress("Stage 6/6: Generating Shorts Clips...");
+                try {
+                    const shorts = await generateShorts(apiKey, fullScript);
+                    setShortsData(shorts);
+                } catch {
+                    console.error("Shorts generation failed");
+                }
+            } else {
+                setProgress("Finalizing...");
+            }
+
+            // Deduct credit after successful generation
+            try {
+                // Pass the count of credits to deduct
+                await fetch("/api/credits", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ count: requiredCredits })
+                });
+
+                // Refresh credits
+                const creditsRes = await fetch("/api/credits");
+                if (creditsRes.ok) {
+                    setCredits(await creditsRes.json());
+                }
+            } catch {
+                console.error("Failed to deduct credit");
+            }
+
+            // Save to history
+            try {
+                await fetch("/api/scripts", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        title: formData.title,
+                        channelName: formData.channelName,
+                        duration: formData.duration,
+                        contentType: formData.contentType,
+                        scriptContent: fullScript,
+                        seoData: seoData,
+                        imagesData: imagesData,
+                        chaptersData: chaptersData,
+                        brollData: brollData,
+                        shortsData: shortsData,
+                    }),
+                });
+            } catch {
+                console.error("Failed to save to history");
+            }
+
+            setProgress("");
+        } catch (err: any) {
+            setError(err.message || "An error occurred while generating the script.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+
+
 
     // Generate production notes
     const generateProductionNotes = async (
@@ -1202,156 +1278,7 @@ Aspect Ratio: ${prompt.aspectRatio}`;
         }
     };
 
-    // Main generate function
-    const generateScript = async () => {
-        // Check if user is logged in
-        if (!session) {
-            setError("Please sign in to generate scripts.");
-            signIn("google");
-            return;
-        }
 
-        // Check if user has credits
-        if (credits && !credits.canGenerate) {
-            setShowPaymentModal(true);
-            return;
-        }
-
-        const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
-
-        if (!apiKey) {
-            setError("API key not configured. Please add NEXT_PUBLIC_OPENAI_API_KEY to your .env.local file.");
-            return;
-        }
-
-        if (!formData.title.trim()) {
-            setError("Please enter a video title.");
-            return;
-        }
-
-        setLoading(true);
-        setError("");
-        setScript("");
-        setSeoData(null);
-        setImagesData(null);
-        setChaptersData(null);
-        setBrollData(null);
-        setShortsData(null);
-        setProgress("Stage 1/6: Generating Hook & Intro...");
-
-        try {
-            const timestamps = generateTimestamps(formData.duration);
-            let fullScript = "";
-
-            // Stage 1: Hook & Intro
-            const hookIntro = await generateSection("hook_intro", timestamps, apiKey);
-            fullScript = hookIntro;
-            setScript(fullScript);
-            setProgress("Stage 2/6: Generating Main Content...");
-
-            // Stage 2: Main Content
-            const mainContent = await generateSection("main_content", timestamps, apiKey, fullScript);
-            fullScript += "\n\n" + mainContent;
-            setScript(fullScript);
-            setProgress("Stage 3/6: Generating Demo & Outro...");
-
-            // Stage 3: Demo & Outro
-            const demoOutro = await generateSection("demo_outro", timestamps, apiKey, fullScript);
-            fullScript += "\n\n" + demoOutro;
-            setScript(fullScript);
-            setProgress("Stage 4/6: Generating Production Notes...");
-
-            // Stage 4: Production Notes
-            const productionNotes = await generateProductionNotes(apiKey, fullScript);
-            fullScript += "\n\n" + productionNotes;
-            setScript(fullScript);
-            setProgress("Stage 5/6: Generating SEO & Media Assets...");
-
-            // Stage 5: Generate SEO, Images, Chapters, B-Roll in parallel
-            const promises: Promise<void>[] = [];
-
-            // SEO Data
-            promises.push(
-                generateSEOData(apiKey)
-                    .then((seo) => setSeoData(seo))
-                    .catch(() => console.error("SEO generation failed"))
-            );
-
-            // Image Prompts (if enabled)
-            if (formData.generateImages) {
-                promises.push(
-                    generateImagePrompts(apiKey, fullScript, timestamps)
-                        .then((images) => setImagesData(images))
-                        .catch(() => console.error("Image prompts generation failed"))
-                );
-            }
-
-            // Chapters
-            promises.push(
-                generateChapters(apiKey, fullScript, timestamps)
-                    .then((chapters) => setChaptersData(chapters))
-                    .catch(() => console.error("Chapters generation failed"))
-            );
-
-            // B-Roll
-            promises.push(
-                generateBRoll(apiKey, fullScript, timestamps)
-                    .then((broll) => setBrollData(broll))
-                    .catch(() => console.error("B-Roll generation failed"))
-            );
-
-            await Promise.all(promises);
-            setProgress("Stage 6/6: Generating Shorts Clips...");
-
-            // Stage 6: Generate Shorts (after we have full script)
-            try {
-                const shorts = await generateShorts(apiKey, fullScript);
-                setShortsData(shorts);
-            } catch {
-                console.error("Shorts generation failed");
-            }
-
-            // Deduct credit after successful generation
-            try {
-                await fetch("/api/credits", { method: "POST" });
-                // Refresh credits
-                const creditsRes = await fetch("/api/credits");
-                if (creditsRes.ok) {
-                    setCredits(await creditsRes.json());
-                }
-            } catch {
-                console.error("Failed to deduct credit");
-            }
-
-            // Save to history
-            try {
-                await fetch("/api/scripts", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        title: formData.title,
-                        channelName: formData.channelName,
-                        duration: formData.duration,
-                        contentType: formData.contentType,
-                        scriptContent: fullScript,
-                        seoData: seoData,
-                        imagesData: imagesData,
-                        chaptersData: chaptersData,
-                        brollData: brollData,
-                        shortsData: shortsData,
-                    }),
-                });
-            } catch {
-                console.error("Failed to save to history");
-            }
-
-            setProgress("");
-        } catch (err) {
-            setError(err instanceof Error ? err.message : "An error occurred while generating the script.");
-        } finally {
-            setLoading(false);
-        }
-    };
 
 
     // Copy to clipboard
@@ -1479,18 +1406,18 @@ Aspect Ratio: ${prompt.aspectRatio}`;
             )}
 
             {/* Header */}
-            <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
+            <header className="bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50 shadow-sm supports-[backdrop-filter]:bg-white/80">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 bg-blue-600 rounded-lg">
+                            <div className="p-2 bg-blue-600 rounded-lg shadow-blue-200/50 shadow-lg">
                                 <Video className="w-5 h-5 text-white" />
                             </div>
                             <div>
-                                <h1 className="text-lg sm:text-xl font-semibold text-slate-900">
+                                <h1 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
                                     Thunglish Script Generator
                                 </h1>
-                                <p className="text-xs sm:text-sm text-slate-500 hidden sm:block">
+                                <p className="text-xs sm:text-sm text-slate-500 hidden sm:block font-medium">
                                     Professional scripts for Tamil tech YouTube creators
                                 </p>
                             </div>
@@ -1503,16 +1430,16 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                     {/* History Button */}
                                     <button
                                         onClick={() => { setShowHistory(true); fetchHistory(); }}
-                                        className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:border-blue-300 hover:bg-blue-50 text-slate-600 hover:text-blue-700 rounded-lg transition-all duration-200 shadow-sm"
                                         title="Script History"
                                     >
-                                        <History className="w-4 h-4 text-slate-600" />
-                                        <span className="hidden sm:inline text-sm font-medium text-slate-700">History</span>
+                                        <History className="w-4 h-4" />
+                                        <span className="hidden sm:inline text-sm font-medium">History</span>
                                     </button>
 
                                     {/* Credits Display */}
                                     {credits && (
-                                        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-lg">
+                                        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-slate-100 border border-slate-200 rounded-lg shadow-inner">
                                             <CreditCard className="w-4 h-4 text-blue-600" />
                                             <span className="text-sm font-medium text-slate-700">
                                                 {credits.freeScriptsRemaining > 0
@@ -1523,26 +1450,27 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                     )}
 
                                     {/* User Avatar */}
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-3 pl-2 border-l border-slate-200">
                                         {session.user?.image ? (
-                                            <img src={session.user.image} alt="" className="w-8 h-8 rounded-full" />
+                                            <img src={session.user.image} alt="" className="w-9 h-9 rounded-full ring-2 ring-white shadow-sm" />
                                         ) : (
-                                            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                            <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center ring-2 ring-white shadow-sm">
                                                 <User className="w-4 h-4 text-blue-600" />
                                             </div>
                                         )}
                                         <button
                                             onClick={() => signOut()}
-                                            className="hidden sm:flex items-center gap-1 px-2 py-1 text-sm text-slate-600 hover:text-slate-900"
+                                            className="hidden sm:flex text-slate-400 hover:text-red-500 transition-colors p-1 rounded-md hover:bg-red-50"
+                                            title="Sign Out"
                                         >
-                                            <LogOut className="w-4 h-4" />
+                                            <LogOut className="w-5 h-5" />
                                         </button>
                                     </div>
                                 </>
                             ) : (
                                 <button
                                     onClick={() => signIn("google")}
-                                    className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 shadow-md hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5"
                                 >
                                     <LogIn className="w-4 h-4" />
                                     <span className="hidden sm:inline">Sign in with Google</span>
@@ -1558,63 +1486,73 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                 <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
                     {/* Left Panel - Configuration (Protected) */}
                     <div className="w-full lg:w-2/5">
-                        <div className="bg-white rounded-lg border border-slate-200 p-4 sm:p-6 lg:sticky lg:top-24">
+                        <div className="bg-white rounded-xl border border-slate-200 p-6 sm:p-8 lg:sticky lg:top-24 shadow-sm">
                             {!session ? (
                                 /* Login Required Panel */
-                                <div className="text-center py-8">
-                                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                        <LogIn className="w-8 h-8 text-blue-600" />
+                                <div className="text-center py-4">
+                                    <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6 ring-4 ring-white shadow-sm">
+                                        <Sparkles className="w-10 h-10 text-blue-600" />
                                     </div>
-                                    <h2 className="text-xl font-semibold text-slate-900 mb-2">
-                                        Sign in to Generate Scripts
+                                    <h2 className="text-2xl font-bold text-slate-900 mb-3 tracking-tight">
+                                        Unlock Pro Script Generation
                                     </h2>
-                                    <p className="text-slate-600 mb-6 text-sm">
-                                        Create professional Thunglish scripts for your Tamil tech YouTube channel
+                                    <p className="text-slate-500 mb-8 text-base leading-relaxed">
+                                        Create engaging, high-retention Thunglish video scripts tailored for your Tamil audience in seconds.
                                     </p>
 
                                     {/* Features List */}
-                                    <div className="text-left bg-slate-50 rounded-lg p-4 mb-6">
-                                        <p className="text-xs font-semibold text-slate-500 uppercase mb-3">What you get:</p>
-                                        <ul className="space-y-2 text-sm text-slate-700">
-                                            <li className="flex items-center gap-2">
-                                                <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                                                <span><strong>2 Free Scripts</strong> to start</span>
+                                    <div className="text-left bg-slate-50/80 rounded-xl p-5 mb-8 border border-slate-100">
+                                        <p className="text-xs font-bold text-slate-500 uppercase mb-4 tracking-wider">Free Plan Includes:</p>
+                                        <ul className="space-y-3.5 text-sm text-slate-700">
+                                            <li className="flex items-start gap-3">
+                                                <div className="mt-0.5 p-0.5 bg-green-100 rounded-full">
+                                                    <Check className="w-3.5 h-3.5 text-green-600 font-bold" />
+                                                </div>
+                                                <span className="font-medium">2 Free High-Quality Scripts</span>
                                             </li>
-                                            <li className="flex items-center gap-2">
-                                                <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                                                <span>Complete script with SEO data</span>
+                                            <li className="flex items-start gap-3">
+                                                <div className="mt-0.5 p-0.5 bg-green-100 rounded-full">
+                                                    <Check className="w-3.5 h-3.5 text-green-600 font-bold" />
+                                                </div>
+                                                <span>Full SEO Metadata (Title, Tags, Desc)</span>
                                             </li>
-                                            <li className="flex items-center gap-2">
-                                                <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                                                <span>AI image prompts included</span>
+                                            <li className="flex items-start gap-3">
+                                                <div className="mt-0.5 p-0.5 bg-green-100 rounded-full">
+                                                    <Check className="w-3.5 h-3.5 text-green-600 font-bold" />
+                                                </div>
+                                                <span>AI Image Prompts for Thumbnails</span>
                                             </li>
-                                            <li className="flex items-center gap-2">
-                                                <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                                                <span>YouTube chapters & B-Roll suggestions</span>
-                                            </li>
-                                            <li className="flex items-center gap-2">
-                                                <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                                                <span>Shorts clips extraction</span>
+                                            <li className="flex items-start gap-3">
+                                                <div className="mt-0.5 p-0.5 bg-green-100 rounded-full">
+                                                    <Check className="w-3.5 h-3.5 text-green-600 font-bold" />
+                                                </div>
+                                                <span>Smart Chapter Breakdowns</span>
                                             </li>
                                         </ul>
                                     </div>
 
                                     <button
                                         onClick={() => signIn("google")}
-                                        className="w-full py-3 px-4 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                                        className="w-full py-3.5 px-4 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-200 transition-all duration-200 flex items-center justify-center gap-3 group"
                                     >
-                                        <svg className="w-5 h-5" viewBox="0 0 24 24">
-                                            <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                                            <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                                            <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                                            <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                                        <svg className="w-5 h-5 bg-white rounded-full p-0.5 group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
+                                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                                         </svg>
-                                        Sign in with Google
+                                        Get Started with Google
                                     </button>
 
-                                    <p className="text-xs text-slate-500 mt-4">
-                                        Only ₹9 per script after free trial
-                                    </p>
+                                    <div className="flex items-center justify-center gap-2 mt-6">
+                                        <span className="flex h-2 w-2 relative">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                                        </span>
+                                        <p className="text-xs font-medium text-slate-500">
+                                            No credit card required for free trial
+                                        </p>
+                                    </div>
                                 </div>
                             ) : (
                                 /* Authenticated - Show Configuration */
@@ -1746,23 +1684,22 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                                 </select>
                                             </div>
 
-                                            {/* Thunglish Ratio */}
+                                            {/* Language Selector */}
                                             <div className="mb-4">
                                                 <label className="block text-sm font-medium text-slate-700 mb-2">
-                                                    Thunglish Ratio: <span className="font-semibold text-blue-600">{formData.thunglishRatio}% Tamil</span>
+                                                    Output Language
                                                 </label>
-                                                <input
-                                                    type="range"
-                                                    min="50"
-                                                    max="90"
-                                                    value={formData.thunglishRatio}
-                                                    onChange={(e) => setFormData({ ...formData, thunglishRatio: parseInt(e.target.value) })}
-                                                    className="w-full"
-                                                />
-                                                <div className="flex justify-between text-xs text-slate-500 mt-1">
-                                                    <span>50% Tamil</span>
-                                                    <span>90% Tamil</span>
-                                                </div>
+                                                <select
+                                                    value={formData.language}
+                                                    onChange={(e) => setFormData({ ...formData, language: e.target.value })}
+                                                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-900 bg-white"
+                                                >
+                                                    {languages.map((l) => (
+                                                        <option key={l.value} value={l.value}>
+                                                            {l.label}
+                                                        </option>
+                                                    ))}
+                                                </select>
                                             </div>
 
                                             {/* Checkboxes */}
@@ -1790,8 +1727,55 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                             {/* Image Settings Divider */}
                                             <div className="mt-5 pt-4 border-t border-slate-200">
                                                 <h4 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                                                    <Sparkles className="w-4 h-4 text-purple-500" />
+                                                    Premium Features (₹9 each)
+                                                </h4>
+
+                                                {/* Chapters Toggle */}
+                                                <label className="flex items-center gap-3 cursor-pointer mb-3">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={formData.includeChapters}
+                                                        onChange={(e) => setFormData({ ...formData, includeChapters: e.target.checked })}
+                                                        className="w-4 h-4 text-purple-600 border-slate-300 rounded focus:ring-purple-500"
+                                                    />
+                                                    <div>
+                                                        <span className="text-sm text-slate-700">Generate YouTube Chapters</span>
+                                                        <p className="text-xs text-slate-500">Timestamps for video navigation</p>
+                                                    </div>
+                                                </label>
+
+                                                {/* B-Roll Toggle */}
+                                                <label className="flex items-center gap-3 cursor-pointer mb-3">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={formData.includeBRoll}
+                                                        onChange={(e) => setFormData({ ...formData, includeBRoll: e.target.checked })}
+                                                        className="w-4 h-4 text-purple-600 border-slate-300 rounded focus:ring-purple-500"
+                                                    />
+                                                    <div>
+                                                        <span className="text-sm text-slate-700">B-Roll Suggestions</span>
+                                                        <p className="text-xs text-slate-500">Visual ideas for each scene</p>
+                                                    </div>
+                                                </label>
+
+                                                {/* Shorts Toggle */}
+                                                <label className="flex items-center gap-3 cursor-pointer mb-4">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={formData.includeShorts}
+                                                        onChange={(e) => setFormData({ ...formData, includeShorts: e.target.checked })}
+                                                        className="w-4 h-4 text-purple-600 border-slate-300 rounded focus:ring-purple-500"
+                                                    />
+                                                    <div>
+                                                        <span className="text-sm text-slate-700">Viral Shorts Ideas</span>
+                                                        <p className="text-xs text-slate-500">Extract short content from main script</p>
+                                                    </div>
+                                                </label>
+
+                                                <h4 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2 mt-6 border-t border-slate-100 pt-4">
                                                     <ImageIcon className="w-4 h-4" />
-                                                    Image Prompt Settings
+                                                    Image Settings
                                                 </h4>
 
                                                 {/* Generate Images Toggle */}

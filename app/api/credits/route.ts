@@ -85,29 +85,48 @@ export async function POST(req: NextRequest) {
         }
 
         // Check what to deduct
-        const freeRemaining = 2 - credits.freeScriptsUsed;
+        // Parse count from body, default to 1
+        const { count = 1 } = await req.json().catch(() => ({}));
 
-        if (freeRemaining > 0) {
-            // Use free credit
-            await prisma.userCredits.update({
-                where: { id: credits.id },
-                data: {
-                    freeScriptsUsed: credits.freeScriptsUsed + 1,
-                    totalGenerated: credits.totalGenerated + 1,
-                },
-            });
-        } else if (credits.paidCredits > 0) {
-            // Use paid credit
-            await prisma.userCredits.update({
-                where: { id: credits.id },
-                data: {
-                    paidCredits: credits.paidCredits - 1,
-                    totalGenerated: credits.totalGenerated + 1,
-                },
-            });
-        } else {
-            return NextResponse.json({ error: "No credits available" }, { status: 403 });
+        // Check availability
+        const freeRemaining = Math.max(0, 2 - credits.freeScriptsUsed);
+        const totalAvailable = freeRemaining + credits.paidCredits;
+
+        if (totalAvailable < count) {
+            return NextResponse.json({
+                error: "Insufficient credits",
+                required: count,
+                available: totalAvailable
+            }, { status: 403 });
         }
+
+        // Deduct logic
+        let newFreeUsed = credits.freeScriptsUsed;
+        let newPaid = credits.paidCredits;
+        let remainingToDeduct = count;
+
+        // 1. Deduct from free first
+        if (freeRemaining > 0) {
+            const deductFree = Math.min(freeRemaining, remainingToDeduct);
+            newFreeUsed += deductFree;
+            remainingToDeduct -= deductFree;
+        }
+
+        // 2. Deduct remaining from paid
+        if (remainingToDeduct > 0) {
+            newPaid -= remainingToDeduct;
+        }
+
+        // Update DB
+        await prisma.userCredits.update({
+            where: { id: credits.id },
+            data: {
+                freeScriptsUsed: newFreeUsed,
+                paidCredits: newPaid,
+                totalGenerated: credits.totalGenerated + 1, // Count generation event, not credits? Or should this track credits? 
+                // Let's keep it as "generations" count for now, or maybe irrelevant.
+            },
+        });
 
         return NextResponse.json({ success: true });
     } catch (error) {
