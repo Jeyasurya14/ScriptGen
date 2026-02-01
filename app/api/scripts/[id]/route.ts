@@ -1,14 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { createClient } from "@supabase/supabase-js";
-
-const getSupabase = () => {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.SUPABASE_SERVICE_KEY;
-    if (!url || !key) return null;
-    return createClient(url, key);
-};
+import { prisma } from "@/lib/prisma";
 
 // GET - Fetch a specific script
 export async function GET(
@@ -17,41 +10,54 @@ export async function GET(
 ) {
     const { id } = await context.params;
 
-    const supabase = getSupabase();
-    if (!supabase) {
-        return NextResponse.json({ error: "Database not configured" }, { status: 503 });
-    }
-
     try {
         const session = await getServerSession(authOptions);
         if (!session?.user?.email) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        // Get user
-        const { data: user } = await supabase
-            .from("users")
-            .select("id")
-            .eq("email", session.user.email)
-            .single();
+        const user = await prisma.user.findUnique({
+            where: { email: session.user.email },
+        });
 
         if (!user) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
         // Get script
-        const { data: script, error } = await supabase
-            .from("scripts")
-            .select("*")
-            .eq("id", id)
-            .eq("user_id", user.id)
-            .single();
+        const script = await prisma.script.findFirst({
+            where: {
+                id: id,
+                userId: user.id,
+            },
+        });
 
-        if (error || !script) {
+        if (!script) {
             return NextResponse.json({ error: "Script not found" }, { status: 404 });
         }
 
-        return NextResponse.json({ script });
+        // Return script with mapped fields if necessary, or usage of script object directly
+        // The previous implementation returned `{ script }` where script was the raw db row.
+        // Prisma returns camelCase.
+        // If frontend expects usage of `data.script.script_content` (snake_case), we need to map.
+        // Let's assume we mapped it.
+        const formattedScript = {
+            id: script.id,
+            user_id: script.userId,
+            title: script.title,
+            channel_name: script.channelName,
+            duration: script.duration,
+            content_type: script.contentType,
+            script_content: script.scriptContent,
+            seo_data: script.seoData,
+            images_data: script.imagesData,
+            chapters_data: script.chaptersData,
+            broll_data: script.brollData,
+            shorts_data: script.shortsData,
+            created_at: script.createdAt,
+        };
+
+        return NextResponse.json({ script: formattedScript });
     } catch (error) {
         console.error("Error fetching script:", error);
         return NextResponse.json({ error: "Failed to fetch script" }, { status: 500 });
@@ -65,36 +71,36 @@ export async function DELETE(
 ) {
     const { id } = await context.params;
 
-    const supabase = getSupabase();
-    if (!supabase) {
-        return NextResponse.json({ error: "Database not configured" }, { status: 503 });
-    }
-
     try {
         const session = await getServerSession(authOptions);
         if (!session?.user?.email) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        // Get user
-        const { data: user } = await supabase
-            .from("users")
-            .select("id")
-            .eq("email", session.user.email)
-            .single();
+        const user = await prisma.user.findUnique({
+            where: { email: session.user.email },
+        });
 
         if (!user) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
         // Delete script (only if owned by user)
-        const { error } = await supabase
-            .from("scripts")
-            .delete()
-            .eq("id", id)
-            .eq("user_id", user.id);
+        // usage of deleteMany to avoid error if not found, or explicit check?
+        // standard pattern:
+        const deleteResult = await prisma.script.deleteMany({
+            where: {
+                id: id,
+                userId: user.id,
+            },
+        });
 
-        if (error) throw error;
+        if (deleteResult.count === 0) {
+            // Maybe it didn't exist or belonged to another user.
+            // Original logic: just tried to delete.
+            // If we want to return success even if not found, that's fine.
+            // But usually it implies success.
+        }
 
         return NextResponse.json({ success: true });
     } catch (error) {

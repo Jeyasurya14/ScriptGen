@@ -1,0 +1,78 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  image     String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  credits      UserCredits?
+  transactions Transaction[]
+  scripts      Script[]
+
+  @@map("users")
+}
+
+model UserCredits {
+  id             String   @id @default(uuid())
+  userId         String   @unique @map("user_id")
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  freeScriptsUsed Int      @default(0) @map("free_scripts_used")
+  paidCredits    Int      @default(0) @map("paid_credits")
+  totalGenerated Int      @default(0) @map("total_generated")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @default(now()) @map("updated_at")
+
+  @@map("user_credits")
+}
+
+model Transaction {
+  id              String   @id @default(uuid())
+  userId          String   @map("user_id")
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount          Decimal  @db.Decimal(10, 2)
+  creditsPurchased Int      @default(1) @map("credits_purchased")
+  razorpayOrderId String?  @map("razorpay_order_id")
+  razorpayPaymentId String? @map("razorpay_payment_id")
+  status          String   @default("pending")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([razorpayOrderId])
+  @@map("transactions")
+}
+
+model Script {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title        String
+  channelName  String?  @map("channel_name")
+  duration     Int?
+  contentType  String?  @map("content_type")
+  scriptContent String? @map("script_content")
+  
+  // JSONB fields
+  seoData      Json?    @map("seo_data")
+  imagesData   Json?    @map("images_data")
+  chaptersData Json?    @map("chapters_data")
+  brollData    Json?    @map("broll_data")
+  shortsData   Json?    @map("shorts_data")
+
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([createdAt(sort: Desc)])
+  @@map("scripts")
+}

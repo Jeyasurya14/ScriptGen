@@ -1,15 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { createClient } from "@supabase/supabase-js";
+import { prisma } from "@/lib/prisma";
 import Razorpay from "razorpay";
-
-const getSupabase = () => {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.SUPABASE_SERVICE_KEY;
-    if (!url || !key) return null;
-    return createClient(url, key);
-};
 
 const getRazorpay = () => {
     const keyId = process.env.RAZORPAY_KEY_ID;
@@ -20,10 +13,9 @@ const getRazorpay = () => {
 
 // POST - Create a Razorpay order
 export async function POST(req: NextRequest) {
-    const supabase = getSupabase();
     const razorpay = getRazorpay();
 
-    if (!supabase || !razorpay) {
+    if (!razorpay) {
         return NextResponse.json({ error: "Payment not configured" }, { status: 503 });
     }
 
@@ -48,21 +40,20 @@ export async function POST(req: NextRequest) {
             },
         });
 
-        // Get user
-        const { data: user } = await supabase
-            .from("users")
-            .select("id")
-            .eq("email", session.user.email)
-            .single();
+        const user = await prisma.user.findUnique({
+            where: { email: session.user.email },
+        });
 
         // Store pending transaction
         if (user) {
-            await supabase.from("transactions").insert({
-                user_id: user.id,
-                amount: credits * 9,
-                razorpay_order_id: order.id,
-                credits_purchased: credits,
-                status: "pending",
+            await prisma.transaction.create({
+                data: {
+                    userId: user.id,
+                    amount: credits * 9,
+                    razorpayOrderId: order.id,
+                    creditsPurchased: credits,
+                    status: "pending",
+                },
             });
         }
 

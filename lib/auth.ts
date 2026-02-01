@@ -1,19 +1,6 @@
 import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
-import { createClient } from "@supabase/supabase-js";
-
-// Initialize Supabase client
-const getSupabase = () => {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
-
-    if (!supabaseUrl || !supabaseServiceKey) {
-        console.warn("Supabase not configured");
-        return null;
-    }
-
-    return createClient(supabaseUrl, supabaseServiceKey);
-};
+import { prisma } from "@/lib/prisma";
 
 export const authOptions: NextAuthOptions = {
     providers: [
@@ -25,37 +12,28 @@ export const authOptions: NextAuthOptions = {
     callbacks: {
         async signIn({ user, account }) {
             if (account?.provider === "google") {
-                const supabase = getSupabase();
-                if (!supabase) return true;
+                if (!user.email) return false;
 
                 try {
-                    const { data: existingUser } = await supabase
-                        .from("users")
-                        .select("id")
-                        .eq("email", user.email)
-                        .single();
+                    const existingUser = await prisma.user.findUnique({
+                        where: { email: user.email },
+                    });
 
                     if (!existingUser) {
-                        await supabase.from("users").insert({
-                            email: user.email,
-                            name: user.name,
-                            image: user.image,
+                        const newUser = await prisma.user.create({
+                            data: {
+                                email: user.email,
+                                name: user.name,
+                                image: user.image,
+                                credits: {
+                                    create: {
+                                        freeScriptsUsed: 0,
+                                        paidCredits: 0,
+                                        totalGenerated: 0,
+                                    },
+                                },
+                            },
                         });
-
-                        const { data: newUser } = await supabase
-                            .from("users")
-                            .select("id")
-                            .eq("email", user.email)
-                            .single();
-
-                        if (newUser) {
-                            await supabase.from("user_credits").insert({
-                                user_id: newUser.id,
-                                free_scripts_used: 0,
-                                paid_credits: 0,
-                                total_generated: 0,
-                            });
-                        }
                     }
                     return true;
                 } catch (error) {
@@ -66,26 +44,17 @@ export const authOptions: NextAuthOptions = {
             return true;
         },
         async session({ session }) {
-            const supabase = getSupabase();
-            if (!supabase || !session.user?.email) return session;
+            if (!session.user?.email) return session;
 
-            const { data: userData } = await supabase
-                .from("users")
-                .select("id")
-                .eq("email", session.user.email)
-                .single();
+            const userData = await prisma.user.findUnique({
+                where: { email: session.user.email },
+                include: { credits: true },
+            });
 
             if (userData) {
                 (session.user as any).id = userData.id;
-
-                const { data: creditsData } = await supabase
-                    .from("user_credits")
-                    .select("*")
-                    .eq("user_id", userData.id)
-                    .single();
-
-                if (creditsData) {
-                    (session.user as any).credits = creditsData;
+                if (userData.credits) {
+                    (session.user as any).credits = userData.credits;
                 }
             }
             return session;
