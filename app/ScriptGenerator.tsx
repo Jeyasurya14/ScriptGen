@@ -1270,10 +1270,10 @@ Output format: Translated script text ONLY. No other text.`;
                             </div>
                             <div>
                                 <h1 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
-                                    Thunglish Script Generator
+                                    AI YouTube Script Generator
                                 </h1>
                                 <p className="text-xs sm:text-sm text-slate-500 hidden sm:block font-medium">
-                                    Professional scripts for Tamil tech YouTube creators
+                                    Viral scripts for Tech Creators in Tamil, Hindi & English
                                 </p>
                             </div>
                         </div>

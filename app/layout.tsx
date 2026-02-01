@@ -15,9 +15,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Thunglish Script Generator | Tamil Tech YouTube Scripts",
-  description: "Generate professional Thunglish scripts for Tamil tech YouTube creators with AI-powered multi-stage generation, SEO optimization, and production notes.",
-  keywords: ["Thunglish", "Tamil", "YouTube", "Script Generator", "Tech Content", "Tamil Nadu"],
+  title: "AI YouTube Script Generator | Tamil, Hindi & English",
+  description: "Generate viral YouTube scripts in Tamil, Hindi, English, and Thunglish with AI-powered multi-stage generation, SEO optimization, and production notes.",
+  keywords: ["YouTube Script", "AI Generator", "Tamil", "Hindi", "English", "Thunglish", "Tech Content"],
 };
 
 export default function RootLayout({
