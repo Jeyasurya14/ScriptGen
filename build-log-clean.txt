@@ -1,0 +1,27 @@
+
+> script-generator@0.1.0 build
+> next build
+
+Γû▓ Next.js 16.1.4 (Turbopack)
+- Environments: .env
+
+  Creating an optimized production build ...
+
+> Build error occurred
+Error: Turbopack build failed with 1 errors:
+./app/api/payment/verify/route.ts:2:1
+Module not found: Can't resolve '@supabase/supabase-js'
+  1 | import { NextRequest, NextResponse } from "next/server";
+> 2 | import { createClient } from "@supabase/supabase-js";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  3 | import crypto from "crypto";
+  4 |
+  5 | const getSupabase = () => {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+    at <unknown> (./app/api/payment/verify/route.ts:2:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)

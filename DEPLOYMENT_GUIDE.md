@@ -1,65 +1,79 @@
-# Deployment Guide: Render (DB) & Vercel (App)
+# Deployment Guide: Vercel + PostgreSQL
 
-## 1. Prerequisites
-*   [GitHub Account](https://github.com/) with this repository pushed.
-*   [Render Account](https://render.com/) (for PostgreSQL).
-*   [Vercel Account](https://vercel.com/) (for Next.js App).
-*   [OpenAI API Key](https://platform.openai.com/).
-*   [Razorpay Account](https://razorpay.com/) (optional, for payments).
+This guide explains how to deploy your **Script Generator** application.
+*   **Frontend**: Hosted on [Vercel](https://vercel.com).
+*   **Backend (Database)**: Hosted on a PostgreSQL provider (e.g., Render, Neon, or Supabase).
 
-## 2. Set up PostgreSQL on Render
-1.  Log in to [Render Dashboard](https://dashboard.render.com/).
+---
+
+## 1. Database Setup (PostgreSQL)
+
+You need a PostgreSQL database hosted in the cloud. We recommend **Render**, **Neon**, or **Supabase** (Database only).
+
+### Option A: Render (Recommended for simplicity)
+1.  Log in to [Render.com](https://render.com).
 2.  Click **New +** -> **PostgreSQL**.
-3.  Name: `script-generator-db` (or similar).
-4.  Region: Closest to you (e.g., Singapore, Frankfurt).
-5.  Plan: **Free** (for dev) or **Individual**.
-6.  Click **Create Database**.
-7.  Wait for it to restart directly. Copy the **External Database URL**.
-    *   Looks like: `postgres://user:password@host.render.com/db_name`
+3.  Name it (e.g., `script-gen-db`).
+4.  Adding a **Region** close to you (e.g., Singapore/US).
+5.  Select **Free Plan**.
+6.  Once created, copy the **External Database URL**.
+    *   It looks like: `postgres://user:password@hostname.render.com/dbname`
 
-## 3. Prepare Repository
-Ensure your latest code (with Prisma config) is pushed to GitHub.
-```bash
-git add .
-git commit -m "Migrate to Prisma"
-git push origin main
-```
+### Option B: Neon (Serverless) / Supabase
+1.  Create a project/database.
+2.  Get the **Connection String** (Transaction mode / pooled connection is fine).
 
-## 4. Deploy to Vercel
-1.  Log in to [Vercel Dashboard](https://vercel.com/dashboard).
-2.  Click **Add New...** -> **Project**.
-3.  Import your GitHub repository (`script-generator`).
-4.  **Configure Project**:
-    *   **Build Command**: `npx prisma generate && next build` (Override if needed, but Next.js defaults are usually fine. **Important**: Prisma needs to generate the client during build).
-    *   **Environment Variables**: Add the following:
-        *   `DATABASE_URL`: (Paste the **External Database URL** from Render)
-        *   `NEXTAUTH_SECRET`: (Generate a random string, e.g. `openssl rand -base64 32`)
-        *   `NEXTAUTH_URL`: `https://your-project-name.vercel.app` (You can update this after deployment if the URL changes)
-        *   `NEXT_PUBLIC_OPENAI_API_KEY`: (Your OpenAI Key)
-        *   `GOOGLE_CLIENT_ID`: (Your Google OAuth ID)
-        *   `GOOGLE_CLIENT_SECRET`: (Your Google OAuth Secret)
-        *   `RAZORPAY_KEY_ID`: (Your Razorpay Key)
-        *   `RAZORPAY_KEY_SECRET`: (Your Razorpay Secret)
-5.  Click **Deploy**.
+---
 
-## 5. Initialize Database
-After deployment (or during build if you add it to build command), you need to push the schema to the database.
-You can do this from your local machine:
+## 2. Prepare the Database
 
-1.  Create a `.env` file locally if you haven't (add the Render Connection String).
-    ```env
-    DATABASE_URL="postgres://user:password@host.render.com/db_name"
-    ```
-2.  Run the push command:
-    ```bash
+Before deploying the app, you need to push your local schema to the new production database.
+
+1.  Open your project terminal locally.
+2.  Run the following command (replace `<YOUR_CONNECTION_STRING>` with the actual URL from Step 1):
+    ```powershell
+    # Temporarily set the URL for this command
+    $env:DATABASE_URL="postgres://user:password@host/db..."
+    
+    # Push the schema
     npx prisma db push
     ```
-    *This creates the tables in your Render database.*
+    *   *Note: If permissions denied on PowerShell, you can also paste the URL into your local `.env` temporarily and run `npx prisma db push`.*
 
-## 6. Verification
-1.  Visit your Vercel URL.
-2.  Try logging in (this verifies Database connection + Auth).
-3.  Try generating a script.
+---
 
-> [!NOTE]
-> If you see database errors, check the `DATABASE_URL` in Vercel environment variables and ensure you ran `npx prisma db push`.
+## 3. Deploy to Vercel
+
+1.  Push your latest code to **GitHub**.
+2.  Log in to [Vercel](https://vercel.com).
+3.  Click **Add New...** -> **Project**.
+4.  Import your `script-generator` repository.
+5.  **Configure Project**:
+    *   **Framework Preset**: Next.js (Auto-detected).
+    *   **Root Directory**: `./` (Default).
+6.  **Environment Variables** (Crucial!):
+    *   Expand the "Environment Variables" section.
+    *   Add the following:
+
+| Name | Value | Description |
+| :--- | :--- | :--- |
+| `DATABASE_URL` | `postgres://...` | The **External Database URL** from Step 1. |
+| `NEXTAUTH_SECRET` | `(generate random)` | Run `openssl rand -base64 32` or type a long random string. |
+| `NEXTAUTH_URL` | `https://your-project.vercel.app` | Your temporary Vercel URL (or update this after first deploy). |
+| `GOOGLE_CLIENT_ID` | `...` | Your Google OAuth Client ID. |
+| `GOOGLE_CLIENT_SECRET` | `...` | Your Google OAuth Secret. |
+
+7.  Click **Deploy**.
+
+---
+
+## 4. Updates & Maintenance
+
+*   **Schema Changes**: If you modify `prisma/schema.prisma`, you must run `npx prisma db push` against your production database URL to update the tables.
+*   **App Updates**: Just push to GitHub, and Vercel will auto-deploy.
+
+---
+
+### Troubleshooting
+*   **Prisma Client Error**: Vercel automatically runs `prisma generate` during build (we added a `postinstall` script to ensure this).
+*   **Connection Error**: Ensure your Database Provider allows connections from anywhere (0.0.0.0/0), which is default for Render Free tier.
