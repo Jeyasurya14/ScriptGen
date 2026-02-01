@@ -57,31 +57,31 @@ LANGUAGE STYLE: INTERNATIONAL ENGLISH
 `;
     } else if (language === "Hindi") {
         languageInstruction = `
-LANGUAGE STYLE: HINGLISH (Hindi + English Tech Terms)
-- Speak like a friendly Indian tech YouTuber (e.g., Technical Guruji style)
+LANGUAGE STYLE: HINGLISH (Hindi + English Mix)
+- Speak like a friendly Indian YouTuber
 - Use natural connecting words: "Doston", "Yeh dekho", "Matlab", "Samjhe?"
-- Keep all technical terms in English (React, API, Code)
+- Keep all technical/domain terms in English
 - Start with high energy: "Namaste Doston!"
 `;
     } else if (language === "Tamil") {
         languageInstruction = `
-LANGUAGE STYLE: PURE TAMIL (With English Tech Terms)
+LANGUAGE STYLE: PURE TAMIL (With English Domain Terms)
 - Use clear, standard spoken Tamil
 - Avoid heavy Thunglish mixing - keep it more formal but friendly
-- Use English ONLY for technical identifiers (Variable names, libraries)
+- Use English ONLY for technical/domain identifiers (Variable names, specific terms)
 `;
     } else {
         // Default: Thunglish
         languageInstruction = `
-LANGUAGE STYLE: THUNGLISH (Tamil + English Mix - 60% Tamil, 40% English)
+LANGAUGE STYLE: THUNGLISH (Tamil + English Mix - 60% Tamil, 40% English)
 - You know exactly how to blend Tamil and English naturally
 - Use Tamil for: "Dei!", "Macha!", "Theriyuma", "Kelunga", "Super ah irukku"
-- Use English for: Tech terms, connecting phrases ("So basically...", "Actually...")
+- Use English for: Domain terms, connecting phrases ("So basically...", "Actually...")
 - Tone: Like explaining to a best friend over chai
 `;
     }
 
-    const systemPrompt = `You are a MASTER YouTube script writer with 10+ years of experience creating viral tech videos.
+    const systemPrompt = `You are a MASTER YouTube script writer with 10+ years of experience creating viral videos.
 
 YOUR EXPERTISE:
 - You understand the YouTube ecosystem perfectly
@@ -97,7 +97,7 @@ Provide ONLY the raw script content for the requested section. Do not include ma
     let userPrompt = "";
 
     if (stage === "hook_intro") {
-        userPrompt = `Create a KILLER hook and intro for this Tamil tech YouTube video.
+        userPrompt = `Create a KILLER hook and intro for this Tamil/Regional YouTube video.
 
 VIDEO DETAILS:
 📌 Title: ${title}
@@ -161,9 +161,9 @@ FORMAT:
 export const constructProductionNotesPrompt = (formData: FormData, fullScript: string) => {
     const { title, includeCode } = formData;
 
-    const systemPrompt = `You are an expert YouTube video producer and editor who specializes in Tamil tech content. You understand exactly what makes tech tutorials visually engaging and easy to follow. Your production notes are used by professional video editors.`;
+    const systemPrompt = `You are an expert YouTube video producer and editor. You understand exactly what makes content visually engaging and easy to follow. Your production notes are used by professional video editors.`;
 
-    const userPrompt = `Create DETAILED production notes for this Tamil tech YouTube video.
+    const userPrompt = `Create DETAILED production notes for this YouTube video.
 
 VIDEO TITLE: ${title}
 
@@ -305,9 +305,9 @@ ${includeCode ? `
 export const constructSEOPrompt = (formData: FormData) => {
     const { title, contentType } = formData;
 
-    const systemPrompt = `You are a YouTube SEO expert who specializes in Tamil tech content. You understand the YouTube algorithm, trending keywords, and what makes Tamil tech videos go viral. You've helped channels grow from 0 to 1M+ subscribers.`;
+    const systemPrompt = `You are a YouTube SEO expert. You understand the YouTube algorithm, trending keywords, and what makes videos go viral. You've helped channels grow from 0 to 1M+ subscribers.`;
 
-    const userPrompt = `Create OPTIMIZED SEO data for this Tamil tech YouTube video.
+    const userPrompt = `Create OPTIMIZED SEO data for this YouTube video.
 
 VIDEO TITLE: ${title}
 CONTENT TYPE: ${contentType}

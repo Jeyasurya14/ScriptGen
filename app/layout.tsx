@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "YouTube Script Generator | Tamil, Hindi & English",
   description: "Generate viral YouTube scripts in Tamil, Hindi, English, and Thunglish with AI-powered multi-stage generation, SEO optimization, and production notes.",
-  keywords: ["YouTube Script", "AI Generator", "Tamil", "Hindi", "English", "Thunglish", "Tech Content"],
+  keywords: ["YouTube Script", "AI Generator", "Tamil", "Hindi", "English", "Thunglish", "Viral Content"],
 };
 
 export default function RootLayout({
