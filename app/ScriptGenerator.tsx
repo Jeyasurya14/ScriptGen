@@ -5,6 +5,7 @@ import { useSession, signIn, signOut } from "next-auth/react";
 // import { jsPDF } from "jspdf"; // Dynamic import used instead
 import {
     FileText,
+    Triangle,
     Copy,
     Download,
     Check,
@@ -27,6 +28,9 @@ import {
     History,
     Trash2,
     Clock,
+    Shield,
+    Settings2,
+    ArrowRight
 } from "lucide-react";
 
 // Types
@@ -1175,8 +1179,8 @@ Output format: Translated script text ONLY. No other text.`;
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
-                        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 mb-4">
-                            <p className="text-2xl font-bold text-blue-600">₹9</p>
+                        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 mb-4">
+                            <p className="text-2xl font-bold text-yellow-600">₹9</p>
                             <p className="text-sm text-slate-600">per script generation</p>
                         </div>
                         <ul className="text-sm text-slate-600 mb-4 space-y-2">
@@ -1187,7 +1191,7 @@ Output format: Translated script text ONLY. No other text.`;
                         <button
                             onClick={handlePayment}
                             disabled={processingPayment}
-                            className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
+                            className="w-full py-3 bg-yellow-500 text-white rounded-lg font-medium hover:bg-yellow-600 transition-colors disabled:opacity-50"
                         >
                             {processingPayment ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Pay with Razorpay"}
                         </button>
@@ -1261,41 +1265,45 @@ Output format: Translated script text ONLY. No other text.`;
             )}
 
             {/* Header */}
-            <header className="bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50 shadow-sm supports-[backdrop-filter]:bg-white/80">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5">
+            <header className="sticky top-0 z-50 transition-all duration-300 border-b border-slate-200 bg-white shadow-sm">
+                <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 bg-blue-600 rounded-lg shadow-blue-200/50 shadow-lg">
-                                <Video className="w-5 h-5 text-white" />
+                        <div className="flex items-center gap-4">
+                            <div className="relative w-10 h-10 rounded-xl overflow-hidden shadow-md shadow-blue-900/10">
+                                <img
+                                    src="/scriptgen-logo.png"
+                                    alt="SCRIPTGEN"
+                                    className="w-full h-full object-cover"
+                                />
                             </div>
                             <div>
-                                <h1 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
-                                    YouTube Script Generator
+                                <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+                                    SCRIPT<span className="text-blue-600">GEN</span>
                                 </h1>
-                                <p className="text-xs sm:text-sm text-slate-500 hidden sm:block font-medium">
-                                    Viral scripts for Any Creator in Tamil, Hindi & English
+                                <p className="text-xs text-slate-500 font-medium">
+                                    Viral scripts for <span className="text-blue-600">Any Creator</span> in Tamil, Hindi & English
                                 </p>
                             </div>
                         </div>
 
                         {/* Auth & Credits */}
-                        <div className="flex items-center gap-2 sm:gap-4">
+                        <div className="flex items-center gap-3 sm:gap-6">
                             {session ? (
                                 <>
                                     {/* History Button */}
                                     <button
                                         onClick={() => { setShowHistory(true); fetchHistory(); }}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:border-blue-300 hover:bg-blue-50 text-slate-600 hover:text-blue-700 rounded-lg transition-all duration-200 shadow-sm"
+                                        className="flex items-center gap-2 px-3 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all duration-200"
                                         title="Script History"
                                     >
-                                        <History className="w-4 h-4" />
+                                        <History className="w-5 h-5" />
                                         <span className="hidden sm:inline text-sm font-medium">History</span>
                                     </button>
 
                                     {/* Credits Display */}
                                     {credits && (
-                                        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-slate-100 border border-slate-200 rounded-lg shadow-inner">
-                                            <CreditCard className="w-4 h-4 text-blue-600" />
+                                        <div className="hidden sm:flex items-center gap-2 px-4 py-1.5 bg-slate-50 border border-slate-200 rounded-full shadow-inner">
+                                            <CreditCard className="w-4 h-4 text-blue-500" />
                                             <span className="text-sm font-medium text-slate-700">
                                                 {credits.freeScriptsRemaining > 0
                                                     ? `${credits.freeScriptsRemaining} free`
@@ -1305,17 +1313,17 @@ Output format: Translated script text ONLY. No other text.`;
                                     )}
 
                                     {/* User Avatar */}
-                                    <div className="flex items-center gap-3 pl-2 border-l border-slate-200">
+                                    <div className="flex items-center gap-4 pl-4 border-l border-slate-200">
                                         {session.user?.image ? (
-                                            <img src={session.user.image} alt="" className="w-9 h-9 rounded-full ring-2 ring-white shadow-sm" />
+                                            <img src={session.user.image} alt="" className="w-10 h-10 rounded-full ring-2 ring-blue-500/20 shadow-lg" />
                                         ) : (
-                                            <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center ring-2 ring-white shadow-sm">
-                                                <User className="w-4 h-4 text-blue-600" />
+                                            <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center ring-2 ring-blue-500/20">
+                                                <User className="w-5 h-5 text-blue-600" />
                                             </div>
                                         )}
                                         <button
                                             onClick={() => signOut()}
-                                            className="hidden sm:flex text-slate-400 hover:text-red-500 transition-colors p-1 rounded-md hover:bg-red-50"
+                                            className="hidden sm:flex text-slate-500 hover:text-red-500 transition-colors p-2 rounded-md hover:bg-red-500/10"
                                             title="Sign Out"
                                         >
                                             <LogOut className="w-5 h-5" />
@@ -1325,7 +1333,7 @@ Output format: Translated script text ONLY. No other text.`;
                             ) : (
                                 <button
                                     onClick={() => signIn("google", { callbackUrl: "/" })}
-                                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 shadow-md hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5"
+                                    className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 shadow-md transition-all duration-200 transform hover:-translate-y-0.5"
                                 >
                                     <LogIn className="w-4 h-4" />
                                     <span className="hidden sm:inline">Sign in with Google</span>
@@ -1341,84 +1349,69 @@ Output format: Translated script text ONLY. No other text.`;
                 <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
                     {/* Left Panel - Configuration (Protected) */}
                     <div className="w-full lg:w-2/5">
-                        <div className="bg-white rounded-xl border border-slate-200 p-6 sm:p-8 lg:sticky lg:top-24 shadow-sm">
+                        <div className="glass-card rounded-2xl p-6 sm:p-8 lg:sticky lg:top-28">
                             {!session ? (
                                 /* Login Required Panel */
-                                <div className="text-center py-4">
-                                    <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6 ring-4 ring-white shadow-sm">
+                                <div className="text-center py-12 bg-white rounded-2xl shadow-xl border border-slate-100 max-w-md mx-auto">
+                                    <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6 ring-4 ring-blue-50/50">
                                         <Sparkles className="w-10 h-10 text-blue-600" />
                                     </div>
-                                    <h2 className="text-2xl font-bold text-slate-900 mb-3 tracking-tight">
-                                        Unlock Pro Script Generation
-                                    </h2>
-                                    <p className="text-slate-500 mb-8 text-base leading-relaxed">
-                                        Create engaging, high-retention Thunglish video scripts tailored for your Tamil audience in seconds.
+                                    <h3 className="text-2xl font-bold text-slate-900 mb-3">Join the Creator Studio</h3>
+                                    <p className="text-slate-500 mb-8 max-w-xs mx-auto text-sm leading-relaxed">
+                                        Unlock professional AI script generation, multi-language support, and viral features.
                                     </p>
-
-                                    {/* Features List */}
-                                    <div className="text-left bg-slate-50/80 rounded-xl p-5 mb-8 border border-slate-100">
-                                        <p className="text-xs font-bold text-slate-500 uppercase mb-4 tracking-wider">Free Plan Includes:</p>
-                                        <ul className="space-y-3.5 text-sm text-slate-700">
-                                            <li className="flex items-start gap-3">
-                                                <div className="mt-0.5 p-0.5 bg-green-100 rounded-full">
-                                                    <Check className="w-3.5 h-3.5 text-green-600 font-bold" />
-                                                </div>
-                                                <span className="font-medium">2 Free High-Quality Scripts</span>
-                                            </li>
-                                            <li className="flex items-start gap-3">
-                                                <div className="mt-0.5 p-0.5 bg-green-100 rounded-full">
-                                                    <Check className="w-3.5 h-3.5 text-green-600 font-bold" />
-                                                </div>
-                                                <span>Full SEO Metadata (Title, Tags, Desc)</span>
-                                            </li>
-                                            <li className="flex items-start gap-3">
-                                                <div className="mt-0.5 p-0.5 bg-green-100 rounded-full">
-                                                    <Check className="w-3.5 h-3.5 text-green-600 font-bold" />
-                                                </div>
-                                                <span>AI Image Prompts for Thumbnails</span>
-                                            </li>
-                                            <li className="flex items-start gap-3">
-                                                <div className="mt-0.5 p-0.5 bg-green-100 rounded-full">
-                                                    <Check className="w-3.5 h-3.5 text-green-600 font-bold" />
-                                                </div>
-                                                <span>Smart Chapter Breakdowns</span>
-                                            </li>
-                                        </ul>
+                                    <div className="flex flex-col gap-3 mt-4 text-left px-8">
+                                        <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
+                                            <div className="p-1 bg-green-100 rounded-full">
+                                                <Check className="w-3 h-3 text-green-600" />
+                                            </div>
+                                            <span className="text-sm font-medium text-slate-700">2 Free High-Quality Scripts</span>
+                                        </div>
+                                        <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
+                                            <div className="p-1 bg-green-100 rounded-full">
+                                                <Check className="w-3 h-3 text-green-600" />
+                                            </div>
+                                            <span className="text-sm font-medium text-slate-700">Full SEO Metadata (Title, Tags, Desc)</span>
+                                        </div>
+                                        <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
+                                            <div className="p-1 bg-green-100 rounded-full">
+                                                <Check className="w-3 h-3 text-green-600" />
+                                            </div>
+                                            <span className="text-sm font-medium text-slate-700">AI Image Prompts for Thumbnails</span>
+                                        </div>
                                     </div>
 
-                                    <button
-                                        onClick={() => signIn("google", { callbackUrl: "/" })}
-                                        className="w-full py-3.5 px-4 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-200 transition-all duration-200 flex items-center justify-center gap-3 group"
-                                    >
-                                        <svg className="w-5 h-5 bg-white rounded-full p-0.5 group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
-                                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                                        </svg>
-                                        Get Started with Google
-                                    </button>
+                                    <div className="px-8">
+                                        <button
+                                            onClick={() => signIn("google", { callbackUrl: "/" })}
+                                            className="w-full mt-8 py-3.5 px-4 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-600/20 transition-all duration-200 flex items-center justify-center gap-3"
+                                        >
+                                            <LogIn className="w-5 h-5" />
+                                            Get Started with Google
+                                        </button>
+                                    </div>
 
                                     <div className="flex items-center justify-center gap-2 mt-6">
                                         <span className="flex h-2 w-2 relative">
                                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                                             <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
                                         </span>
-                                        <p className="text-xs font-medium text-slate-500">
+                                        <p className="text-xs font-medium text-slate-400">
                                             No credit card required for free trial
                                         </p>
                                     </div>
                                 </div>
                             ) : (
                                 /* Authenticated - Show Configuration */
-                                <>
+                                /* Authenticated - Show Configuration */
+                                <div className="bg-white rounded-2xl p-6 sm:p-8 h-full border border-slate-200 shadow-sm relative overflow-hidden">
                                     <div className="flex items-center justify-between mb-6">
                                         <div className="flex items-center gap-2">
-                                            <Settings className="w-5 h-5 text-slate-600" />
-                                            <h2 className="text-lg font-medium text-slate-900">Configuration</h2>
+                                            <Settings2 className="w-5 h-5 text-slate-400" />
+                                            <h2 className="text-lg font-semibold text-slate-800">Configuration</h2>
                                         </div>
                                         {credits && (
-                                            <span className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-full">
+                                            <span className="text-xs px-3 py-1 bg-blue-50 text-blue-600 border border-blue-100 rounded-full font-medium">
                                                 {credits.freeScriptsRemaining > 0
                                                     ? `${credits.freeScriptsRemaining} free left`
                                                     : `${credits.paidCredits} credits`}
@@ -1436,70 +1429,135 @@ Output format: Translated script text ONLY. No other text.`;
                                             value={formData.title}
                                             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                             placeholder="e.g., React useState hook complete guide"
-                                            className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-900 placeholder-slate-400"
+                                            className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 placeholder-slate-400 transition-all shadow-sm"
                                         />
                                     </div>
 
                                     {/* Channel Name */}
                                     <div className="mb-5">
                                         <label className="block text-sm font-medium text-slate-700 mb-2">
-                                            Channel Name <span className="text-slate-400">(optional)</span>
+                                            Channel Name <span className="text-slate-400 normal-case font-normal">(optional)</span>
                                         </label>
                                         <input
                                             type="text"
                                             value={formData.channelName}
                                             onChange={(e) => setFormData({ ...formData, channelName: e.target.value })}
                                             placeholder="Your channel name"
-                                            className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-900 placeholder-slate-400"
+                                            className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 placeholder-slate-400 transition-all shadow-sm"
                                         />
                                     </div>
 
                                     {/* Duration Slider */}
-                                    <div className="mb-5">
-                                        <label className="block text-sm font-medium text-slate-700 mb-2">
-                                            Video Duration: <span className="font-semibold text-blue-600">{formData.duration} minutes</span>
+                                    <div className="mb-8">
+                                        <label className="block text-sm font-medium text-slate-700 mb-4">
+                                            Video Duration: <span className="font-bold text-blue-600">{formData.duration} minutes</span>
                                         </label>
-                                        <input
-                                            type="range"
-                                            min="5"
-                                            max="20"
-                                            value={formData.duration}
-                                            onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) })}
-                                            className="w-full"
-                                        />
-                                        <div className="flex justify-between text-xs text-slate-500 mt-1">
+                                        <div className="w-full bg-slate-100 rounded-full h-2 relative">
+                                            <input
+                                                type="range"
+                                                min="5"
+                                                max="20"
+                                                step="1"
+                                                value={formData.duration}
+                                                onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) })}
+                                                className="absolute w-full h-full opacity-0 z-10 cursor-pointer"
+                                            />
+                                            <div
+                                                className="absolute h-full bg-blue-500 rounded-full transition-all duration-150"
+                                                style={{ width: `${((formData.duration - 5) / 15) * 100}%` }}
+                                            ></div>
+                                            <div
+                                                className="absolute h-5 w-5 bg-blue-600 rounded-full shadow-md border-2 border-white top-1/2 -translate-y-1/2 transition-all duration-150 pointer-events-none"
+                                                style={{ left: `${((formData.duration - 5) / 15) * 100}%`, transform: `translate(-50%, -50%)` }}
+                                            ></div>
+                                        </div>
+                                        <div className="flex justify-between mt-2 text-xs text-slate-400 font-medium">
                                             <span>5 min</span>
                                             <span>20 min</span>
                                         </div>
                                     </div>
-
-                                    {/* Content Type */}
-                                    <div className="mb-5">
-                                        <label className="block text-sm font-medium text-slate-700 mb-2">
-                                            Content Type
-                                        </label>
-                                        <select
-                                            value={formData.contentType}
-                                            onChange={(e) => setFormData({ ...formData, contentType: e.target.value })}
-                                            className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-900 bg-white"
-                                        >
-                                            {contentTypes.map((type) => (
-                                                <option key={type.value} value={type.value}>
-                                                    {type.label}
-                                                </option>
-                                            ))}
-                                        </select>
+                                    {/* Content Type & Difficulty */}
+                                    <div className="grid grid-cols-2 gap-4 mb-5">
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                                                Content Type
+                                            </label>
+                                            <div className="relative">
+                                                <select
+                                                    value={formData.contentType}
+                                                    onChange={(e) => setFormData({ ...formData, contentType: e.target.value })}
+                                                    className="w-full pl-4 pr-10 py-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 appearance-none cursor-pointer transition-all shadow-sm"
+                                                >
+                                                    <option value="Tutorial">Tutorial / How-to</option>
+                                                    <option value="Review">Product Review</option>
+                                                    <option value="Vlog">Vlog / Storytelling</option>
+                                                    <option value="Educational">Educational</option>
+                                                    <option value="Entertainment">Entertainment</option>
+                                                </select>
+                                                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                                                Difficulty Level
+                                            </label>
+                                            <div className="relative">
+                                                <select
+                                                    value={formData.difficulty}
+                                                    onChange={(e) => setFormData({ ...formData, difficulty: e.target.value })}
+                                                    className="w-full pl-4 pr-10 py-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 appearance-none cursor-pointer transition-all shadow-sm"
+                                                >
+                                                    <option value="Beginner">Beginner</option>
+                                                    <option value="Intermediate">Intermediate</option>
+                                                    <option value="Advanced">Advanced</option>
+                                                </select>
+                                                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    {/* Tone */}
-                                    <div className="mb-5">
+                                    {/* Project Language */}
+                                    <div className="space-y-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <label className="block text-sm font-bold text-slate-700 flex items-center gap-2">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+                                                Project Language
+                                            </label>
+                                            <span className="text-xs text-blue-700 font-medium bg-blue-100 px-2 py-0.5 rounded border border-blue-200">
+                                                AI Optimized
+                                            </span>
+                                        </div>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {["English", "Tamil", "Hindi"].map((lang) => (
+                                                <button
+                                                    key={lang}
+                                                    onClick={() => setFormData({ ...formData, language: lang })}
+                                                    className={`px-3 py-2.5 text-sm font-medium rounded-lg border transition-all ${formData.language === lang
+                                                        ? "bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-500/20"
+                                                        : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                                                        }`}
+                                                >
+                                                    {lang}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <p className="text-xs text-slate-500 mt-2 italic px-1">
+                                            {formData.language === "Thunglish" && "ℹ️ 60% Tamil + 40% English Mix (High Retention)"}
+                                            {formData.language === "English" && "ℹ️ International Standard English"}
+                                            {formData.language === "Tamil" && "ℹ️ Pure Tamil with English Technical Terms"}
+                                            {formData.language === "Hindi" && "ℹ️ Hinglish - Natural conversational style"}
+                                        </p>
+                                    </div>
+
+                                    {/* Tone & Style */}
+                                    <div className="mt-5">
                                         <label className="block text-sm font-medium text-slate-700 mb-2">
                                             Tone
                                         </label>
                                         <select
                                             value={formData.tone}
                                             onChange={(e) => setFormData({ ...formData, tone: e.target.value })}
-                                            className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-900 bg-white"
+                                            className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 transition-all shadow-sm"
                                         >
                                             {tones.map((t) => (
                                                 <option key={t.value} value={t.value}>
@@ -1509,163 +1567,103 @@ Output format: Translated script text ONLY. No other text.`;
                                         </select>
                                     </div>
 
-                                    {/* Advanced Options (Always Visible) */}
-                                    <div className="bg-slate-50 rounded-lg p-4 mb-5 border border-slate-200">
-                                        {/* Difficulty Level */}
-                                        <div className="mb-4">
-                                            <label className="block text-sm font-medium text-slate-700 mb-2">
-                                                Difficulty Level
-                                            </label>
-                                            <select
-                                                value={formData.difficulty}
-                                                onChange={(e) => setFormData({ ...formData, difficulty: e.target.value })}
-                                                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-900 bg-white"
-                                            >
-                                                {difficulties.map((d) => (
-                                                    <option key={d.value} value={d.value}>
-                                                        {d.label}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
-
-                                        {/* Language Selector */}
-                                        <div className="mb-4">
-                                            <label className="block text-sm font-medium text-slate-700 mb-2">
-                                                Output Language
-                                            </label>
-                                            <select
-                                                value={formData.language}
-                                                onChange={(e) => setFormData({ ...formData, language: e.target.value })}
-                                                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-900 bg-white"
-                                            >
-                                                {languages.map((l) => (
-                                                    <option key={l.value} value={l.value}>
-                                                        {l.label}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
-
-                                        {/* Checkboxes */}
-                                        <div className="space-y-3">
-                                            <label className="flex items-center gap-3 cursor-pointer">
+                                    {/* Advanced Settings */}
+                                    <div className="mt-5 space-y-3">
+                                        <div className="flex items-center gap-5">
+                                            <label className="flex items-center gap-2 cursor-pointer group">
                                                 <input
                                                     type="checkbox"
                                                     checked={formData.includeCode}
                                                     onChange={(e) => setFormData({ ...formData, includeCode: e.target.checked })}
-                                                    className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+                                                    className="w-4 h-4 text-blue-600 bg-white border-slate-300 rounded focus:ring-blue-500 transition-colors"
                                                 />
-                                                <span className="text-sm text-slate-700">Include code examples</span>
+                                                <span className="text-sm text-slate-600 group-hover:text-slate-900">Include code examples</span>
                                             </label>
-                                            <label className="flex items-center gap-3 cursor-pointer">
+                                            <label className="flex items-center gap-2 cursor-pointer group">
                                                 <input
                                                     type="checkbox"
                                                     checked={formData.localContext}
                                                     onChange={(e) => setFormData({ ...formData, localContext: e.target.checked })}
-                                                    className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+                                                    className="w-4 h-4 text-blue-600 bg-white border-slate-300 rounded focus:ring-blue-500 transition-colors"
                                                 />
-                                                <span className="text-sm text-slate-700">Add Tamil Nadu context</span>
+                                                <span className="text-sm text-slate-600 group-hover:text-slate-900">Add Tamil Nadu context</span>
                                             </label>
                                         </div>
 
                                         {/* Image Settings Divider */}
-                                        <div className="mt-5 pt-4 border-t border-slate-200">
-                                            <h4 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
-                                                <Sparkles className="w-4 h-4 text-purple-500" />
+                                        <div className="mt-5 pt-4 border-t border-slate-100">
+                                            <h4 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+                                                <Sparkles className="w-4 h-4 text-blue-600" />
                                                 Premium Features (₹9 each)
                                             </h4>
 
-                                            {/* Chapters Toggle */}
-                                            <label className="flex items-center gap-3 cursor-pointer mb-3">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={formData.includeChapters}
-                                                    onChange={(e) => setFormData({ ...formData, includeChapters: e.target.checked })}
-                                                    className="w-4 h-4 text-purple-600 border-slate-300 rounded focus:ring-purple-500"
-                                                />
-                                                <div>
-                                                    <span className="text-sm text-slate-700">Generate YouTube Chapters</span>
-                                                    <p className="text-xs text-slate-500">Timestamps for video navigation</p>
-                                                </div>
-                                            </label>
+                                            <div className="space-y-3">
+                                                <label className="flex items-center gap-3 cursor-pointer group p-2 hover:bg-slate-50 rounded-lg transition-colors -ml-2">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={formData.includeChapters}
+                                                        onChange={(e) => setFormData({ ...formData, includeChapters: e.target.checked })}
+                                                        className="w-5 h-5 text-blue-600 bg-white border-slate-300 rounded focus:ring-blue-500"
+                                                    />
+                                                    <div>
+                                                        <span className="text-sm font-medium text-slate-700">Generate YouTube Chapters</span>
+                                                    </div>
+                                                </label>
 
-                                            {/* B-Roll Toggle */}
-                                            <label className="flex items-center gap-3 cursor-pointer mb-3">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={formData.includeBRoll}
-                                                    onChange={(e) => setFormData({ ...formData, includeBRoll: e.target.checked })}
-                                                    className="w-4 h-4 text-purple-600 border-slate-300 rounded focus:ring-purple-500"
-                                                />
-                                                <div>
-                                                    <span className="text-sm text-slate-700">B-Roll Suggestions</span>
-                                                    <p className="text-xs text-slate-500">Visual ideas for each scene</p>
-                                                </div>
-                                            </label>
+                                                <label className="flex items-center gap-3 cursor-pointer group p-2 hover:bg-slate-50 rounded-lg transition-colors -ml-2">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={formData.includeBRoll}
+                                                        onChange={(e) => setFormData({ ...formData, includeBRoll: e.target.checked })}
+                                                        className="w-5 h-5 text-blue-600 bg-white border-slate-300 rounded focus:ring-blue-500"
+                                                    />
+                                                    <div>
+                                                        <span className="text-sm font-medium text-slate-700">B-Roll Suggestions</span>
+                                                    </div>
+                                                </label>
 
-                                            {/* Shorts Toggle */}
-                                            <label className="flex items-center gap-3 cursor-pointer mb-4">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={formData.includeShorts}
-                                                    onChange={(e) => setFormData({ ...formData, includeShorts: e.target.checked })}
-                                                    className="w-4 h-4 text-purple-600 border-slate-300 rounded focus:ring-purple-500"
-                                                />
-                                                <div>
-                                                    <span className="text-sm text-slate-700">Viral Shorts Ideas</span>
-                                                    <p className="text-xs text-slate-500">Extract short content from main script</p>
-                                                </div>
-                                            </label>
+                                                <label className="flex items-center gap-3 cursor-pointer group p-2 hover:bg-slate-50 rounded-lg transition-colors -ml-2">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={formData.includeShorts}
+                                                        onChange={(e) => setFormData({ ...formData, includeShorts: e.target.checked })}
+                                                        className="w-5 h-5 text-blue-600 bg-white border-slate-300 rounded focus:ring-blue-500"
+                                                    />
+                                                    <div>
+                                                        <span className="text-sm font-medium text-slate-700">Viral Shorts Ideas</span>
+                                                    </div>
+                                                </label>
 
-                                            <h4 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2 mt-6 border-t border-slate-100 pt-4">
-                                                <ImageIcon className="w-4 h-4" />
-                                                Image Settings
-                                            </h4>
-
-                                            {/* Generate Images Toggle */}
-                                            <label className="flex items-center gap-3 cursor-pointer mb-4">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={formData.generateImages}
-                                                    onChange={(e) => setFormData({ ...formData, generateImages: e.target.checked })}
-                                                    className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
-                                                />
-                                                <div>
-                                                    <span className="text-sm text-slate-700">Generate AI Image Prompts</span>
-                                                    <p className="text-xs text-slate-500">Creates 10 production-ready prompts for AI image generators</p>
-                                                </div>
-                                            </label>
-
-                                            {/* Image Format Selector - Only show if generateImages is true */}
-                                            {formData.generateImages && (
-                                                <div>
-                                                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                                                        Image Format
+                                                <div className="flex items-start gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors -ml-2">
+                                                    <label className="flex items-center gap-3 cursor-pointer group flex-1">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={formData.generateImages}
+                                                            onChange={(e) => setFormData({ ...formData, generateImages: e.target.checked })}
+                                                            className="w-5 h-5 text-blue-600 bg-white border-slate-300 rounded focus:ring-blue-500"
+                                                        />
+                                                        <div>
+                                                            <span className="text-sm font-medium text-slate-700">Generate AI Image Prompts</span>
+                                                        </div>
                                                     </label>
-                                                    <select
-                                                        value={formData.imageFormat}
-                                                        onChange={(e) => setFormData({ ...formData, imageFormat: e.target.value })}
-                                                        className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-900 bg-white text-sm"
-                                                    >
-                                                        {imageFormats.map((format) => (
-                                                            <option key={format.value} value={format.value}>
-                                                                {format.label}
-                                                            </option>
-                                                        ))}
-                                                    </select>
-                                                    <p className="text-xs text-slate-500 mt-1">
-                                                        {formData.imageFormat === "portrait"
-                                                            ? "Optimized for YouTube Shorts, Instagram Reels, TikTok"
-                                                            : formData.imageFormat === "square"
-                                                                ? "Perfect for thumbnails and social media posts"
-                                                                : "Standard YouTube and desktop video format"}
-                                                    </p>
+
+                                                    {formData.generateImages && (
+                                                        <select
+                                                            value={formData.imageFormat}
+                                                            onChange={(e) => setFormData({ ...formData, imageFormat: e.target.value })}
+                                                            className="w-32 px-2 py-1 bg-white border border-slate-300 rounded-md text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                                                        >
+                                                            {imageFormats.map((format) => (
+                                                                <option key={format.value} value={format.value}>
+                                                                    {format.label}
+                                                                </option>
+                                                            ))}
+                                                        </select>
+                                                    )}
                                                 </div>
-                                            )}
+                                            </div>
                                         </div>
                                     </div>
-
 
                                     {/* Error Message */}
                                     {error && (
@@ -1675,23 +1673,28 @@ Output format: Translated script text ONLY. No other text.`;
                                     )}
 
                                     {/* Generate Button */}
-                                    <button
-                                        onClick={generateScript}
-                                        disabled={loading || !formData.title.trim()}
-                                        className="w-full py-3 px-4 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
-                                    >
-                                        {loading ? (
-                                            <>
-                                                <Loader2 className="w-5 h-5 animate-spin" />
-                                                Generating...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Sparkles className="w-5 h-5" />
-                                                Generate Script
-                                            </>
-                                        )}
-                                    </button>
+                                    <div className="mt-8">
+                                        <button
+                                            onClick={generateScript}
+                                            disabled={loading || !formData.title.trim()}
+                                            className="w-full py-3.5 px-4 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all shadow-md active:transform active:scale-[0.98]"
+                                        >
+                                            {loading ? (
+                                                <>
+                                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                                    Generating Magic...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Sparkles className="w-5 h-5" />
+                                                    Generate Script
+                                                </>
+                                            )}
+                                        </button>
+                                        <p className="text-center text-xs text-slate-400 mt-2">
+                                            Consumes 1 credit or 1 free generation
+                                        </p>
+                                    </div>
 
                                     {/* Progress Indicator */}
                                     {progress && (
@@ -1702,88 +1705,43 @@ Output format: Translated script text ONLY. No other text.`;
                                             </div>
                                         </div>
                                     )}
-                                </>
+                                </div>
                             )}
                         </div>
                     </div>
 
                     {/* Right Panel - Output */}
                     <div className="w-full lg:w-3/5">
-                        <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-                            {/* Tabs */}
-                            <div className="tabs-container border-b border-slate-200">
-                                <button
-                                    onClick={() => setActiveTab("script")}
-                                    className={`flex-shrink-0 py-3 px-3 sm:px-4 text-xs sm:text-sm font-medium transition-colors ${activeTab === "script"
-                                        ? "tab-active"
-                                        : "tab-inactive"
-                                        }`}
-                                >
-                                    <div className="flex items-center justify-center gap-1 sm:gap-2">
-                                        <FileText className="w-4 h-4" />
-                                        <span className="hidden xs:inline sm:inline">Script</span>
-                                    </div>
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab("seo")}
-                                    className={`flex-shrink-0 py-3 px-3 sm:px-4 text-xs sm:text-sm font-medium transition-colors ${activeTab === "seo"
-                                        ? "tab-active"
-                                        : "tab-inactive"
-                                        }`}
-                                >
-                                    <div className="flex items-center justify-center gap-1 sm:gap-2">
-                                        <Search className="w-4 h-4" />
-                                        <span className="hidden xs:inline sm:inline">SEO</span>
-                                    </div>
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab("images")}
-                                    className={`flex-shrink-0 py-3 px-3 sm:px-4 text-xs sm:text-sm font-medium transition-colors ${activeTab === "images"
-                                        ? "tab-active"
-                                        : "tab-inactive"
-                                        }`}
-                                >
-                                    <div className="flex items-center justify-center gap-1 sm:gap-2">
-                                        <ImageIcon className="w-4 h-4" />
-                                        <span className="hidden xs:inline sm:inline">Images</span>
-                                    </div>
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab("chapters")}
-                                    className={`flex-shrink-0 py-3 px-3 sm:px-4 text-xs sm:text-sm font-medium transition-colors ${activeTab === "chapters"
-                                        ? "tab-active"
-                                        : "tab-inactive"
-                                        }`}
-                                >
-                                    <div className="flex items-center justify-center gap-1 sm:gap-2">
-                                        <List className="w-4 h-4" />
-                                        <span className="hidden xs:inline sm:inline">Chapters</span>
-                                    </div>
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab("broll")}
-                                    className={`flex-shrink-0 py-3 px-3 sm:px-4 text-xs sm:text-sm font-medium transition-colors ${activeTab === "broll"
-                                        ? "tab-active"
-                                        : "tab-inactive"
-                                        }`}
-                                >
-                                    <div className="flex items-center justify-center gap-1 sm:gap-2">
-                                        <Film className="w-4 h-4" />
-                                        <span className="hidden xs:inline sm:inline">B-Roll</span>
-                                    </div>
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab("shorts")}
-                                    className={`flex-shrink-0 py-3 px-3 sm:px-4 text-xs sm:text-sm font-medium transition-colors ${activeTab === "shorts"
-                                        ? "tab-active"
-                                        : "tab-inactive"
-                                        }`}
-                                >
-                                    <div className="flex items-center justify-center gap-1 sm:gap-2">
-                                        <Scissors className="w-4 h-4" />
-                                        <span className="hidden xs:inline sm:inline">Shorts</span>
-                                    </div>
-                                </button>
+                        <div className="bg-white rounded-2xl min-h-[600px] flex flex-col shadow-sm border border-slate-200 relative overflow-hidden">
+                            {/* Accent Top Border */}
+                            <div className="absolute top-0 left-0 right-0 h-1 bg-blue-600"></div>
+
+                            {/* Tabs Header */}
+                            <div className="flex items-center justify-between px-2 pt-2 border-b border-slate-200 bg-slate-50">
+                                <div className="flex items-center gap-2 overflow-x-auto w-full no-scrollbar pb-0">
+                                    {[
+                                        { id: "script", label: "Script" },
+                                        { id: "seo", label: "SEO" },
+                                        { id: "images", label: "Images" },
+                                        { id: "chapters", label: "Chapters" },
+                                        { id: "broll", label: "B-Roll" },
+                                        { id: "shorts", label: "Shorts" },
+                                    ].map((tab) => (
+                                        <button
+                                            key={tab.id}
+                                            onClick={() => setActiveTab(tab.id as any)}
+                                            className={`relative flex-shrink-0 px-6 py-3 text-sm font-semibold transition-all rounded-t-lg z-10 ${activeTab === tab.id
+                                                ? "bg-white text-blue-600 border-t border-l border-r border-slate-200 shadow-[0_-2px_6px_rgba(0,0,0,0.02)]"
+                                                : "text-slate-500 hover:text-slate-800 hover:bg-slate-100/50 border-transparent"
+                                                }`}
+                                        >
+                                            {activeTab === tab.id && (
+                                                <div className="absolute top-0 left-0 right-0 h-[3px] bg-blue-600 rounded-t-lg"></div>
+                                            )}
+                                            {tab.label}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
 
                             {/* Content */}
@@ -1798,7 +1756,7 @@ Output format: Translated script text ONLY. No other text.`;
                                                     <button
                                                         onClick={() => setShowTranslateDropdown(!showTranslateDropdown)}
                                                         disabled={isTranslating}
-                                                        className="flex items-center gap-2 px-3 py-2 text-sm border border-blue-200 bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50"
+                                                        className="flex items-center gap-2 px-3 py-2 text-sm border border-blue-500/30 bg-blue-500/10 text-blue-400 rounded-md hover:bg-blue-500/20 transition-colors disabled:opacity-50"
                                                     >
                                                         {isTranslating ? (
                                                             <>
@@ -1815,7 +1773,7 @@ Output format: Translated script text ONLY. No other text.`;
                                                     </button>
 
                                                     {showTranslateDropdown && (
-                                                        <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-100 py-1 z-10">
+                                                        <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-xl border border-slate-200 py-1 z-10">
                                                             {languages.map((lang) => (
                                                                 <button
                                                                     key={lang.value}
@@ -1831,7 +1789,7 @@ Output format: Translated script text ONLY. No other text.`;
 
                                                 <button
                                                     onClick={copyToClipboard}
-                                                    className="flex items-center gap-2 px-3 py-2 text-sm border border-slate-300 rounded-md hover:bg-slate-50 transition-colors text-slate-700"
+                                                    className="flex items-center gap-2 px-3 py-2 text-sm border border-blue-200 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors"
                                                 >
                                                     {copied ? (
                                                         <>
@@ -1851,7 +1809,7 @@ Output format: Translated script text ONLY. No other text.`;
                                                 <div className="relative">
                                                     <button
                                                         onClick={() => setShowExportDropdown(!showExportDropdown)}
-                                                        className="flex items-center gap-2 px-3 py-2 text-sm border border-slate-300 rounded-md hover:bg-slate-50 transition-colors text-slate-700"
+                                                        className="flex items-center gap-2 px-3 py-2 text-sm border border-blue-200 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors"
                                                     >
                                                         <Download className="w-4 h-4" />
                                                         Export
@@ -1859,7 +1817,7 @@ Output format: Translated script text ONLY. No other text.`;
                                                     </button>
 
                                                     {showExportDropdown && (
-                                                        <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-100 py-1 z-10">
+                                                        <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-xl border border-slate-200 py-1 z-10">
                                                             <button
                                                                 onClick={downloadAsPDF}
                                                                 className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors flex items-center gap-2"
@@ -1871,7 +1829,7 @@ Output format: Translated script text ONLY. No other text.`;
                                                                 onClick={downloadAsDOC}
                                                                 className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors flex items-center gap-2"
                                                             >
-                                                                <FileText className="w-4 h-4 text-blue-500" />
+                                                                <FileText className="w-4 h-4 text-blue-600" />
                                                                 Export as Word
                                                             </button>
                                                             <button
@@ -1886,9 +1844,9 @@ Output format: Translated script text ONLY. No other text.`;
                                                 </div>
                                             </div>
 
-                                            {/* Script Display */}
-                                            <div className="bg-slate-900 rounded-lg p-4 overflow-auto max-h-[70vh]">
-                                                <pre className="text-slate-100 text-sm whitespace-pre-wrap font-mono leading-relaxed">
+                                            {/* Script Display - Paper Look */}
+                                            <div className="bg-slate-50 rounded-lg p-6 overflow-auto max-h-[70vh] border border-slate-200 shadow-inner">
+                                                <pre className="text-slate-800 text-sm whitespace-pre-wrap font-sans leading-relaxed">
                                                     {script}
                                                 </pre>
                                             </div>
@@ -1971,77 +1929,76 @@ Output format: Translated script text ONLY. No other text.`;
                                             {/* Header */}
                                             <div className="flex items-center justify-between mb-4">
                                                 <div>
-                                                    <h3 className="text-lg font-semibold text-slate-900">AI Image Prompts</h3>
-                                                    <p className="text-sm text-slate-500">{imagesData.length} prompts generated for your video</p>
+                                                    <h3 className="text-lg font-semibold text-white">AI Image Prompts</h3>
+                                                    <p className="text-sm text-zinc-400">{imagesData.length} prompts generated for your video</p>
                                                 </div>
                                             </div>
 
                                             {/* Image Prompt Cards */}
                                             <div className="space-y-4 max-h-[70vh] overflow-auto">
-                                                {imagesData.map((prompt) => (
-                                                    <div
-                                                        key={prompt.id}
-                                                        className="bg-gradient-to-r from-slate-50 to-blue-50 rounded-lg p-4 border border-slate-200 hover:border-blue-300 transition-colors"
-                                                    >
-                                                        {/* Header Row */}
-                                                        <div className="flex items-start justify-between mb-3">
-                                                            <div className="flex items-center gap-3">
-                                                                <span className="px-2 py-1 bg-blue-600 text-white text-xs font-medium rounded">
-                                                                    {prompt.timestamp}
-                                                                </span>
-                                                                <span className={`px-2 py-1 text-xs font-medium rounded ${prompt.scene === "Hook" ? "bg-red-100 text-red-700" :
-                                                                    prompt.scene === "Intro" ? "bg-orange-100 text-orange-700" :
-                                                                        prompt.scene === "Main Content" ? "bg-green-100 text-green-700" :
-                                                                            prompt.scene === "Demo" ? "bg-purple-100 text-purple-700" :
-                                                                                "bg-cyan-100 text-cyan-700"
-                                                                    }`}>
-                                                                    {prompt.scene}
-                                                                </span>
-                                                            </div>
-                                                            <button
-                                                                onClick={() => copyImagePrompt(prompt)}
-                                                                className="flex items-center gap-1 px-2 py-1 text-xs border border-slate-300 rounded hover:bg-white transition-colors text-slate-600"
-                                                            >
-                                                                {copiedImageId === prompt.id ? (
-                                                                    <>
-                                                                        <Check className="w-3 h-3 text-green-600" />
-                                                                        Copied!
-                                                                    </>
-                                                                ) : (
-                                                                    <>
-                                                                        <Copy className="w-3 h-3" />
-                                                                        Copy
-                                                                    </>
-                                                                )}
-                                                            </button>
+                                                {imagesData.map((prompt) => <div
+                                                    key={prompt.id}
+                                                    className="bg-white rounded-xl p-5 border border-slate-200 hover:border-blue-400 hover:shadow-md transition-all group"
+                                                >
+                                                    {/* Header Row */}
+                                                    <div className="flex items-start justify-between mb-3">
+                                                        <div className="flex items-center gap-3">
+                                                            <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded">
+                                                                {prompt.timestamp}
+                                                            </span>
+                                                            <span className={`px-2 py-1 text-xs font-medium rounded border ${prompt.scene === "Hook" ? "bg-amber-50 text-amber-700 border-amber-200" :
+                                                                prompt.scene === "Intro" ? "bg-blue-50 text-blue-700 border border-blue-200" :
+                                                                    prompt.scene === "Main Content" ? "bg-amber-50 text-amber-700 border border-amber-200" :
+                                                                        prompt.scene === "Demo" ? "bg-blue-50 text-blue-700 border border-blue-200" :
+                                                                            "bg-slate-50 text-slate-600 border border-slate-200"
+                                                                }`}>
+                                                                {prompt.scene}
+                                                            </span>
                                                         </div>
+                                                        <button
+                                                            onClick={() => copyImagePrompt(prompt)}
+                                                            className="flex items-center gap-1 px-2 py-1 text-xs border border-slate-200 rounded hover:bg-slate-100 transition-colors text-slate-500 hover:text-blue-600"
+                                                        >
+                                                            {copiedImageId === prompt.id ? (
+                                                                <>
+                                                                    <Check className="w-3 h-3 text-green-600" />
+                                                                    Copied!
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <Copy className="w-3 h-3" />
+                                                                    Copy
+                                                                </>
+                                                            )}
+                                                        </button>
+                                                    </div>
 
-                                                        {/* Description */}
-                                                        <p className="text-sm text-slate-800 mb-3 leading-relaxed">
-                                                            {prompt.description}
-                                                        </p>
+                                                    {/* Description */}
+                                                    <p className="text-sm text-slate-700 mb-4 leading-relaxed font-medium">
+                                                        {prompt.description}
+                                                    </p>
 
-                                                        {/* Metadata Grid */}
-                                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                                                            <div className="bg-white rounded p-2">
-                                                                <span className="text-xs text-slate-500 block">Style</span>
-                                                                <span className="text-xs font-medium text-slate-700">{prompt.style}</span>
-                                                            </div>
-                                                            <div className="bg-white rounded p-2">
-                                                                <span className="text-xs text-slate-500 block">Mood</span>
-                                                                <span className="text-xs font-medium text-slate-700">{prompt.mood}</span>
-                                                            </div>
-                                                            <div className="bg-white rounded p-2">
-                                                                <span className="text-xs text-slate-500 block">Colors</span>
-                                                                <span className="text-xs font-medium text-slate-700">{prompt.colorPalette}</span>
-                                                            </div>
-                                                            <div className="bg-white rounded p-2">
-                                                                <span className="text-xs text-slate-500 block">Ratio</span>
-                                                                <span className="text-xs font-medium text-slate-700">{prompt.aspectRatio}</span>
-                                                            </div>
+                                                    {/* Metadata Grid */}
+                                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                                        <div className="bg-slate-50 rounded p-2 border border-slate-100">
+                                                            <span className="text-xs text-slate-400 block mb-0.5">Style</span>
+                                                            <span className="text-xs font-semibold text-slate-700">{prompt.style}</span>
+                                                        </div>
+                                                        <div className="bg-slate-50 rounded p-2 border border-slate-100">
+                                                            <span className="text-xs text-slate-400 block mb-0.5">Mood</span>
+                                                            <span className="text-xs font-semibold text-slate-700">{prompt.mood}</span>
+                                                        </div>
+                                                        <div className="bg-slate-50 rounded p-2 border border-slate-100">
+                                                            <span className="text-xs text-slate-400 block mb-0.5">Colors</span>
+                                                            <span className="text-xs font-semibold text-slate-700">{prompt.colorPalette}</span>
+                                                        </div>
+                                                        <div className="bg-slate-50 rounded p-2 border border-slate-100">
+                                                            <span className="text-xs text-slate-400 block mb-0.5">Ratio</span>
+                                                            <span className="text-xs font-semibold text-slate-700">{prompt.aspectRatio}</span>
                                                         </div>
                                                     </div>
-                                                ))}
+                                                </div>
+                                                )}
                                             </div>
                                         </div>
                                     ) : (
@@ -2064,7 +2021,7 @@ Output format: Translated script text ONLY. No other text.`;
                                                         chaptersData.map(c => `${c.timestamp} ${c.title}`).join('\n'),
                                                         'all-chapters'
                                                     )}
-                                                    className="flex items-center gap-2 px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                                                    className="flex items-center gap-2 px-3 py-2 text-sm bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors shadow-sm"
                                                 >
                                                     {copiedItem === 'all-chapters' ? (
                                                         <><Check className="w-4 h-4" /> Copied!</>
@@ -2074,16 +2031,16 @@ Output format: Translated script text ONLY. No other text.`;
                                                 </button>
                                             </div>
 
-                                            <div className="bg-slate-900 rounded-lg p-4 overflow-auto">
-                                                <pre className="text-slate-100 text-sm font-mono leading-relaxed">
+                                            <div className="bg-slate-50 rounded-lg p-4 overflow-auto border border-slate-200">
+                                                <pre className="text-slate-700 text-sm font-mono leading-relaxed">
                                                     {chaptersData.map(c => `${c.timestamp} ${c.title}`).join('\n')}
                                                 </pre>
                                             </div>
 
                                             <div className="space-y-2 mt-4">
                                                 {chaptersData.map((chapter, index) => (
-                                                    <div key={index} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
-                                                        <span className="px-2 py-1 bg-blue-600 text-white text-xs font-mono rounded">
+                                                    <div key={index} className="flex items-center gap-3 p-3 bg-white rounded-lg border border-slate-200 hover:border-blue-300 transition-colors">
+                                                        <span className="px-2 py-1 bg-blue-50 text-blue-600 text-xs font-mono rounded border border-blue-100">
                                                             {chapter.timestamp}
                                                         </span>
                                                         <div className="flex-1">
@@ -2106,32 +2063,32 @@ Output format: Translated script text ONLY. No other text.`;
                                         <div className="space-y-4">
                                             <div className="flex items-center justify-between mb-4">
                                                 <div>
-                                                    <h3 className="text-lg font-semibold text-slate-900">B-Roll Suggestions</h3>
-                                                    <p className="text-sm text-slate-500">{brollData.length} clips suggested for your video</p>
+                                                    <h3 className="text-lg font-semibold text-white">B-Roll Suggestions</h3>
+                                                    <p className="text-sm text-zinc-400">{brollData.length} clips suggested for your video</p>
                                                 </div>
                                             </div>
 
                                             <div className="space-y-3 max-h-[70vh] overflow-auto">
                                                 {brollData.map((broll) => (
-                                                    <div key={broll.id} className="bg-gradient-to-r from-slate-50 to-purple-50 rounded-lg p-4 border border-slate-200">
+                                                    <div key={broll.id} className="bg-zinc-800/30 rounded-lg p-4 border border-zinc-700/50 hover:border-blue-500/30 transition-colors">
                                                         <div className="flex items-start justify-between mb-2">
                                                             <div className="flex items-center gap-2">
-                                                                <span className="px-2 py-1 bg-purple-600 text-white text-xs font-medium rounded">
+                                                                <span className="px-2 py-1 bg-blue-500/10 text-blue-400 text-xs font-medium rounded border border-blue-500/20">
                                                                     {broll.timestamp}
                                                                 </span>
-                                                                <span className={`px-2 py-1 text-xs font-medium rounded ${broll.source === "stock" ? "bg-green-100 text-green-700" :
-                                                                    broll.source === "screen" ? "bg-blue-100 text-blue-700" :
-                                                                        broll.source === "animation" ? "bg-yellow-100 text-yellow-700" :
-                                                                            "bg-pink-100 text-pink-700"
+                                                                <span className={`px-2 py-1 text-xs font-medium rounded border ${broll.source === "stock" ? "bg-blue-500/10 text-blue-400 border-blue-500/20" :
+                                                                    broll.source === "screen" ? "bg-zinc-500/10 text-zinc-400 border-zinc-500/20" :
+                                                                        broll.source === "animation" ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/20" :
+                                                                            "bg-blue-500/10 text-blue-400 border-blue-500/20"
                                                                     }`}>
                                                                     {broll.source}
                                                                 </span>
                                                             </div>
                                                         </div>
-                                                        <p className="text-sm text-slate-800 mb-2">{broll.suggestion}</p>
+                                                        <p className="text-sm text-zinc-300 mb-2">{broll.suggestion}</p>
                                                         <div className="flex flex-wrap gap-1">
                                                             {broll.searchTerms.map((term, i) => (
-                                                                <span key={i} className="px-2 py-0.5 bg-white text-slate-600 text-xs rounded border border-slate-200">
+                                                                <span key={i} className="px-2 py-0.5 bg-black/40 text-zinc-400 text-xs rounded border border-zinc-700/50">
                                                                     {term}
                                                                 </span>
                                                             ))}
@@ -2159,16 +2116,16 @@ Output format: Translated script text ONLY. No other text.`;
 
                                             <div className="space-y-4 max-h-[70vh] overflow-auto">
                                                 {shortsData.map((short) => (
-                                                    <div key={short.id} className="bg-gradient-to-r from-red-50 to-orange-50 rounded-lg p-4 border border-slate-200">
+                                                    <div key={short.id} className="bg-white rounded-xl p-5 border border-slate-200 hover:border-blue-400 hover:shadow-md transition-all">
                                                         <div className="flex items-start justify-between mb-3">
                                                             <div>
-                                                                <h4 className="font-semibold text-slate-900">{short.title}</h4>
+                                                                <h4 className="font-bold text-slate-800">{short.title}</h4>
                                                                 <span className="text-xs text-slate-500">From: {short.originalTimestamp}</span>
                                                             </div>
                                                             <div className="flex items-center gap-2">
-                                                                <span className={`px-2 py-1 text-xs font-bold rounded ${short.viralScore >= 80 ? "bg-green-500 text-white" :
-                                                                    short.viralScore >= 60 ? "bg-yellow-500 text-white" :
-                                                                        "bg-orange-500 text-white"
+                                                                <span className={`px-2 py-1 text-xs font-bold rounded ${short.viralScore >= 80 ? "bg-green-100 text-green-700" :
+                                                                    short.viralScore >= 60 ? "bg-amber-100 text-amber-700" :
+                                                                        "bg-orange-100 text-orange-700"
                                                                     }`}>
                                                                     {short.viralScore}% Viral
                                                                 </span>
@@ -2177,7 +2134,7 @@ Output format: Translated script text ONLY. No other text.`;
                                                                         `${short.hook}\n\n${short.content}\n\n${short.cta}`,
                                                                         `short-${short.id}`
                                                                     )}
-                                                                    className="flex items-center gap-1 px-2 py-1 text-xs border border-slate-300 rounded hover:bg-white transition-colors"
+                                                                    className="flex items-center gap-1 px-2 py-1 text-xs border border-slate-200 rounded hover:bg-slate-50 transition-colors text-slate-500"
                                                                 >
                                                                     {copiedItem === `short-${short.id}` ? (
                                                                         <><Check className="w-3 h-3 text-green-600" /> Copied!</>
@@ -2189,17 +2146,17 @@ Output format: Translated script text ONLY. No other text.`;
                                                         </div>
 
                                                         <div className="space-y-2">
-                                                            <div className="p-2 bg-white rounded border-l-4 border-red-500">
-                                                                <span className="text-xs font-semibold text-red-600">HOOK</span>
-                                                                <p className="text-sm text-slate-700">{short.hook}</p>
+                                                            <div className="p-3 bg-red-50 rounded border-l-4 border-red-500">
+                                                                <span className="text-xs font-bold text-red-600 tracking-wide">HOOK</span>
+                                                                <p className="text-sm text-slate-700 font-medium">{short.hook}</p>
                                                             </div>
-                                                            <div className="p-2 bg-white rounded border-l-4 border-blue-500">
-                                                                <span className="text-xs font-semibold text-blue-600">CONTENT</span>
+                                                            <div className="p-3 bg-blue-50 rounded border-l-4 border-blue-500">
+                                                                <span className="text-xs font-bold text-blue-600 tracking-wide">CONTENT</span>
                                                                 <p className="text-sm text-slate-700">{short.content}</p>
                                                             </div>
-                                                            <div className="p-2 bg-white rounded border-l-4 border-green-500">
-                                                                <span className="text-xs font-semibold text-green-600">CTA</span>
-                                                                <p className="text-sm text-slate-700">{short.cta}</p>
+                                                            <div className="p-3 bg-green-50 rounded border-l-4 border-green-500">
+                                                                <span className="text-xs font-bold text-green-600 tracking-wide">CTA</span>
+                                                                <p className="text-sm text-slate-700 font-medium">{short.cta}</p>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -2217,17 +2174,17 @@ Output format: Translated script text ONLY. No other text.`;
                             </div>
                         </div>
                     </div>
-                </div>
+                </div >
             </main >
 
             {/* Footer */}
-            < footer className="mt-12 py-6 border-t border-slate-200 bg-white" >
+            <footer className="mt-12 py-8 border-t border-slate-200 bg-white">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <p className="text-center text-sm text-slate-500">
-                        Thunglish Script Generator • Built for Tamil Tech YouTube Creators
+                        SCRIPTGEN • Built for Creators Worldwide
                     </p>
                 </div>
-            </footer >
+            </footer>
         </div >
     );
 }

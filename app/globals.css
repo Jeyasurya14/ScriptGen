@@ -1,212 +1,107 @@
 @import "tailwindcss";
 
 :root {
+  /* Clean Light Theme Variables */
   --background: #f8fafc;
+  /* Slate 50 */
   --foreground: #0f172a;
+  /* Slate 900 */
+
+  --primary: #3b82f6;
+  /* Blue 500 */
+  --primary-foreground: #ffffff;
+
+  --sidebar-bg: #ffffff;
+  --sidebar-fg: #0f172a;
+
+  --paper-bg: #ffffff;
+  --paper-fg: #0f172a;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
 }
 
 body {
-  background: var(--background);
   color: var(--foreground);
+  background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
+  overflow-x: hidden;
+  min-height: 100vh;
 }
 
-/* Custom slider styling */
-input[type="range"] {
-  -webkit-appearance: none;
-  appearance: none;
-  height: 8px;
-  background: #e2e8f0;
-  border-radius: 4px;
-  outline: none;
+/* Theme Utilities */
+.theme-sidebar {
+  background-color: var(--sidebar-bg);
+  color: var(--sidebar-fg);
 }
 
-input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 18px;
-  height: 18px;
-  background: #2563eb;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: background 0.2s;
+.theme-paper {
+  background-color: var(--paper-bg);
+  color: var(--paper-fg);
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
 }
 
-input[type="range"]::-webkit-slider-thumb:hover {
-  background: #1d4ed8;
-}
-
-input[type="range"]::-moz-range-thumb {
-  width: 18px;
-  height: 18px;
-  background: #2563eb;
-  border-radius: 50%;
-  cursor: pointer;
-  border: none;
-  transition: background 0.2s;
-}
-
-input[type="range"]::-moz-range-thumb:hover {
-  background: #1d4ed8;
-}
-
-/* Scrollbar styling */
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 4px;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
 
-/* Code block styling */
-.code-block {
-  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-  white-space: pre-wrap;
-  word-break: break-word;
+/* Range Slider */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: #cbd5e1;
+  border-radius: 2px;
+  outline: none;
 }
 
-/* Tab styling */
-.tab-active {
-  border-bottom: 2px solid #2563eb;
-  color: #2563eb;
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: var(--primary);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.2s;
 }
 
-.tab-inactive {
-  border-bottom: 2px solid transparent;
-  color: #64748b;
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
 }
 
-.tab-inactive:hover {
-  color: #334155;
-}
-
-/* Responsive Tab Container - Horizontal scrolling on mobile */
-.tabs-container {
-  display: flex;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.tabs-container::-webkit-scrollbar {
-  display: none;
-}
-
-/* Touch-friendly button sizing */
-@media (max-width: 640px) {
-
-  button,
-  input,
-  select,
-  textarea {
-    min-height: 44px;
-    font-size: 16px;
-    /* Prevents iOS zoom on focus */
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
 
-  /* Larger touch targets for checkboxes */
-  input[type="checkbox"] {
-    width: 20px;
-    height: 20px;
-  }
-
-  /* Full-width form elements on mobile */
-  .form-input {
-    width: 100%;
-  }
-
-  /* Reduce padding on mobile */
-  .mobile-padding {
-    padding: 1rem;
-  }
-
-  /* Stack grid items on mobile */
-  .responsive-grid {
-    grid-template-columns: 1fr !important;
-  }
-}
-
-/* Tablet styles */
-@media (min-width: 641px) and (max-width: 1024px) {
-  .tablet-2-col {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-/* Card responsive styling */
-.card-responsive {
-  padding: 1rem;
-}
-
-@media (min-width: 640px) {
-  .card-responsive {
-    padding: 1.5rem;
-  }
-}
-
-/* Responsive text sizing */
-.text-responsive-heading {
-  font-size: 1.125rem;
-}
-
-@media (min-width: 640px) {
-  .text-responsive-heading {
-    font-size: 1.25rem;
-  }
-}
-
-@media (min-width: 1024px) {
-  .text-responsive-heading {
-    font-size: 1.5rem;
-  }
-}
-
-/* Safe area for mobile notches */
-@supports (padding: max(0px)) {
-  .safe-area-bottom {
-    padding-bottom: max(1rem, env(safe-area-inset-bottom));
-  }
-}
-
-/* Improve mobile scrolling in output areas */
-.scroll-container {
-  overflow: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Animation for loading state */
-@keyframes pulse-subtle {
-
-  0%,
-  100% {
+  to {
     opacity: 1;
-  }
-
-  50% {
-    opacity: 0.7;
+    transform: translateY(0);
   }
 }
 
-.loading-pulse {
-  animation: pulse-subtle 1.5s ease-in-out infinite;
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
 }
