@@ -502,3 +502,36 @@ Focus on: surprising facts, quick tips, relatable moments, controversy/opinions`
 
     return { systemPrompt: "You are a viral content extractor.", userPrompt, model: "gpt-4-turbo", max_tokens: 2000 };
 };
+
+export const constructTranslatePrompt = (targetLanguage: string, fullScript: string) => {
+    const systemPrompt = `You are a professional translator for YouTube scripts. Translate content while preserving timestamps and tone.`;
+
+    const rules = [
+        "Maintain ALL timestamps exactly as they are [00:00].",
+        "Keep the original tone (Casual/Professional).",
+        "Keep technical terms in English (e.g., React, API, Database).",
+        "Do not translate proper nouns or channel names.",
+        `Ensure the flow is natural for a native speaker of ${targetLanguage}.`,
+    ];
+
+    if (targetLanguage === "Thunglish") {
+        rules.push("Mix Tamil and English naturally (60% Tamil, 40% English).");
+    }
+
+    if (targetLanguage === "Hindi") {
+        rules.push("Use Hinglish (Hindi + English tech terms) for a natural tech review feel.");
+    }
+
+    const userPrompt = `Translate the following script to ${targetLanguage}.
+
+RULES:
+${rules.map((rule, index) => `${index + 1}. ${rule}`).join("\n")}
+
+Input format: Full script text
+Output format: Translated script text ONLY. No other text.
+
+SCRIPT:
+${fullScript}`;
+
+    return { systemPrompt, userPrompt, model: "gpt-4o-mini", max_tokens: 4000 };
+};

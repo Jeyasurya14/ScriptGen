@@ -38,7 +38,7 @@ export default function RefundPolicy() {
                             <section className="mb-8">
                                 <h2 className="text-xl font-semibold mb-4">1. Digital Services</h2>
                                 <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
-                                    Our service provides instant access to AI-generated content. Once a generation is initiated or credits are purchased, the computing resources are consumed immediately. Therefore, we cannot retrieve or "un-use" the service, making refunds impossible.
+                                    Our service provides instant access to AI-generated content. Once a generation is initiated or credits are purchased, the computing resources are consumed immediately. Therefore, we cannot retrieve or &quot;un-use&quot; the service, making refunds impossible.
                                 </p>
                             </section>
 
@@ -52,7 +52,7 @@ export default function RefundPolicy() {
                             <section className="mb-8">
                                 <h2 className="text-xl font-semibold mb-4">3. Accidental Purchases</h2>
                                 <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
-                                    We are not responsible for accidental purchases or "change of mind." Please double-check your order before confirming your payment.
+                                    We are not responsible for accidental purchases or &quot;change of mind.&quot; Please double-check your order before confirming your payment.
                                 </p>
                             </section>
 

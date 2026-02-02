@@ -11,6 +11,10 @@
   /* Blue 500 */
   --primary-foreground: #ffffff;
 
+  --secondary: #f5b400;
+  /* Gold */
+  --secondary-foreground: #111827;
+
   --sidebar-bg: #ffffff;
   --sidebar-fg: #0f172a;
 
@@ -23,6 +27,8 @@
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
 }
 
 body {
@@ -43,6 +49,31 @@ body {
   background-color: var(--paper-bg);
   color: var(--paper-fg);
   box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+/* Brand Utilities */
+.brand-gradient {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 55%, #f5b400 100%);
+}
+
+.brand-border {
+  border: 1px solid rgba(37, 99, 235, 0.15);
+}
+
+.brand-glow {
+  box-shadow: 0 12px 30px -18px rgba(29, 78, 216, 0.55);
+}
+
+.brand-card {
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 20px 40px -32px rgba(15, 23, 42, 0.4);
+}
+
+.brand-pill {
+  background: rgba(245, 180, 0, 0.12);
+  color: #8a5b00;
+  border: 1px solid rgba(245, 180, 0, 0.35);
 }
 
 /* Custom Scrollbar */

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const dotenv = require('dotenv');
 const { execSync } = require('child_process');
 const path = require('path');
@@ -21,6 +22,6 @@ try {
     });
     console.log('Prisma generate successful!');
 } catch (error) {
-    console.error('Prisma generate failed.');
+    console.error('Prisma generate failed:', error);
     process.exit(1);
 }

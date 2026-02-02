@@ -20,7 +20,7 @@ export const authOptions: NextAuthOptions = {
                     });
 
                     if (!existingUser) {
-                        const newUser = await prisma.user.create({
+                        await prisma.user.create({
                             data: {
                                 email: user.email,
                                 name: user.name,
@@ -52,9 +52,14 @@ export const authOptions: NextAuthOptions = {
             });
 
             if (userData) {
-                (session.user as any).id = userData.id;
+                type SessionUserWithCredits = NonNullable<typeof session.user> & {
+                    id?: string;
+                    credits?: typeof userData.credits;
+                };
+                const sessionUser = session.user as SessionUserWithCredits;
+                sessionUser.id = userData.id;
                 if (userData.credits) {
-                    (session.user as any).credits = userData.credits;
+                    sessionUser.credits = userData.credits;
                 }
             }
             return session;

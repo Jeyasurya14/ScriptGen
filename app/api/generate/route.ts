@@ -12,16 +12,18 @@ import {
     constructChaptersPrompt,
     constructBRollPrompt,
     constructShortsPrompt,
+    constructTranslatePrompt,
 } from "@/lib/generation";
 
 // Validation Schema
 const GenerateSchema = z.object({
-    type: z.enum(["section", "production_notes", "seo", "image_prompts", "chapters", "broll", "shorts"]),
+    type: z.enum(["section", "production_notes", "seo", "image_prompts", "chapters", "broll", "shorts", "translate"]),
     formData: z.any(), // validate deeper if needed, but 'any' allows flexibility for now
     timestamps: z.any().optional(),
     previousContent: z.string().optional(),
     fullScript: z.string().optional(),
     stage: z.string().optional(),
+    targetLanguage: z.string().optional(),
 });
 
 export async function POST(req: Request) {
@@ -40,7 +42,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Invalid input", details: parseResult.error }, { status: 400 });
         }
 
-        const { type, formData, timestamps, previousContent, fullScript, stage } = parseResult.data;
+        const { type, formData, timestamps, previousContent, fullScript, stage, targetLanguage } = parseResult.data;
 
 
         // Use server-side API key
@@ -80,6 +82,12 @@ export async function POST(req: Request) {
                 if (!fullScript) return NextResponse.json({ error: "Missing fullScript" }, { status: 400 });
                 promptConfig = constructShortsPrompt(formData, fullScript);
                 break;
+            case "translate":
+                if (!fullScript || !targetLanguage) {
+                    return NextResponse.json({ error: "Missing script or target language" }, { status: 400 });
+                }
+                promptConfig = constructTranslatePrompt(targetLanguage, fullScript);
+                break;
             default:
                 return NextResponse.json({ error: "Invalid generation type" }, { status: 400 });
         }
@@ -112,10 +120,11 @@ export async function POST(req: Request) {
 
         return NextResponse.json({ content });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Generate API Error:", error);
+        const message = error instanceof Error ? error.message : "Internal Server Error";
         return NextResponse.json(
-            { error: error.message || "Internal Server Error" },
+            { error: message },
             { status: 500 }
         );
     }

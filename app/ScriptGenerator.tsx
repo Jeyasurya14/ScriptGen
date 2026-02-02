@@ -1,20 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
+import Image from "next/image";
 // import { jsPDF } from "jspdf"; // Dynamic import used instead
 import {
     FileText,
-    Triangle,
     Copy,
     Download,
     Check,
     Loader2,
     ChevronDown,
-    ChevronUp,
     Search,
-    Video,
-    Settings,
     Sparkles,
     ImageIcon,
     List,
@@ -28,9 +25,7 @@ import {
     History,
     Trash2,
     Clock,
-    Shield,
     Settings2,
-    ArrowRight
 } from "lucide-react";
 
 // Types
@@ -108,15 +103,37 @@ interface ShortClip {
     viralScore: number;
 }
 
-// Content type options
-const contentTypes = [
-    { value: "tutorial", label: "Tutorial / How-to" },
-    { value: "story", label: "Story / Experience" },
-    { value: "review", label: "Review / Analysis" },
-    { value: "comparison", label: "Comparison" },
-    { value: "problem", label: "Problem Solving" },
-    { value: "career", label: "Career Advice" },
-];
+type ActiveTab = "script" | "seo" | "images" | "chapters" | "broll" | "shorts";
+
+interface RazorpayPaymentResponse {
+    razorpay_payment_id: string;
+    razorpay_order_id: string;
+    razorpay_signature: string;
+}
+
+interface RazorpayOrderResponse {
+    keyId: string;
+    amount: number;
+    currency: string;
+    orderId: string;
+}
+
+interface RazorpayOptions {
+    key: string;
+    amount: number;
+    currency: string;
+    name: string;
+    description: string;
+    order_id: string;
+    handler: (response: RazorpayPaymentResponse) => void;
+    prefill?: {
+        email?: string | null;
+        name?: string | null;
+    };
+    theme?: { color: string };
+}
+
+type RazorpayConstructor = new (options: RazorpayOptions) => { open: () => void };
 
 // Tone options
 const tones = [
@@ -125,13 +142,6 @@ const tones = [
     { value: "humorous", label: "Humorous" },
     { value: "motivational", label: "Motivational" },
     { value: "storytelling", label: "Storytelling" },
-];
-
-// Difficulty levels
-const difficulties = [
-    { value: "beginner", label: "Beginner" },
-    { value: "intermediate", label: "Intermediate" },
-    { value: "advanced", label: "Advanced" },
 ];
 
 // Language options
@@ -149,14 +159,16 @@ const imageFormats = [
     { value: "square", label: "Square (1:1) - Instagram/Thumbnails" },
 ];
 
+const STORAGE_KEY = "scriptgen:lastState";
+
 export default function ScriptGenerator() {
     // Form state
     const [formData, setFormData] = useState<FormData>({
         title: "",
         channelName: "",
         duration: 10,
-        contentType: "tutorial",
-        difficulty: "beginner",
+        contentType: "Tutorial",
+        difficulty: "Beginner",
         tone: "casual",
         language: "Thunglish",
         includeCode: false,
@@ -182,12 +194,13 @@ export default function ScriptGenerator() {
     const [copied, setCopied] = useState<boolean>(false);
     const [copiedImageId, setCopiedImageId] = useState<number | null>(null);
     const [copiedItem, setCopiedItem] = useState<string | null>(null);
-    const [activeTab, setActiveTab] = useState<"script" | "seo" | "images" | "chapters" | "broll" | "shorts">("script");
-    const [showAdvanced, setShowAdvanced] = useState<boolean>(false);
+    const [activeTab, setActiveTab] = useState<ActiveTab>("script");
     const [error, setError] = useState<string>("");
+    const [hasSavedState, setHasSavedState] = useState<boolean>(false);
+    const generationAbortRef = useRef<AbortController | null>(null);
 
     // Auth and credits state
-    const { data: session, status } = useSession();
+    const { data: session } = useSession();
     const [credits, setCredits] = useState<{
         freeScriptsUsed: number;
         freeScriptsRemaining: number;
@@ -213,6 +226,105 @@ export default function ScriptGenerator() {
         created_at: string;
     }[]>([]);
     const [loadingHistory, setLoadingHistory] = useState<boolean>(false);
+
+    const normalizeContentType = (value?: string) => {
+        if (!value) return value;
+        const key = value.toLowerCase();
+        const map: Record<string, string> = {
+            tutorial: "Tutorial",
+            review: "Review",
+            vlog: "Vlog",
+            educational: "Educational",
+            entertainment: "Entertainment",
+        };
+        return map[key] || value;
+    };
+
+    const normalizeDifficulty = (value?: string) => {
+        if (!value) return value;
+        const key = value.toLowerCase();
+        const map: Record<string, string> = {
+            beginner: "Beginner",
+            intermediate: "Intermediate",
+            advanced: "Advanced",
+        };
+        return map[key] || value;
+    };
+
+    const isActiveTab = (value: string): value is ActiveTab =>
+        ["script", "seo", "images", "chapters", "broll", "shorts"].includes(value);
+
+    const getErrorMessage = (err: unknown, fallback: string) =>
+        err instanceof Error ? err.message : fallback;
+
+    const isAbortError = (err: unknown) =>
+        typeof err === "object" &&
+        err !== null &&
+        "name" in err &&
+        (err as { name?: string }).name === "AbortError";
+
+    useEffect(() => {
+        try {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                if (parsed?.formData) {
+                    const normalizedFormData = {
+                        ...parsed.formData,
+                        contentType: normalizeContentType(parsed.formData.contentType),
+                        difficulty: normalizeDifficulty(parsed.formData.difficulty),
+                    };
+                    setFormData((prev) => ({ ...prev, ...normalizedFormData }));
+                }
+                if (typeof parsed?.script === "string") setScript(parsed.script);
+                if (parsed?.seoData) setSeoData(parsed.seoData);
+                if (parsed?.imagesData) setImagesData(parsed.imagesData);
+                if (parsed?.chaptersData) setChaptersData(parsed.chaptersData);
+                if (parsed?.brollData) setBrollData(parsed.brollData);
+                if (parsed?.shortsData) setShortsData(parsed.shortsData);
+                if (parsed?.activeTab && isActiveTab(parsed.activeTab)) {
+                    setActiveTab(parsed.activeTab);
+                }
+                setHasSavedState(true);
+            }
+        } catch (err) {
+            console.error("Failed to load saved state:", err);
+        }
+    }, []);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            try {
+                localStorage.setItem(
+                    STORAGE_KEY,
+                    JSON.stringify({
+                        formData,
+                        script,
+                        seoData,
+                        imagesData,
+                        chaptersData,
+                        brollData,
+                        shortsData,
+                        activeTab
+                    })
+                );
+                setHasSavedState(true);
+            } catch (err) {
+                console.error("Failed to save state:", err);
+            }
+        }, 600);
+
+        return () => clearTimeout(timer);
+    }, [formData, script, seoData, imagesData, chaptersData, brollData, shortsData, activeTab]);
+
+    const clearSavedState = () => {
+        try {
+            localStorage.removeItem(STORAGE_KEY);
+            setHasSavedState(false);
+        } catch (err) {
+            console.error("Failed to clear saved state:", err);
+        }
+    };
 
     // Fetch credits when session changes
     useEffect(() => {
@@ -262,7 +374,7 @@ export default function ScriptGenerator() {
                     title: s.title || "",
                     channelName: s.channel_name || "",
                     duration: s.duration || 10,
-                    contentType: s.content_type || "tutorial",
+                    contentType: normalizeContentType(s.content_type) || "Tutorial",
                 });
                 setScript(s.script_content || "");
                 setSeoData(s.seo_data || null);
@@ -288,31 +400,6 @@ export default function ScriptGenerator() {
             }
         } catch (err) {
             console.error("Failed to delete script:", err);
-        }
-    };
-
-    // Save script to history
-    const saveToHistory = async () => {
-        if (!session || !script) return;
-        try {
-            await fetch("/api/scripts", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    title: formData.title,
-                    channelName: formData.channelName,
-                    duration: formData.duration,
-                    contentType: formData.contentType,
-                    scriptContent: script,
-                    seoData: seoData,
-                    imagesData: imagesData,
-                    chaptersData: chaptersData,
-                    brollData: brollData,
-                    shortsData: shortsData,
-                }),
-            });
-        } catch (err) {
-            console.error("Failed to save script:", err);
         }
     };
 
@@ -342,16 +429,16 @@ export default function ScriptGenerator() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ credits: needed }),
             });
-            const order = await res.json();
+            const order: RazorpayOrderResponse = await res.json();
 
-            const options = {
+            const options: RazorpayOptions = {
                 key: order.keyId,
                 amount: order.amount,
                 currency: order.currency,
                 name: "Thunglish Script Generator",
                 description: `${needed} Script Credit${needed > 1 ? 's' : ''} (₹9/each)`,
                 order_id: order.orderId,
-                handler: async (response: any) => {
+                handler: async (response: RazorpayPaymentResponse) => {
                     // Verify payment
                     const verifyRes = await fetch("/api/payment/verify", {
                         method: "POST",
@@ -374,10 +461,13 @@ export default function ScriptGenerator() {
                 theme: { color: "#2563eb" },
             };
 
-            const razorpay = new (window as any).Razorpay(options);
+            const RazorpayCtor = (window as Window & { Razorpay?: RazorpayConstructor }).Razorpay;
+            if (!RazorpayCtor) throw new Error("Payment SDK unavailable");
+            const razorpay = new RazorpayCtor(options);
             razorpay.open();
         } catch (err) {
             console.error("Payment failed:", err);
+            setError(getErrorMessage(err, "Payment failed"));
         } finally {
             setProcessingPayment(false);
         }
@@ -409,22 +499,17 @@ export default function ScriptGenerator() {
         };
     };
 
-    // Format seconds to MM:SS
-    const formatTime = (seconds: number): string => {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins}:${secs.toString().padStart(2, "0")}`;
-    };
-
     // API call to generate a section
     const generateSection = async (
         stage: string,
         timestamps: Timestamps,
-        previousContent: string = ""
+        previousContent: string = "",
+        signal?: AbortSignal
     ): Promise<string> => {
         const response = await fetch("/api/generate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
+            signal,
             body: JSON.stringify({
                 type: "section",
                 stage,
@@ -447,7 +532,7 @@ export default function ScriptGenerator() {
     const generateScript = async () => {
         if (!session) {
             alert("Please sign in to generate scripts");
-            signIn("google", { callbackUrl: "/" });
+            signIn("google", { callbackUrl: "/app" });
             return;
         }
 
@@ -459,6 +544,10 @@ export default function ScriptGenerator() {
             setShowPaymentModal(true);
             return;
         }
+
+        generationAbortRef.current?.abort();
+        const controller = new AbortController();
+        generationAbortRef.current = controller;
 
         setLoading(true);
         setError("");
@@ -480,25 +569,25 @@ export default function ScriptGenerator() {
             let fullScript = "";
 
             // Stage 1: Hook & Intro
-            const hookIntro = await generateSection("hook_intro", timestamps);
+            const hookIntro = await generateSection("hook_intro", timestamps, "", controller.signal);
             fullScript = hookIntro;
             setScript(fullScript);
             setProgress("Stage 2/6: Generating Main Content...");
 
             // Stage 2: Main Content
-            const mainContent = await generateSection("main_content", timestamps, fullScript);
+            const mainContent = await generateSection("main_content", timestamps, fullScript, controller.signal);
             fullScript += "\n\n" + mainContent;
             setScript(fullScript);
             setProgress("Stage 3/6: Generating Demo & Outro...");
 
             // Stage 3: Demo & Outro
-            const demoOutro = await generateSection("demo_outro", timestamps, fullScript);
+            const demoOutro = await generateSection("demo_outro", timestamps, fullScript, controller.signal);
             fullScript += "\n\n" + demoOutro;
             setScript(fullScript);
             setProgress("Stage 4/6: Generating Production Notes...");
 
             // Stage 4: Production Notes
-            const productionNotes = await generateProductionNotes(fullScript);
+            const productionNotes = await generateProductionNotes(fullScript, controller.signal);
             fullScript += "\n\n" + productionNotes;
             setScript(fullScript);
             setProgress("Stage 5/6: Generating SEO & Media Assets...");
@@ -508,7 +597,7 @@ export default function ScriptGenerator() {
 
             // SEO Data (Always included)
             promises.push(
-                generateSEOData()
+                generateSEOData(controller.signal)
                     .then((seo) => setSeoData(seo))
                     .catch(() => console.error("SEO generation failed"))
             );
@@ -516,7 +605,7 @@ export default function ScriptGenerator() {
             // Image Prompts (if enabled)
             if (formData.generateImages) {
                 promises.push(
-                    generateImagePrompts(fullScript, timestamps)
+                    generateImagePrompts(fullScript, timestamps, controller.signal)
                         .then((images) => setImagesData(images))
                         .catch(() => console.error("Image prompts generation failed"))
                 );
@@ -525,7 +614,7 @@ export default function ScriptGenerator() {
             // Chapters (if enabled)
             if (formData.includeChapters) {
                 promises.push(
-                    generateChapters(fullScript, timestamps)
+                    generateChapters(fullScript, timestamps, controller.signal)
                         .then((chapters) => setChaptersData(chapters))
                         .catch(() => console.error("Chapters generation failed"))
                 );
@@ -534,7 +623,7 @@ export default function ScriptGenerator() {
             // B-Roll (if enabled)
             if (formData.includeBRoll) {
                 promises.push(
-                    generateBRoll(fullScript, timestamps)
+                    generateBRoll(fullScript, timestamps, controller.signal)
                         .then((broll) => setBrollData(broll))
                         .catch(() => console.error("B-Roll generation failed"))
                 );
@@ -547,7 +636,7 @@ export default function ScriptGenerator() {
             if (formData.includeShorts) {
                 setProgress("Stage 6/6: Generating Shorts Clips...");
                 try {
-                    const shorts = await generateShorts(fullScript);
+                    const shorts = await generateShorts(fullScript, controller.signal);
                     setShortsData(shorts);
                 } catch {
                     console.error("Shorts generation failed");
@@ -597,10 +686,22 @@ export default function ScriptGenerator() {
             }
 
             setProgress("");
-        } catch (err: any) {
-            setError(err.message || "An error occurred while generating the script.");
+        } catch (err: unknown) {
+            if (isAbortError(err)) {
+                setProgress("Generation canceled.");
+                return;
+            }
+            setError(getErrorMessage(err, "An error occurred while generating the script."));
         } finally {
             setLoading(false);
+            generationAbortRef.current = null;
+        }
+    };
+
+    const cancelGeneration = () => {
+        if (generationAbortRef.current) {
+            generationAbortRef.current.abort();
+            setProgress("Canceling...");
         }
     };
 
@@ -609,11 +710,13 @@ export default function ScriptGenerator() {
 
     // Generate production notes
     const generateProductionNotes = async (
-        fullScript: string
+        fullScript: string,
+        signal?: AbortSignal
     ): Promise<string> => {
         const response = await fetch("/api/generate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
+            signal,
             body: JSON.stringify({
                 type: "production_notes",
                 formData,
@@ -627,94 +730,11 @@ export default function ScriptGenerator() {
     };
 
     // Generate SEO data
-    const generateSEOData = async (): Promise<SEOData> => {
-        const { title, contentType } = formData;
-
-        const systemPrompt = `You are a YouTube SEO expert who specializes in Tamil tech content. You understand the YouTube algorithm, trending keywords, and what makes Tamil tech videos go viral. You've helped channels grow from 0 to 1M+ subscribers.`;
-
-        const userPrompt = `Create OPTIMIZED SEO data for this Tamil tech YouTube video.
-
-VIDEO TITLE: ${title}
-CONTENT TYPE: ${contentType}
-
-Generate SEO-optimized content that will help this video rank and get clicks:
-
-═══════════════════════════════════════════════════════════════
-
-TITLES:
-Create 5 alternative titles. Each should be:
-- Under 60 characters
-- Include primary keyword
-- Have emotional trigger or curiosity element
-- Mix of Tamil and English for broader reach
-
-1. [Power word + Topic + Benefit] - e.g., "🔥 React Hooks Complete Guide - இனி Confusion இல்ல!"
-2. [Question format] - e.g., "useState எப்படி Work ஆகுது? 90% Developers இது Miss பண்றாங்க"
-3. [How-to format] - e.g., "React useState கத்துக்கணுமா? இந்த Video போதும்!"
-4. [Number/List format] - e.g., "5 useState Mistakes நீங்க பண்ணிருக்கலாம் | React Tutorial Tamil"
-5. [Controversial/Bold] - e.g., "useState தெரியாம React எழுதாதீங்க! 🚫"
-
-DESCRIPTION:
-Write a 250-300 word YouTube description that:
-- Opens with a hook (first 150 characters visible in search)
-- Includes primary and secondary keywords naturally
-- Has timestamps for main sections
-- Includes call-to-action
-- Has social links placeholder
-- Ends with relevant hashtags
-
-Format:
-[Opening hook - 2 lines]
-
-📚 What You'll Learn:
-• Point 1
-• Point 2
-• Point 3
-
-⏱️ Timestamps:
-0:00 - Introduction
-[Add more based on typical structure]
-
-🔗 Resources:
-[Placeholder for links]
-
-👋 Connect:
-[Social media placeholders]
-
-#TamilTech #[Topic]Tags #[More relevant tags]
-
-TAGS:
-Generate 18-22 comma-separated tags including:
-- Primary keyword variations
-- Tamil keywords (in English letters)
-- Related tech terms
-- Long-tail keywords
-- Competitor video keywords
-
-Example: React tutorial Tamil, useState hook Tamil, React hooks explain, Tamil tech tutorial, learn React Tamil, web development Tamil...
-
-THUMBNAILS:
-3 thumbnail text options (3-5 words max, ALL CAPS works best):
-
-1. [Emotion + Topic] - e.g., "useState 🤯 EXPLAINED!"
-2. [Problem/Solution] - e.g., "REACT CONFUSION? ❌➡️✅"
-3. [Benefit focused] - e.g., "MASTER REACT HOOKS 🎯"
-
-COMMENT:
-Write a pinned first comment in Thunglish that:
-- Asks an engaging question
-- Creates discussion
-- Hints at future content
-- Feels personal and friendly
-
-Example format:
-"Dei friends! 🔥 Ivlo vara antha [topic] pathi detailed ah paathom. Ungalukku innum enna topic la video venum? Comment pannunga da! Like panna marakatheenga! 👍
-
-Next video la [related topic] pathi paakalam, interested ah? 🤔"`;
-
+    const generateSEOData = async (signal?: AbortSignal): Promise<SEOData> => {
         const response = await fetch("/api/generate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
+            signal,
             body: JSON.stringify({
                 type: "seo",
                 formData
@@ -727,7 +747,7 @@ Next video la [related topic] pathi paakalam, interested ah? 🤔"`;
         }
 
         const data = await response.json();
-        const text = data.choices[0].message.content;
+        const text = data.content || "";
 
         // Parse the SEO data
         const titlesMatch = text.match(/TITLES:\n([\s\S]*?)(?=\n\nDESCRIPTION:)/);
@@ -762,40 +782,13 @@ Next video la [related topic] pathi paakalam, interested ah? 🤔"`;
     // Generate Image Prompts
     const generateImagePrompts = async (
         fullScript: string,
-        timestamps: Timestamps
+        timestamps: Timestamps,
+        signal?: AbortSignal
     ): Promise<ImagePrompt[]> => {
-        const { title, contentType, includeCode, imageFormat } = formData;
-
-        const aspectRatio = imageFormat === "portrait" ? "9:16" : imageFormat === "square" ? "1:1" : "16:9";
-        const formatHint = imageFormat === "portrait" ? "vertical mobile-first" : imageFormat === "square" ? "centered balanced" : "cinematic wide";
-
-        // Concise system prompt - establishes expertise efficiently
-        const systemPrompt = `Expert AI image prompt engineer. Create Midjourney/DALL-E 3/SDXL-ready prompts. Output: JSON array only, no markdown.`;
-
-        // Optimized user prompt - essential info only, high signal-to-noise ratio
-        const userPrompt = `Generate 8 ${aspectRatio} image prompts for: "${title}"
-Type: ${contentType}${includeCode ? " (coding tutorial)" : ""}
-Composition: ${formatHint}
-
-Timeline:
-Hook ${formatTime(timestamps.hookStart)}-${formatTime(timestamps.hookEnd)} | Intro ${formatTime(timestamps.introStart)}-${formatTime(timestamps.introEnd)} | Main ${formatTime(timestamps.mainStart)}-${formatTime(timestamps.mainEnd)} | Demo ${formatTime(timestamps.demoStart)}-${formatTime(timestamps.demoEnd)} | Outro ${formatTime(timestamps.outroStart)}-${formatTime(timestamps.outroEnd)}
-
-Context: ${fullScript.substring(0, 800)}
-
-Distribution: 2 Hook, 1 Intro, 3 Main, 1 Demo, 1 Outro
-
-JSON format:
-[{"id":1,"timestamp":"0:00-0:24","scene":"Hook","description":"[40-60 words: subject, composition, lighting, angle, quality modifiers like 8K, ultra detailed]","style":"[specific art style]","mood":"[atmosphere]","colorPalette":"[3 colors]","aspectRatio":"${aspectRatio}"}]
-
-Requirements per prompt:
-- Include lighting (rim/ambient/neon), depth (bokeh/layers), camera (lens/angle)
-- Style: Cyberpunk/Photorealistic/Minimalist/Cinematic/Neon-futuristic
-${includeCode ? "- Show: IDE screens, code snippets, terminal outputs, tech devices" : "- Show: Concept diagrams, infographics, professional visuals"}
-- Optimized for ${aspectRatio} framing`;
-
         const response = await fetch("/api/generate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
+            signal,
             body: JSON.stringify({
                 type: "image_prompts",
                 formData,
@@ -809,7 +802,7 @@ ${includeCode ? "- Show: IDE screens, code snippets, terminal outputs, tech devi
         }
 
         const data = await response.json();
-        const text = data.choices[0].message.content;
+        const text = data.content || "";
 
         // Parse JSON response
         try {
@@ -827,27 +820,13 @@ ${includeCode ? "- Show: IDE screens, code snippets, terminal outputs, tech devi
     // Generate YouTube Chapters
     const generateChapters = async (
         fullScript: string,
-        timestamps: Timestamps
+        timestamps: Timestamps,
+        signal?: AbortSignal
     ): Promise<Chapter[]> => {
-        const { title } = formData;
-
-        const prompt = `Generate YouTube video chapters for: "${title}"
-
-Timeline: Hook 0:00-${formatTime(timestamps.hookEnd)} | Intro ${formatTime(timestamps.introStart)}-${formatTime(timestamps.introEnd)} | Main ${formatTime(timestamps.mainStart)}-${formatTime(timestamps.mainEnd)} | Demo ${formatTime(timestamps.demoStart)}-${formatTime(timestamps.demoEnd)} | Outro ${formatTime(timestamps.outroStart)}-${formatTime(timestamps.outroEnd)}
-
-Script summary: ${fullScript.substring(0, 600)}
-
-Create 6-10 chapters. JSON array only:
-[{"timestamp":"0:00","title":"Short engaging title (max 5 words)","description":"One line about this section"}]
-
-Rules:
-- First chapter MUST be 0:00
-- Titles: engaging, curiosity-inducing
-- Cover all major topic transitions`;
-
         const response = await fetch("/api/generate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
+            signal,
             body: JSON.stringify({
                 type: "chapters",
                 formData,
@@ -859,7 +838,7 @@ Rules:
         if (!response.ok) throw new Error("Failed to generate chapters");
 
         const data = await response.json();
-        const text = data.choices[0].message.content;
+        const text = data.content || "";
         try {
             return JSON.parse(text.replace(/```json\n?|\n?```/g, "").trim());
         } catch {
@@ -870,31 +849,13 @@ Rules:
     // Generate B-Roll Suggestions
     const generateBRoll = async (
         fullScript: string,
-        timestamps: Timestamps
+        timestamps: Timestamps,
+        signal?: AbortSignal
     ): Promise<BRollSuggestion[]> => {
-        const { title, contentType, includeCode } = formData;
-
-        const prompt = `Generate B-Roll suggestions for: "${title}"
-Type: ${contentType}${includeCode ? " (coding)" : ""}
-
-Timeline: Hook-${formatTime(timestamps.hookEnd)} | Intro-${formatTime(timestamps.introEnd)} | Main-${formatTime(timestamps.mainEnd)} | Demo-${formatTime(timestamps.demoEnd)} | Outro-${formatTime(timestamps.outroEnd)}
-
-Script: ${fullScript.substring(0, 500)}
-
-Create 10-12 B-Roll suggestions. JSON array only:
-[{"id":1,"timestamp":"0:00-0:24","scene":"Hook","suggestion":"Specific B-Roll description","source":"stock|screen|animation|self-record","searchTerms":["term1","term2","term3"]}]
-
-Sources:
-- stock: Pexels/Pixabay clips (general visuals)
-- screen: Screen recordings (demos, code, tutorials)
-- animation: Motion graphics, text animations
-- self-record: Camera footage you film
-
-${includeCode ? "Focus on: IDE screenshots, terminal outputs, code animations, typing sequences" : "Focus on: concept visuals, reactions, professional footage"}`;
-
         const response = await fetch("/api/generate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
+            signal,
             body: JSON.stringify({
                 type: "broll",
                 formData,
@@ -906,7 +867,7 @@ ${includeCode ? "Focus on: IDE screenshots, terminal outputs, code animations, t
         if (!response.ok) throw new Error("Failed to generate B-Roll");
 
         const data = await response.json();
-        const text = data.choices[0].message.content;
+        const text = data.content || "";
         try {
             return JSON.parse(text.replace(/```json\n?|\n?```/g, "").trim());
         } catch {
@@ -916,30 +877,13 @@ ${includeCode ? "Focus on: IDE screenshots, terminal outputs, code animations, t
 
     // Generate Shorts/Clips
     const generateShorts = async (
-        fullScript: string
+        fullScript: string,
+        signal?: AbortSignal
     ): Promise<ShortClip[]> => {
-        const { title, contentType } = formData;
-
-        const prompt = `Extract 4 viral YouTube Shorts from this video: "${title}"
-Type: ${contentType}
-
-Full script:
-${fullScript.substring(0, 1200)}
-
-Create 4 standalone 30-60 second Shorts. JSON array only:
-[{"id":1,"title":"Catchy Shorts title (curiosity/value)","hook":"Opening line (first 3 sec - must grab attention)","content":"Main content script (20-40 sec, complete thought, valuable standalone)","cta":"Closing CTA (like/follow/comment prompt)","originalTimestamp":"2:30-3:15","viralScore":85}]
-
-Viral Score criteria (1-100):
-- Hook strength (0-25)
-- Standalone value (0-25) 
-- Shareability (0-25)
-- Engagement potential (0-25)
-
-Focus on: surprising facts, quick tips, relatable moments, controversy/opinions`;
-
         const response = await fetch("/api/generate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
+            signal,
             body: JSON.stringify({
                 type: "shorts",
                 formData,
@@ -950,7 +894,7 @@ Focus on: surprising facts, quick tips, relatable moments, controversy/opinions`
         if (!response.ok) throw new Error("Failed to generate Shorts");
 
         const data = await response.json();
-        const text = data.choices[0].message.content;
+        const text = data.content || "";
         try {
             return JSON.parse(text.replace(/```json\n?|\n?```/g, "").trim());
         } catch {
@@ -1083,10 +1027,6 @@ Aspect Ratio: ${prompt.aspectRatio}`;
         `;
 
         const html = preHtml + htmlContent + postHtml;
-        const blob = new Blob(['\ufeff', html], {
-            type: 'application/msword'
-        });
-
         const url = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(html);
 
         const downloadLink = document.createElement("a");
@@ -1112,60 +1052,48 @@ Aspect Ratio: ${prompt.aspectRatio}`;
         setError("");
 
         try {
-            const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
-            if (!apiKey) throw new Error("API configuration missing");
-
-            const systemPrompt = `You are a professional translator for YouTube scripts.
-Your task is to translate the following script to ${targetLanguage}.
-
-RULES:
-1. Maintain ALL timestamps exactly as they are [00:00].
-2. Keep the original tone (Casual/Professional).
-3. Keep technical terms in English (e.g., React, API, Database).
-4. Do not translate proper nouns or channel names.
-5. Ensure the flow is natural for a native speaker of ${targetLanguage}.
-${targetLanguage === "Thunglish" ? "6. Mix Tamil and English naturally (60% Tamil, 40% English)." : ""}
-${targetLanguage === "Hindi" ? "6. Use Hinglish (Hindi + English tech terms) for a natural tech review feel." : ""}
-
-Input format: Full script text
-Output format: Translated script text ONLY. No other text.`;
-
-            const response = await fetch("https://api.openai.com/v1/chat/completions", {
+            const response = await fetch("/api/generate", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${apiKey}`,
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    model: "gpt-4.0-mini",
-                    max_tokens: 4000,
-                    temperature: 0.5,
-                    messages: [
-                        { role: "system", content: systemPrompt },
-                        { role: "user", content: script },
-                    ],
+                    type: "translate",
+                    formData,
+                    targetLanguage,
+                    fullScript: script
                 }),
             });
 
             if (!response.ok) throw new Error("Translation failed");
 
             const data = await response.json();
-            const translatedScript = data.choices[0].message.content;
+            const translatedScript = data.content || "";
 
             setScript(translatedScript);
 
             // Auto-update language setting visually (optional, but good for UX)
             // setFormData({...formData, language: targetLanguage}); 
 
-        } catch (err: any) {
-            setError(err.message || "Translation failed. Please try again.");
+        } catch (err: unknown) {
+            setError(getErrorMessage(err, "Translation failed. Please try again."));
         } finally {
             setIsTranslating(false);
         }
     };
 
+    const requiredCredits = calculateRequiredCredits();
+    const estimatedWords = Math.round(formData.duration * 130);
+    const tabs: { id: ActiveTab; label: string }[] = [
+        { id: "script", label: "Script" },
+        { id: "seo", label: "SEO" },
+        { id: "images", label: "Images" },
+        { id: "chapters", label: "Chapters" },
+        { id: "broll", label: "B-Roll" },
+        { id: "shorts", label: "Shorts" },
+    ];
+
     return (
-        <div className="min-h-screen bg-slate-50">
+        <div className="min-h-screen bg-slate-50 relative overflow-hidden">
+            <div className="absolute inset-x-0 top-0 h-72 bg-gradient-to-br from-blue-50 via-white to-amber-50 pointer-events-none" />
             {/* Razorpay Script */}
             <script src="https://checkout.razorpay.com/v1/checkout.js" async />
 
@@ -1191,7 +1119,7 @@ Output format: Translated script text ONLY. No other text.`;
                         <button
                             onClick={handlePayment}
                             disabled={processingPayment}
-                            className="w-full py-3 bg-yellow-500 text-white rounded-lg font-medium hover:bg-yellow-600 transition-colors disabled:opacity-50"
+                            className="w-full py-3 text-slate-900 rounded-lg font-semibold bg-amber-400 brand-glow hover:bg-amber-500 transition-colors disabled:opacity-50"
                         >
                             {processingPayment ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Pay with Razorpay"}
                         </button>
@@ -1265,23 +1193,22 @@ Output format: Translated script text ONLY. No other text.`;
             )}
 
             {/* Header */}
-            <header className="sticky top-0 z-50 transition-all duration-300 border-b border-slate-200 bg-white shadow-sm">
+            <header className="sticky top-0 z-50 transition-all duration-300 border-b border-slate-200 bg-white/95 backdrop-blur shadow-sm">
+                <div className="h-1 w-full brand-gradient" />
                 <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                            <div className="relative w-10 h-10 rounded-xl overflow-hidden shadow-md shadow-blue-900/10">
-                                <img
-                                    src="/scriptgen-logo.png"
-                                    alt="SCRIPTGEN"
-                                    className="w-full h-full object-cover"
-                                />
-                            </div>
                             <div>
-                                <h1 className="text-xl font-bold text-slate-900 tracking-tight">
-                                    SCRIPT<span className="text-blue-600">GEN</span>
-                                </h1>
+                                <div className="flex items-center gap-2">
+                                    <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+                                        SCRIPT<span className="text-blue-700">GEN</span>
+                                    </h1>
+                                    <span className="hidden sm:inline-flex text-[10px] uppercase tracking-[0.2em] px-2 py-0.5 rounded-full border border-amber-200 bg-amber-50 text-amber-900 font-semibold">
+                                        Enterprise
+                                    </span>
+                                </div>
                                 <p className="text-xs text-slate-500 font-medium">
-                                    Viral scripts for <span className="text-blue-600">Any Creator</span> in Tamil, Hindi & English
+                                    Corporate-grade script generation for <span className="text-blue-700">national reach</span>
                                 </p>
                             </div>
                         </div>
@@ -1302,9 +1229,9 @@ Output format: Translated script text ONLY. No other text.`;
 
                                     {/* Credits Display */}
                                     {credits && (
-                                        <div className="hidden sm:flex items-center gap-2 px-4 py-1.5 bg-slate-50 border border-slate-200 rounded-full shadow-inner">
-                                            <CreditCard className="w-4 h-4 text-blue-500" />
-                                            <span className="text-sm font-medium text-slate-700">
+                                        <div className="hidden sm:flex items-center gap-2 px-4 py-1.5 brand-pill rounded-full shadow-inner">
+                                            <CreditCard className="w-4 h-4 text-amber-600" />
+                                            <span className="text-sm font-semibold text-amber-900">
                                                 {credits.freeScriptsRemaining > 0
                                                     ? `${credits.freeScriptsRemaining} free`
                                                     : `${credits.paidCredits} credits`}
@@ -1315,7 +1242,14 @@ Output format: Translated script text ONLY. No other text.`;
                                     {/* User Avatar */}
                                     <div className="flex items-center gap-4 pl-4 border-l border-slate-200">
                                         {session.user?.image ? (
-                                            <img src={session.user.image} alt="" className="w-10 h-10 rounded-full ring-2 ring-blue-500/20 shadow-lg" />
+                                            <Image
+                                                src={session.user.image}
+                                                alt=""
+                                                width={40}
+                                                height={40}
+                                                className="w-10 h-10 rounded-full ring-2 ring-blue-500/20 shadow-lg"
+                                                unoptimized
+                                            />
                                         ) : (
                                             <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center ring-2 ring-blue-500/20">
                                                 <User className="w-5 h-5 text-blue-600" />
@@ -1332,8 +1266,8 @@ Output format: Translated script text ONLY. No other text.`;
                                 </>
                             ) : (
                                 <button
-                                    onClick={() => signIn("google", { callbackUrl: "/" })}
-                                    className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 shadow-md transition-all duration-200 transform hover:-translate-y-0.5"
+                                    onClick={() => signIn("google", { callbackUrl: "/app" })}
+                                    className="flex items-center gap-2 px-6 py-2.5 text-white text-sm font-semibold rounded-lg bg-blue-700 brand-glow hover:bg-blue-800 transition-all duration-200 transform hover:-translate-y-0.5"
                                 >
                                     <LogIn className="w-4 h-4" />
                                     <span className="hidden sm:inline">Sign in with Google</span>
@@ -1345,14 +1279,36 @@ Output format: Translated script text ONLY. No other text.`;
                 </div>
             </header>
 
-            <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
+            <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 relative z-10">
+                <div className="mb-6 text-center relative z-10">
+                    <p className="text-xs uppercase tracking-[0.3em] text-slate-400 font-semibold">Corporate Studio</p>
+                    <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900 mt-2">
+                        Enterprise Script Generation Suite
+                    </h2>
+                    <p className="text-sm text-slate-500 mt-2">
+                        Professional-grade outputs designed for consistency, scale, and trust.
+                    </p>
+                </div>
+                <div className="mb-6 brand-card rounded-2xl px-5 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <p className="text-xs uppercase tracking-[0.2em] text-slate-400 font-semibold">National Creator Platform</p>
+                        <h2 className="text-lg font-semibold text-slate-900">
+                            Design & Branding aligned for professional studios
+                        </h2>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        <span className="text-xs px-3 py-1 rounded-full border border-blue-200 text-blue-700 bg-blue-50 font-semibold">Secure Access</span>
+                        <span className="text-xs px-3 py-1 rounded-full border border-amber-200 text-amber-900 bg-amber-50 font-semibold">Premium Output</span>
+                        <span className="text-xs px-3 py-1 rounded-full border border-slate-200 text-slate-600 bg-white font-semibold">Reliable Scale</span>
+                    </div>
+                </div>
                 <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
                     {/* Left Panel - Configuration (Protected) */}
                     <div className="w-full lg:w-2/5">
-                        <div className="glass-card rounded-2xl p-6 sm:p-8 lg:sticky lg:top-28">
+                        <div className="brand-card rounded-2xl p-6 sm:p-8 lg:sticky lg:top-28">
                             {!session ? (
                                 /* Login Required Panel */
-                                <div className="text-center py-12 bg-white rounded-2xl shadow-xl border border-slate-100 max-w-md mx-auto">
+                                <div className="text-center py-12 brand-card rounded-2xl max-w-md mx-auto">
                                     <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6 ring-4 ring-blue-50/50">
                                         <Sparkles className="w-10 h-10 text-blue-600" />
                                     </div>
@@ -1383,8 +1339,8 @@ Output format: Translated script text ONLY. No other text.`;
 
                                     <div className="px-8">
                                         <button
-                                            onClick={() => signIn("google", { callbackUrl: "/" })}
-                                            className="w-full mt-8 py-3.5 px-4 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-600/20 transition-all duration-200 flex items-center justify-center gap-3"
+                                            onClick={() => signIn("google", { callbackUrl: "/app" })}
+                                            className="w-full mt-8 py-3.5 px-4 text-slate-900 font-bold rounded-xl bg-amber-400 brand-glow hover:bg-amber-500 transition-all duration-200 flex items-center justify-center gap-3"
                                         >
                                             <LogIn className="w-5 h-5" />
                                             Get Started with Google
@@ -1404,14 +1360,14 @@ Output format: Translated script text ONLY. No other text.`;
                             ) : (
                                 /* Authenticated - Show Configuration */
                                 /* Authenticated - Show Configuration */
-                                <div className="bg-white rounded-2xl p-6 sm:p-8 h-full border border-slate-200 shadow-sm relative overflow-hidden">
+                                <div className="brand-card rounded-2xl p-6 sm:p-8 h-full relative overflow-hidden">
                                     <div className="flex items-center justify-between mb-6">
                                         <div className="flex items-center gap-2">
                                             <Settings2 className="w-5 h-5 text-slate-400" />
                                             <h2 className="text-lg font-semibold text-slate-800">Configuration</h2>
                                         </div>
                                         {credits && (
-                                            <span className="text-xs px-3 py-1 bg-blue-50 text-blue-600 border border-blue-100 rounded-full font-medium">
+                                            <span className="text-xs px-3 py-1 brand-pill rounded-full font-semibold">
                                                 {credits.freeScriptsRemaining > 0
                                                     ? `${credits.freeScriptsRemaining} free left`
                                                     : `${credits.paidCredits} credits`}
@@ -1429,7 +1385,7 @@ Output format: Translated script text ONLY. No other text.`;
                                             value={formData.title}
                                             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                             placeholder="e.g., React useState hook complete guide"
-                                            className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 placeholder-slate-400 transition-all shadow-sm"
+                                            className="w-full px-4 py-2.5 bg-white/90 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600/15 focus:border-blue-600 text-slate-900 placeholder-slate-400 transition-all shadow-sm"
                                         />
                                     </div>
 
@@ -1443,7 +1399,7 @@ Output format: Translated script text ONLY. No other text.`;
                                             value={formData.channelName}
                                             onChange={(e) => setFormData({ ...formData, channelName: e.target.value })}
                                             placeholder="Your channel name"
-                                            className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 placeholder-slate-400 transition-all shadow-sm"
+                                            className="w-full px-4 py-2.5 bg-white/90 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600/15 focus:border-blue-600 text-slate-900 placeholder-slate-400 transition-all shadow-sm"
                                         />
                                     </div>
 
@@ -1463,11 +1419,11 @@ Output format: Translated script text ONLY. No other text.`;
                                                 className="absolute w-full h-full opacity-0 z-10 cursor-pointer"
                                             />
                                             <div
-                                                className="absolute h-full bg-blue-500 rounded-full transition-all duration-150"
+                                                className="absolute h-full bg-blue-600 rounded-full transition-all duration-150"
                                                 style={{ width: `${((formData.duration - 5) / 15) * 100}%` }}
                                             ></div>
                                             <div
-                                                className="absolute h-5 w-5 bg-blue-600 rounded-full shadow-md border-2 border-white top-1/2 -translate-y-1/2 transition-all duration-150 pointer-events-none"
+                                                className="absolute h-5 w-5 bg-blue-700 rounded-full shadow-md border-2 border-white top-1/2 -translate-y-1/2 transition-all duration-150 pointer-events-none"
                                                 style={{ left: `${((formData.duration - 5) / 15) * 100}%`, transform: `translate(-50%, -50%)` }}
                                             ></div>
                                         </div>
@@ -1475,6 +1431,9 @@ Output format: Translated script text ONLY. No other text.`;
                                             <span>5 min</span>
                                             <span>20 min</span>
                                         </div>
+                                        <p className="mt-2 text-xs text-slate-500">
+                                            Estimated length: ~{estimatedWords} words
+                                        </p>
                                     </div>
                                     {/* Content Type & Difficulty */}
                                     <div className="grid grid-cols-2 gap-4 mb-5">
@@ -1486,7 +1445,7 @@ Output format: Translated script text ONLY. No other text.`;
                                                 <select
                                                     value={formData.contentType}
                                                     onChange={(e) => setFormData({ ...formData, contentType: e.target.value })}
-                                                    className="w-full pl-4 pr-10 py-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 appearance-none cursor-pointer transition-all shadow-sm"
+                                                    className="w-full pl-4 pr-10 py-2.5 bg-white/90 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-600/15 focus:border-blue-600 text-slate-900 appearance-none cursor-pointer transition-all shadow-sm"
                                                 >
                                                     <option value="Tutorial">Tutorial / How-to</option>
                                                     <option value="Review">Product Review</option>
@@ -1505,7 +1464,7 @@ Output format: Translated script text ONLY. No other text.`;
                                                 <select
                                                     value={formData.difficulty}
                                                     onChange={(e) => setFormData({ ...formData, difficulty: e.target.value })}
-                                                    className="w-full pl-4 pr-10 py-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 appearance-none cursor-pointer transition-all shadow-sm"
+                                                    className="w-full pl-4 pr-10 py-2.5 bg-white/90 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-600/15 focus:border-blue-600 text-slate-900 appearance-none cursor-pointer transition-all shadow-sm"
                                                 >
                                                     <option value="Beginner">Beginner</option>
                                                     <option value="Intermediate">Intermediate</option>
@@ -1517,27 +1476,27 @@ Output format: Translated script text ONLY. No other text.`;
                                     </div>
 
                                     {/* Project Language */}
-                                    <div className="space-y-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                    <div className="space-y-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
                                         <div className="flex items-center justify-between mb-2">
                                             <label className="block text-sm font-bold text-slate-700 flex items-center gap-2">
-                                                <span className="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+                                                <span className="w-1.5 h-1.5 rounded-full bg-blue-700"></span>
                                                 Project Language
                                             </label>
-                                            <span className="text-xs text-blue-700 font-medium bg-blue-100 px-2 py-0.5 rounded border border-blue-200">
+                                            <span className="text-xs text-amber-900 font-semibold bg-amber-100 px-2 py-0.5 rounded border border-amber-200">
                                                 AI Optimized
                                             </span>
                                         </div>
-                                        <div className="grid grid-cols-3 gap-2">
-                                            {["English", "Tamil", "Hindi"].map((lang) => (
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {languages.map((lang) => (
                                                 <button
-                                                    key={lang}
-                                                    onClick={() => setFormData({ ...formData, language: lang })}
-                                                    className={`px-3 py-2.5 text-sm font-medium rounded-lg border transition-all ${formData.language === lang
-                                                        ? "bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-500/20"
+                                                    key={lang.value}
+                                                    onClick={() => setFormData({ ...formData, language: lang.value })}
+                                                    className={`px-3 py-2.5 text-sm font-semibold rounded-lg border transition-all ${formData.language === lang.value
+                                                        ? "bg-blue-700 border-blue-700 text-white shadow-md shadow-blue-500/20"
                                                         : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                                                         }`}
                                                 >
-                                                    {lang}
+                                                    {lang.label}
                                                 </button>
                                             ))}
                                         </div>
@@ -1557,7 +1516,7 @@ Output format: Translated script text ONLY. No other text.`;
                                         <select
                                             value={formData.tone}
                                             onChange={(e) => setFormData({ ...formData, tone: e.target.value })}
-                                            className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 transition-all shadow-sm"
+                                            className="w-full px-4 py-2.5 bg-white/90 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600/15 focus:border-blue-600 text-slate-900 transition-all shadow-sm"
                                         >
                                             {tones.map((t) => (
                                                 <option key={t.value} value={t.value}>
@@ -1575,7 +1534,7 @@ Output format: Translated script text ONLY. No other text.`;
                                                     type="checkbox"
                                                     checked={formData.includeCode}
                                                     onChange={(e) => setFormData({ ...formData, includeCode: e.target.checked })}
-                                                    className="w-4 h-4 text-blue-600 bg-white border-slate-300 rounded focus:ring-blue-500 transition-colors"
+                                                    className="w-4 h-4 text-blue-700 bg-white border-slate-300 rounded focus:ring-blue-600 transition-colors"
                                                 />
                                                 <span className="text-sm text-slate-600 group-hover:text-slate-900">Include code examples</span>
                                             </label>
@@ -1584,16 +1543,16 @@ Output format: Translated script text ONLY. No other text.`;
                                                     type="checkbox"
                                                     checked={formData.localContext}
                                                     onChange={(e) => setFormData({ ...formData, localContext: e.target.checked })}
-                                                    className="w-4 h-4 text-blue-600 bg-white border-slate-300 rounded focus:ring-blue-500 transition-colors"
+                                                    className="w-4 h-4 text-blue-700 bg-white border-slate-300 rounded focus:ring-blue-600 transition-colors"
                                                 />
                                                 <span className="text-sm text-slate-600 group-hover:text-slate-900">Add Tamil Nadu context</span>
                                             </label>
                                         </div>
 
                                         {/* Image Settings Divider */}
-                                        <div className="mt-5 pt-4 border-t border-slate-100">
+                                        <div className="mt-5 pt-4 border-t border-slate-200">
                                             <h4 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
-                                                <Sparkles className="w-4 h-4 text-blue-600" />
+                                                <Sparkles className="w-4 h-4 text-amber-500" />
                                                 Premium Features (₹9 each)
                                             </h4>
 
@@ -1603,7 +1562,7 @@ Output format: Translated script text ONLY. No other text.`;
                                                         type="checkbox"
                                                         checked={formData.includeChapters}
                                                         onChange={(e) => setFormData({ ...formData, includeChapters: e.target.checked })}
-                                                        className="w-5 h-5 text-blue-600 bg-white border-slate-300 rounded focus:ring-blue-500"
+                                                        className="w-5 h-5 text-blue-700 bg-white border-slate-300 rounded focus:ring-blue-600"
                                                     />
                                                     <div>
                                                         <span className="text-sm font-medium text-slate-700">Generate YouTube Chapters</span>
@@ -1615,7 +1574,7 @@ Output format: Translated script text ONLY. No other text.`;
                                                         type="checkbox"
                                                         checked={formData.includeBRoll}
                                                         onChange={(e) => setFormData({ ...formData, includeBRoll: e.target.checked })}
-                                                        className="w-5 h-5 text-blue-600 bg-white border-slate-300 rounded focus:ring-blue-500"
+                                                        className="w-5 h-5 text-blue-700 bg-white border-slate-300 rounded focus:ring-blue-600"
                                                     />
                                                     <div>
                                                         <span className="text-sm font-medium text-slate-700">B-Roll Suggestions</span>
@@ -1627,7 +1586,7 @@ Output format: Translated script text ONLY. No other text.`;
                                                         type="checkbox"
                                                         checked={formData.includeShorts}
                                                         onChange={(e) => setFormData({ ...formData, includeShorts: e.target.checked })}
-                                                        className="w-5 h-5 text-blue-600 bg-white border-slate-300 rounded focus:ring-blue-500"
+                                                        className="w-5 h-5 text-blue-700 bg-white border-slate-300 rounded focus:ring-blue-600"
                                                     />
                                                     <div>
                                                         <span className="text-sm font-medium text-slate-700">Viral Shorts Ideas</span>
@@ -1640,7 +1599,7 @@ Output format: Translated script text ONLY. No other text.`;
                                                             type="checkbox"
                                                             checked={formData.generateImages}
                                                             onChange={(e) => setFormData({ ...formData, generateImages: e.target.checked })}
-                                                            className="w-5 h-5 text-blue-600 bg-white border-slate-300 rounded focus:ring-blue-500"
+                                                            className="w-5 h-5 text-blue-700 bg-white border-slate-300 rounded focus:ring-blue-600"
                                                         />
                                                         <div>
                                                             <span className="text-sm font-medium text-slate-700">Generate AI Image Prompts</span>
@@ -1651,7 +1610,7 @@ Output format: Translated script text ONLY. No other text.`;
                                                         <select
                                                             value={formData.imageFormat}
                                                             onChange={(e) => setFormData({ ...formData, imageFormat: e.target.value })}
-                                                            className="w-32 px-2 py-1 bg-white border border-slate-300 rounded-md text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                                                            className="w-32 px-2 py-1 bg-white border border-slate-300 rounded-md text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-600/15 focus:border-blue-600"
                                                         >
                                                             {imageFormats.map((format) => (
                                                                 <option key={format.value} value={format.value}>
@@ -1673,11 +1632,11 @@ Output format: Translated script text ONLY. No other text.`;
                                     )}
 
                                     {/* Generate Button */}
-                                    <div className="mt-8">
+                                    <div className="mt-8 space-y-3">
                                         <button
                                             onClick={generateScript}
                                             disabled={loading || !formData.title.trim()}
-                                            className="w-full py-3.5 px-4 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all shadow-md active:transform active:scale-[0.98]"
+                                            className="w-full py-3.5 px-4 text-white font-bold rounded-xl bg-blue-700 brand-glow hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all active:transform active:scale-[0.98]"
                                         >
                                             {loading ? (
                                                 <>
@@ -1691,9 +1650,25 @@ Output format: Translated script text ONLY. No other text.`;
                                                 </>
                                             )}
                                         </button>
+                                        {loading && (
+                                            <button
+                                                onClick={cancelGeneration}
+                                                className="w-full py-3 px-4 bg-slate-100 text-slate-700 font-semibold rounded-xl hover:bg-slate-200 transition-colors"
+                                            >
+                                                Cancel Generation
+                                            </button>
+                                        )}
                                         <p className="text-center text-xs text-slate-400 mt-2">
-                                            Consumes 1 credit or 1 free generation
+                                            Consumes {requiredCredits} credit{requiredCredits > 1 ? "s" : ""} (free or paid)
                                         </p>
+                                        {hasSavedState && (
+                                            <button
+                                                onClick={clearSavedState}
+                                                className="w-full text-xs text-slate-500 hover:text-slate-700 underline underline-offset-4"
+                                            >
+                                                Clear saved draft on this device
+                                            </button>
+                                        )}
                                     </div>
 
                                     {/* Progress Indicator */}
@@ -1712,31 +1687,24 @@ Output format: Translated script text ONLY. No other text.`;
 
                     {/* Right Panel - Output */}
                     <div className="w-full lg:w-3/5">
-                        <div className="bg-white rounded-2xl min-h-[600px] flex flex-col shadow-sm border border-slate-200 relative overflow-hidden">
+                        <div className="brand-card rounded-2xl min-h-[600px] flex flex-col relative overflow-hidden">
                             {/* Accent Top Border */}
-                            <div className="absolute top-0 left-0 right-0 h-1 bg-blue-600"></div>
+                            <div className="absolute top-0 left-0 right-0 h-1 brand-gradient"></div>
 
                             {/* Tabs Header */}
-                            <div className="flex items-center justify-between px-2 pt-2 border-b border-slate-200 bg-slate-50">
+                            <div className="flex items-center justify-between px-2 pt-2 border-b border-slate-200 bg-white/80">
                                 <div className="flex items-center gap-2 overflow-x-auto w-full no-scrollbar pb-0">
-                                    {[
-                                        { id: "script", label: "Script" },
-                                        { id: "seo", label: "SEO" },
-                                        { id: "images", label: "Images" },
-                                        { id: "chapters", label: "Chapters" },
-                                        { id: "broll", label: "B-Roll" },
-                                        { id: "shorts", label: "Shorts" },
-                                    ].map((tab) => (
+                                    {tabs.map((tab) => (
                                         <button
                                             key={tab.id}
-                                            onClick={() => setActiveTab(tab.id as any)}
+                                            onClick={() => setActiveTab(tab.id)}
                                             className={`relative flex-shrink-0 px-6 py-3 text-sm font-semibold transition-all rounded-t-lg z-10 ${activeTab === tab.id
-                                                ? "bg-white text-blue-600 border-t border-l border-r border-slate-200 shadow-[0_-2px_6px_rgba(0,0,0,0.02)]"
-                                                : "text-slate-500 hover:text-slate-800 hover:bg-slate-100/50 border-transparent"
+                                                ? "bg-white text-blue-700 border-t border-l border-r border-slate-200 shadow-[0_-2px_6px_rgba(0,0,0,0.02)]"
+                                                : "text-slate-500 hover:text-slate-800 hover:bg-slate-100 border-transparent"
                                                 }`}
                                         >
                                             {activeTab === tab.id && (
-                                                <div className="absolute top-0 left-0 right-0 h-[3px] bg-blue-600 rounded-t-lg"></div>
+                                                <div className="absolute top-0 left-0 right-0 h-[3px] bg-amber-500 rounded-t-lg"></div>
                                             )}
                                             {tab.label}
                                         </button>
@@ -1756,7 +1724,7 @@ Output format: Translated script text ONLY. No other text.`;
                                                     <button
                                                         onClick={() => setShowTranslateDropdown(!showTranslateDropdown)}
                                                         disabled={isTranslating}
-                                                        className="flex items-center gap-2 px-3 py-2 text-sm border border-blue-500/30 bg-blue-500/10 text-blue-400 rounded-md hover:bg-blue-500/20 transition-colors disabled:opacity-50"
+                                                        className="flex items-center gap-2 px-3 py-2 text-sm border border-slate-200 bg-white text-slate-600 rounded-md hover:bg-slate-50 transition-colors disabled:opacity-50"
                                                     >
                                                         {isTranslating ? (
                                                             <>
@@ -1765,7 +1733,7 @@ Output format: Translated script text ONLY. No other text.`;
                                                             </>
                                                         ) : (
                                                             <>
-                                                                <Sparkles className="w-4 h-4" />
+                                                                <Sparkles className="w-4 h-4 text-amber-500" />
                                                                 Translate
                                                                 <ChevronDown className="w-3 h-3 ml-1" />
                                                             </>
@@ -1789,7 +1757,7 @@ Output format: Translated script text ONLY. No other text.`;
 
                                                 <button
                                                     onClick={copyToClipboard}
-                                                    className="flex items-center gap-2 px-3 py-2 text-sm border border-blue-200 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors"
+                                                    className="flex items-center gap-2 px-3 py-2 text-sm border border-slate-200 bg-white text-slate-600 rounded-md hover:bg-slate-50 transition-colors"
                                                 >
                                                     {copied ? (
                                                         <>
@@ -1809,7 +1777,7 @@ Output format: Translated script text ONLY. No other text.`;
                                                 <div className="relative">
                                                     <button
                                                         onClick={() => setShowExportDropdown(!showExportDropdown)}
-                                                        className="flex items-center gap-2 px-3 py-2 text-sm border border-blue-200 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors"
+                                                        className="flex items-center gap-2 px-3 py-2 text-sm border border-slate-200 bg-white text-slate-600 rounded-md hover:bg-slate-50 transition-colors"
                                                     >
                                                         <Download className="w-4 h-4" />
                                                         Export
