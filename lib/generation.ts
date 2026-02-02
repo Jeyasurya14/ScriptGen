@@ -36,6 +36,9 @@ const formatTime = (seconds: number): string => {
     return `${mins}:${secs.toString().padStart(2, "0")}`;
 };
 
+const truncateText = (text: string, maxChars: number): string =>
+    text.length > maxChars ? `${text.slice(0, maxChars).trim()}…` : text;
+
 export const constructSectionPrompt = (
     stage: string,
     formData: FormData,
@@ -48,346 +51,118 @@ export const constructSectionPrompt = (
     let languageInstruction = "";
 
     if (language === "English") {
-        languageInstruction = `
-LANGUAGE STYLE: INTERNATIONAL ENGLISH
-- Use clear, energetic, universally understood English
-- Style: Like MKBHD or MrBeast - high retention, zero fluff
-- Simplify complex topics but don't dumb them down
-- Use "Guys", "Friends" for connection
-`;
+        languageInstruction = "Use clear international English. Energetic, no fluff.";
     } else if (language === "Hindi") {
-        languageInstruction = `
-LANGUAGE STYLE: HINGLISH (Hindi + English Mix)
-- Speak like a friendly Indian YouTuber
-- Use natural connecting words: "Doston", "Yeh dekho", "Matlab", "Samjhe?"
-- Keep all technical/domain terms in English
-- Start with high energy: "Namaste Doston!"
-`;
+        languageInstruction = "Use Hinglish. Keep technical terms in English.";
     } else if (language === "Tamil") {
-        languageInstruction = `
-LANGUAGE STYLE: PURE TAMIL (With English Domain Terms)
-- Use clear, standard spoken Tamil
-- Avoid heavy Thunglish mixing - keep it more formal but friendly
-- Use English ONLY for technical/domain identifiers (Variable names, specific terms)
-`;
+        languageInstruction = "Use spoken Tamil; keep technical terms in English.";
     } else {
-        // Default: Thunglish
-        languageInstruction = `
-LANGAUGE STYLE: THUNGLISH (Tamil + English Mix - 60% Tamil, 40% English)
-- You know exactly how to blend Tamil and English naturally
-- Use Tamil for: "Dei!", "Macha!", "Theriyuma", "Kelunga", "Super ah irukku"
-- Use English for: Domain terms, connecting phrases ("So basically...", "Actually...")
-- Tone: Like explaining to a best friend over chai
-`;
+        languageInstruction = "Use Thunglish (Tamil+English mix).";
     }
 
-    const systemPrompt = `You are a MASTER YouTube script writer with 10+ years of experience creating viral videos.
-
-YOUR EXPERTISE:
-- You understand the YouTube ecosystem perfectly
-- Your hooks have 95%+ retention rates
-- Your explanations are crystal clear yet entertaining
-
+    const systemPrompt = `You are an expert YouTube script writer.
+Prioritize retention, clarity, and brevity. No filler, no repetition.
 ${languageInstruction}
-
-FINAL OUTPUT RULE:
-Provide ONLY the raw script content for the requested section. Do not include markdown code blocks or JSON wrappers.
-`;
+Output only the script content.`;
 
     let userPrompt = "";
 
     if (stage === "hook_intro") {
-        userPrompt = `Create a KILLER hook and intro for this Tamil/Regional YouTube video.
-
-VIDEO DETAILS:
-📌 Title: ${title}
-${channelName ? `📺 Channel: ${channelName}` : ""}
-🎯 Difficulty: ${difficulty}
-⏱️ Hook: ${formatTime(timestamps.hookStart)} - ${formatTime(timestamps.hookEnd)}
-⏱️ Intro: ${formatTime(timestamps.introStart)} - ${formatTime(timestamps.introEnd)}
-
-HOOK REQUIREMENTS:
-- Grab attention in FIRST 3 SECONDS
-- Use SHOCK, QUESTION, or PROMISE pattern
-- Sound excited!
-
-INTRO REQUIREMENTS:
-- Clear promise of value
-- Curiosity loop
-- Engagement hook
-
-FORMAT:
-[${formatTime(timestamps.hookStart)}-${formatTime(timestamps.hookEnd)}] 🎯 HOOK
-Visual: [...]
-[Script Content]
-
-[${formatTime(timestamps.introStart)}-${formatTime(timestamps.introEnd)}] 🎬 INTRO
-Visual: [...]
-[Script Content]`;
+        userPrompt = `Write hook + intro.
+Title: ${title}
+${channelName ? `Channel: ${channelName}` : ""}
+Difficulty: ${difficulty}
+Hook: ${formatTime(timestamps.hookStart)}-${formatTime(timestamps.hookEnd)}
+Intro: ${formatTime(timestamps.introStart)}-${formatTime(timestamps.introEnd)}
+Requirements: attention in first 3 seconds, clear value promise, curiosity loop.
+Format:
+[${formatTime(timestamps.hookStart)}-${formatTime(timestamps.hookEnd)}] HOOK
+Visual: ...
+Script...
+[${formatTime(timestamps.introStart)}-${formatTime(timestamps.introEnd)}] INTRO
+Visual: ...
+Script...`;
 
     } else if (stage === "main_content") {
-        userPrompt = `Continue with MAIN CONTENT.
-previous: ${previousContent.substring(previousContent.length - 500)}
-
-REQUIREMENTS:
-- Break into subsections
-- Use analogies
-- High energy
-${formData.includeCode ? "- SHOW WORKING CODE FIRST then explain line-by-line" : ""}
-
-FORMAT:
-[Timestamp] 📚 SUBSECTION
-[Content]`;
+        userPrompt = `Write main content.
+Previous: ${truncateText(previousContent, 400)}
+Requirements: 3-5 subsections, punchy lines, clear steps, 1 analogy per subsection.
+${formData.includeCode ? "Show working code first, then explain briefly." : ""}
+Format:
+[Timestamp] SUBSECTION
+Script...`;
     } else if (stage === "demo_outro") {
-        userPrompt = `Complete with DEMO and OUTRO.
-previous: ${previousContent.substring(previousContent.length - 500)}
-
-REQUIREMENTS:
-- Step-by-step practical demo
-- Strong outro with 3 key takeaways
-- Call to action
-
-FORMAT:
-[Timestamp] 🛠️ DEMO
-[Content]
-
-[Timestamp] 👋 OUTRO
-[Content]`;
+        userPrompt = `Write demo + outro.
+Previous: ${truncateText(previousContent, 400)}
+Requirements: step-by-step demo, 3 crisp takeaways, short CTA.
+Format:
+[Timestamp] DEMO
+Script...
+[Timestamp] OUTRO
+Script...`;
     }
 
-    return { systemPrompt, userPrompt, model: "gpt-4o-mini", max_tokens: 2000 };
+    return { systemPrompt, userPrompt, model: "gpt-4o-mini", max_tokens: 1400 };
 };
 
 export const constructProductionNotesPrompt = (formData: FormData, fullScript: string) => {
     const { title, includeCode } = formData;
 
-    const systemPrompt = `You are an expert YouTube video producer and editor. You understand exactly what makes content visually engaging and easy to follow. Your production notes are used by professional video editors.`;
+    const systemPrompt = `You are a professional YouTube video producer. Create practical, concise production notes.`;
 
-    const userPrompt = `Create DETAILED production notes for this YouTube video.
-
-VIDEO TITLE: ${title}
-
-SCRIPT SUMMARY:
-${fullScript.substring(0, 2500)}
-
-Generate comprehensive production notes that a video editor can directly use:
-
-═══════════════════════════════════════════════════════════════
-📹 PRODUCTION NOTES: ${title}
-═══════════════════════════════════════════════════════════════
-
-🎬 B-ROLL SHOTS NEEDED:
-List 6-8 SPECIFIC B-roll shots with exact descriptions:
-1. [Timestamp range] - [Exact description of what to show]
-2. [Continue for each...]
-
-Example format:
-1. [0:15-0:20] - Close-up of hands typing on mechanical keyboard with code visible on screen
-2. [1:30-1:45] - Stock footage of server room with blinking lights
-
----
-
-🎨 GRAPHICS & ANIMATIONS:
-List 4-6 specific graphics to create:
+    const userPrompt = `Create production notes that look premium and scannable.
+Use tasteful emojis, clean separators, and a compact table where asked. Keep it concise.
+Title: ${title}
+Script summary: ${truncateText(fullScript, 1200)}
+Output sections (use this order and headings):
+1) 🎬 B-ROLL (6-8 items, timestamp + description)
+2) 🎨 GRAPHICS (4-6 items)
 ${includeCode ? `
-- Animated code snippet appearing line by line
-- Variable/function name callouts with arrows
-- Before/After code comparison split screen
-- Error message popup graphics
-- Console output overlay
+- Code snippet reveal
+- Function callouts
+- Before/after split
+- Error vs fix overlay
 ` : `
-- Key concept text animations
-- Diagram/flowchart for explaining concepts
-- List animations for main points
+- Key concept text
+- Diagram/flowchart
+- Step list animation
 `}
-
----
-
+3) 📝 ON-SCREEN TEXT (6-8 items)
 ${includeCode ? `
-💻 CODE DISPLAY REQUIREMENTS:
-- IDE Theme: Dark theme (Dracula/One Dark recommended)
-- Font: Fira Code or JetBrains Mono, 18px minimum
-- Line highlighting: Yellow/green glow on current line being explained
-- Zoom: 150% when explaining specific lines
-- Show line numbers: YES
-- Show file tabs: When switching between files
-- Terminal/Console: Side panel or bottom panel, clearly visible
-
-📍 CODE MOMENTS TO HIGHLIGHT:
-- Each import statement (briefly)
-- Function declarations (zoom in)
-- Variable assignments (highlight the value)
-- Return statements (emphasize)
-- Error-causing lines (red highlight)
-- Fixed code (green highlight with checkmark)
-
-` : `
-🖥️ SCREEN RECORDING NOTES:
-- Resolution: 1080p minimum
-- Cursor highlighting: Enable with yellow circle
-- Zoom on important elements
-- Clean desktop, hide personal items
-`}
-
----
-
-🎵 BACKGROUND MUSIC GUIDE:
-| Section | Music Style | Energy Level | Volume |
-|---------|-------------|--------------|--------|
-| Hook | Upbeat electronic | High 🔥 | 30% |
-| Intro | Motivational tech | Medium-High | 25% |
-| Main Content | Lo-fi ambient | Low-Medium | 15% |
-${includeCode ? `| Code Explanation | Minimal/None | Very Low | 10% |` : ''}
-| Demo | Building momentum | Medium | 20% |
-| Outro | Uplifting, achievement | High | 30% |
-
-Recommended: Epidemic Sound / Artlist tracks - search "tech tutorial", "coding", "productivity"
-
----
-
-📝 TEXT OVERLAYS TO ADD:
-List 6-8 key phrases that should appear on screen:
-${includeCode ? `
-1. Function/variable names when first introduced
-2. Key syntax to remember
-3. "Pro Tip:" callouts
-4. Common error messages
+1. Function names
+2. Key syntax
+3. Pro tips
+4. Error messages
 5. Output examples
 ` : `
-1. Main topic title
-2. Key points as bullet lists
-3. Important terms with definitions
-4. Step numbers for processes
+1. Title
+2. Key points
+3. Definitions
+4. Step numbers
 `}
+4) ✂️ EDITING NOTES (transitions + pacing)
+5) 🎵 BACKGROUND MUSIC GUIDE (compact table with: Section | Style | Energy | Volume)
+6) 🖼️ THUMBNAIL NOTES (subject + 3-4 word text)`;
 
----
-
-✂️ EDITING NOTES:
-
-TRANSITIONS:
-- Between sections: Simple cut or subtle zoom
-- Concept to example: Whip pan or dissolve
-- Code to output: Split second freeze + slide
-
-PACING:
-- Hook: Fast cuts, high energy
-- Explanation: Slower, let it breathe
-- Code walkthrough: Match narration speed exactly
-- Demo: Real-time with minor speedups for typing
-
-EFFECTS TO USE:
-${includeCode ? `
-- Code zoom: Smooth 1.5x zoom on specific lines
-- Highlight box: Rounded rectangle around important code
-- Arrow annotations: Point to specific syntax
-- Typing animation: For code reveal moments
-- Error shake: Screen shake for error demonstrations
-- Success pop: Confetti or checkmark for working code
-` : `
-- Zoom punches on key words
-- Lower thirds for topic labels
-- Callout boxes for definitions
-- Progress indicators for multi-step processes
-`}
-
----
-
-📱 THUMBNAIL NOTES:
-- Main subject: ${includeCode ? 'Code snippet or error message' : 'Key visual representing the topic'}
-- Expression: Excited/surprised face (if using face)
-- Text: Maximum 3-4 words, bold sans-serif
-- Colors: High contrast, brand consistent
-- Elements: Arrow pointing to key thing, emoji optional`;
-
-    return { systemPrompt, userPrompt, model: "gpt-4-turbo", max_tokens: 3000 };
+    return { systemPrompt, userPrompt, model: "gpt-4o-mini", max_tokens: 1400 };
 };
 
 export const constructSEOPrompt = (formData: FormData) => {
     const { title, contentType } = formData;
 
-    const systemPrompt = `You are a YouTube SEO expert. You understand the YouTube algorithm, trending keywords, and what makes videos go viral. You've helped channels grow from 0 to 1M+ subscribers.`;
+    const systemPrompt = `You are a YouTube SEO expert. Be concise and practical.`;
 
-    const userPrompt = `Create OPTIMIZED SEO data for this YouTube video.
+    const userPrompt = `Create SEO pack.
+Title: ${title}
+Type: ${contentType}
+Return:
+1) 5 alt titles (<=60 chars, keyword + curiosity)
+2) Description (160-220 words) with hook, 3 bullets, timestamps, CTA, hashtags
+3) 18-22 tags (comma-separated)
+4) 3 thumbnail text options (3-5 words)
+5) Pinned comment (friendly Thunglish, 2-3 lines)`;
 
-VIDEO TITLE: ${title}
-CONTENT TYPE: ${contentType}
-
-Generate SEO-optimized content that will help this video rank and get clicks:
-
-═══════════════════════════════════════════════════════════════
-
-TITLES:
-Create 5 alternative titles. Each should be:
-- Under 60 characters
-- Include primary keyword
-- Have emotional trigger or curiosity element
-- Mix of Tamil and English for broader reach
-
-1. [Power word + Topic + Benefit] - e.g., "🔥 React Hooks Complete Guide - இனி Confusion இல்ல!"
-2. [Question format] - e.g., "useState எப்படி Work ஆகுது? 90% Developers இது Miss பண்றாங்க"
-3. [How-to format] - e.g., "React useState கத்துக்கணுமா? இந்த Video போதும்!"
-4. [Number/List format] - e.g., "5 useState Mistakes நீங்க பண்ணிருக்கலாம் | React Tutorial Tamil"
-5. [Controversial/Bold] - e.g., "useState தெரியாம React எழுதாதீங்க! 🚫"
-
-DESCRIPTION:
-Write a 250-300 word YouTube description that:
-- Opens with a hook (first 150 characters visible in search)
-- Includes primary and secondary keywords naturally
-- Has timestamps for main sections
-- Includes call-to-action
-- Has social links placeholder
-- Ends with relevant hashtags
-
-Format:
-[Opening hook - 2 lines]
-
-📚 What You'll Learn:
-• Point 1
-• Point 2
-• Point 3
-
-⏱️ Timestamps:
-0:00 - Introduction
-[Add more based on typical structure]
-
-🔗 Resources:
-[Placeholder for links]
-
-👋 Connect:
-[Social media placeholders]
-
-#TamilTech #[Topic]Tags #[More relevant tags]
-
-TAGS:
-Generate 18-22 comma-separated tags including:
-- Primary keyword variations
-- Tamil keywords (in English letters)
-- Related tech terms
-- Long-tail keywords
-- Competitor video keywords
-
-Example: React tutorial Tamil, useState hook Tamil, React hooks explain, Tamil tech tutorial, learn React Tamil, web development Tamil...
-
-THUMBNAILS:
-3 thumbnail text options (3-5 words max, ALL CAPS works best):
-
-1. [Emotion + Topic] - e.g., "useState 🤯 EXPLAINED!"
-2. [Problem/Solution] - e.g., "REACT CONFUSION? ❌➡️✅"
-3. [Benefit focused] - e.g., "MASTER REACT HOOKS 🎯"
-
-COMMENT:
-Write a pinned first comment in Thunglish that:
-- Asks an engaging question
-- Creates discussion
-- Hints at future content
-- Feels personal and friendly
-
-Example format:
-"Dei friends! 🔥 Ivlo vara antha [topic] pathi detailed ah paathom. Ungalukku innum enna topic la video venum? Comment pannunga da! Like panna marakatheenga! 👍
-
-Next video la [related topic] pathi paakalam, interested ah? 🤔"`;
-
-    return { systemPrompt, userPrompt, model: "gpt-4-turbo", max_tokens: 2500 };
+    return { systemPrompt, userPrompt, model: "gpt-4o-mini", max_tokens: 1200 };
 };
 
 export const constructImagePromptsPrompt = (
@@ -400,7 +175,7 @@ export const constructImagePromptsPrompt = (
     const aspectRatio = imageFormat === "portrait" ? "9:16" : imageFormat === "square" ? "1:1" : "16:9";
     const formatHint = imageFormat === "portrait" ? "vertical mobile-first" : imageFormat === "square" ? "centered balanced" : "cinematic wide";
 
-    const systemPrompt = `Expert AI image prompt engineer. Create Midjourney/DALL-E 3/SDXL-ready prompts. Output: JSON array only, no markdown.`;
+    const systemPrompt = `Image prompt engineer. Output JSON array only.`;
 
     const userPrompt = `Generate 8 ${aspectRatio} image prompts for: "${title}"
 Type: ${contentType}${includeCode ? " (coding tutorial)" : ""}
@@ -409,7 +184,7 @@ Composition: ${formatHint}
 Timeline:
 Hook ${formatTime(timestamps.hookStart)}-${formatTime(timestamps.hookEnd)} | Intro ${formatTime(timestamps.introStart)}-${formatTime(timestamps.introEnd)} | Main ${formatTime(timestamps.mainStart)}-${formatTime(timestamps.mainEnd)} | Demo ${formatTime(timestamps.demoStart)}-${formatTime(timestamps.demoEnd)} | Outro ${formatTime(timestamps.outroStart)}-${formatTime(timestamps.outroEnd)}
 
-Context: ${fullScript.substring(0, 800)}
+Context: ${truncateText(fullScript, 500)}
 
 Distribution: 2 Hook, 1 Intro, 3 Main, 1 Demo, 1 Outro
 
@@ -422,7 +197,7 @@ Requirements per prompt:
 ${includeCode ? "- Show: IDE screens, code snippets, terminal outputs, tech devices" : "- Show: Concept diagrams, infographics, professional visuals"}
 - Optimized for ${aspectRatio} framing`;
 
-    return { systemPrompt, userPrompt, model: "gpt-4-turbo", max_tokens: 2500 };
+    return { systemPrompt, userPrompt, model: "gpt-4o-mini", max_tokens: 1200 };
 };
 
 export const constructChaptersPrompt = (
@@ -436,7 +211,7 @@ export const constructChaptersPrompt = (
 
 Timeline: Hook 0:00-${formatTime(timestamps.hookEnd)} | Intro ${formatTime(timestamps.introStart)}-${formatTime(timestamps.introEnd)} | Main ${formatTime(timestamps.mainStart)}-${formatTime(timestamps.mainEnd)} | Demo ${formatTime(timestamps.demoStart)}-${formatTime(timestamps.demoEnd)} | Outro ${formatTime(timestamps.outroStart)}-${formatTime(timestamps.outroEnd)}
 
-Script summary: ${fullScript.substring(0, 600)}
+Script summary: ${truncateText(fullScript, 400)}
 
 Create 6-10 chapters. JSON array only:
 [{"timestamp":"0:00","title":"Short engaging title (max 5 words)","description":"One line about this section"}]
@@ -446,7 +221,7 @@ Rules:
 - Titles: engaging, curiosity-inducing
 - Cover all major topic transitions`;
 
-    return { systemPrompt: "You are a YouTube chapter generator.", userPrompt, model: "gpt-4-turbo", max_tokens: 1000 };
+    return { systemPrompt: "You are a YouTube chapter generator.", userPrompt, model: "gpt-4o-mini", max_tokens: 600 };
 };
 
 export const constructBRollPrompt = (
@@ -461,7 +236,7 @@ Type: ${contentType}${includeCode ? " (coding)" : ""}
 
 Timeline: Hook-${formatTime(timestamps.hookEnd)} | Intro-${formatTime(timestamps.introEnd)} | Main-${formatTime(timestamps.mainEnd)} | Demo-${formatTime(timestamps.demoEnd)} | Outro-${formatTime(timestamps.outroEnd)}
 
-Script: ${fullScript.substring(0, 500)}
+Script: ${truncateText(fullScript, 350)}
 
 Create 10-12 B-Roll suggestions. JSON array only:
 [{"id":1,"timestamp":"0:00-0:24","scene":"Hook","suggestion":"Specific B-Roll description","source":"stock|screen|animation|self-record","searchTerms":["term1","term2","term3"]}]
@@ -474,7 +249,7 @@ Sources:
 
 ${includeCode ? "Focus on: IDE screenshots, terminal outputs, code animations, typing sequences" : "Focus on: concept visuals, reactions, professional footage"}`;
 
-    return { systemPrompt: "You are a B-Roll suggestion generator.", userPrompt, model: "gpt-4-turbo", max_tokens: 1500 };
+    return { systemPrompt: "You are a B-Roll suggestion generator.", userPrompt, model: "gpt-4o-mini", max_tokens: 800 };
 };
 
 export const constructShortsPrompt = (
@@ -487,7 +262,7 @@ export const constructShortsPrompt = (
 Type: ${contentType}
 
 Full script:
-${fullScript.substring(0, 1200)}
+${truncateText(fullScript, 900)}
 
 Create 4 standalone 30-60 second Shorts. JSON array only:
 [{"id":1,"title":"Catchy Shorts title (curiosity/value)","hook":"Opening line (first 3 sec - must grab attention)","content":"Main content script (20-40 sec, complete thought, valuable standalone)","cta":"Closing CTA (like/follow/comment prompt)","originalTimestamp":"2:30-3:15","viralScore":85}]
@@ -500,7 +275,7 @@ Viral Score criteria (1-100):
 
 Focus on: surprising facts, quick tips, relatable moments, controversy/opinions`;
 
-    return { systemPrompt: "You are a viral content extractor.", userPrompt, model: "gpt-4-turbo", max_tokens: 2000 };
+    return { systemPrompt: "You are a viral content extractor.", userPrompt, model: "gpt-4o-mini", max_tokens: 1200 };
 };
 
 export const constructTranslatePrompt = (targetLanguage: string, fullScript: string) => {
@@ -533,5 +308,5 @@ Output format: Translated script text ONLY. No other text.
 SCRIPT:
 ${fullScript}`;
 
-    return { systemPrompt, userPrompt, model: "gpt-4o-mini", max_tokens: 4000 };
+    return { systemPrompt, userPrompt, model: "gpt-4o-mini", max_tokens: 3000 };
 };
