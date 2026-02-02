@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import type { Metadata } from "next";
 import HomeCta from "@/components/HomeCta";
 
@@ -257,53 +258,54 @@ export default function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareSchema) }}
       />
-      <section className="border-b border-slate-200/80 bg-white">
-        <div className="max-w-6xl mx-auto px-6 py-16 sm:py-20">
-          <div className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] items-center">
-            <div className="max-w-3xl space-y-5">
-              <span className="inline-block text-xs font-medium uppercase tracking-wider text-slate-500">
-                Free AI Script Generator
+      <section className="relative border-b border-slate-200/80 bg-gradient-to-b from-slate-50/50 to-white overflow-hidden">
+        <div className="absolute inset-0 h-1 w-full bg-gradient-to-r from-blue-600 via-blue-500 to-amber-400/80 opacity-90" />
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 relative">
+          <div className="grid gap-12 lg:grid-cols-[1.05fr_0.95fr] items-center">
+            <div className="max-w-3xl space-y-6">
+              <span className="inline-block text-xs font-semibold uppercase tracking-wider text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md">
+                Free Script Generator
               </span>
-              <h1 className="text-3xl sm:text-4xl font-semibold leading-tight text-slate-900 tracking-tight">
-                AI Script Generator for YouTube
+              <h1 className="text-3xl sm:text-4xl lg:text-[2.75rem] font-bold leading-[1.15] text-slate-900 tracking-tight">
+                Script Generator for YouTube
                 <span className="text-blue-600"> – Free & Fast</span>
               </h1>
-              <p className="text-slate-600 text-base leading-relaxed">
-                Generate professional YouTube scripts with AI in minutes. Supports Tamil, Hindi, English, Thunglish with automated SEO optimization, chapters, B-roll suggestions, and shorts extraction.
+              <p className="text-slate-600 text-base sm:text-lg leading-relaxed max-w-xl">
+                Generate professional YouTube scripts in minutes. Tamil, Hindi, English, Thunglish — with SEO, chapters, B-roll, and shorts. Start with 50 free tokens.
               </p>
               <div className="flex flex-wrap gap-3">
                 <HomeCta
-                  className="px-5 py-2.5 rounded-lg bg-blue-700 text-white font-semibold shadow-md shadow-blue-700/20 hover:bg-blue-800 transition"
+                  className="px-6 py-3 rounded-xl bg-blue-600 text-white font-semibold shadow-lg shadow-blue-600/25 hover:bg-blue-700 hover:shadow-blue-600/30 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                 >
                   Get started
                 </HomeCta>
                 <a
                   href="#faq"
-                  className="px-5 py-2.5 rounded-lg border border-slate-300 text-slate-700 font-semibold hover:border-slate-400 transition bg-white"
+                  className="px-6 py-3 rounded-xl border-2 border-slate-200 text-slate-700 font-semibold hover:border-slate-300 hover:bg-slate-50 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                 >
                   Read FAQ
                 </a>
               </div>
-              <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500">
+              <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-sm text-slate-500 pt-1">
                 <span className="inline-flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-green-500" />
+                  <span className="h-2 w-2 rounded-full bg-green-500 ring-2 ring-green-500/30" />
                   50 free tokens on signup
                 </span>
-                <span>Script costs 10 tokens + 10 per feature</span>
-                <a href="/refund-policy" className="text-blue-600 hover:text-blue-700 font-medium">
+                <span>10 tokens per script + 10 per feature</span>
+                <a href="/refund-policy" className="text-blue-600 hover:text-blue-700 font-medium underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded">
                   Refund policy
                 </a>
               </div>
             </div>
-            <div className="relative w-full max-w-xl justify-self-center">
-              <div className="absolute -inset-6 rounded-3xl bg-blue-100/60 blur-3xl" />
-              <div className="relative rounded-3xl border border-slate-200 bg-white p-4 shadow-xl">
+            <div className="relative w-full max-w-xl justify-self-center lg:justify-self-end">
+              <div className="absolute -inset-4 sm:-inset-6 rounded-3xl bg-gradient-to-br from-blue-100/70 to-slate-100/50 blur-2xl" />
+              <div className="relative rounded-2xl border border-slate-200/80 bg-white p-3 sm:p-4 shadow-xl shadow-slate-200/50 ring-1 ring-slate-200/50">
                 <Image
                   src="/hero-illustration.png"
-                  alt="Abstract illustration representing fast script generation"
+                  alt="Script generation workflow"
                   width={1200}
                   height={675}
-                  className="w-full h-auto rounded-2xl"
+                  className="w-full h-auto rounded-xl"
                   priority
                 />
               </div>
@@ -312,28 +314,28 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-6 py-10">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-14">
         <div className="grid gap-4 sm:grid-cols-3">
           {stats.map((stat) => (
             <div
               key={stat.label}
-              className="rounded-xl border border-slate-200/80 bg-white p-5 text-center shadow-sm"
+              className="rounded-2xl border border-slate-200/80 bg-white p-6 sm:p-7 text-center shadow-sm hover:shadow-md hover:border-slate-200 transition-all"
             >
-              <p className="text-xl font-semibold text-slate-900 tracking-tight">{stat.value}</p>
-              <p className="text-sm text-slate-500 mt-1">{stat.label}</p>
+              <p className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight text-blue-600">{stat.value}</p>
+              <p className="text-sm text-slate-500 mt-1.5 font-medium">{stat.label}</p>
             </div>
           ))}
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-6 pb-10">
-        <div className="rounded-xl border border-slate-200/80 bg-white px-6 py-5">
-          <p className="text-xs font-medium uppercase tracking-wider text-slate-400 text-center">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+        <div className="rounded-2xl border border-slate-200/80 bg-slate-50/50 px-6 py-6">
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 text-center">
             Trusted by teams
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-6 mt-3 text-sm font-medium text-slate-500">
+          <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-10 mt-4 text-sm font-medium text-slate-500">
             {logos.map((logo) => (
-              <span key={logo} className="tracking-wide">
+              <span key={logo} className="tracking-wide hover:text-slate-700 transition-colors">
                 {logo}
               </span>
             ))}
@@ -341,60 +343,64 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-6 py-14 sm:py-20">
-        <div className="grid gap-8 lg:grid-cols-[1.1fr_1fr] items-start">
-          <div className="space-y-3">
-            <p className="text-xs font-medium uppercase tracking-wider text-blue-600">
-              Advantages
-            </p>
-            <h2 className="text-2xl font-semibold text-slate-900 tracking-tight">Why teams choose ScriptGen</h2>
-            <p className="text-slate-600 text-sm leading-relaxed">
-              Move faster from concept to publish-ready scripts while keeping quality high.
-            </p>
-          </div>
-          <div className="grid gap-4">
-            {advantages.map((item, index) => (
-              <div
-                key={item.title}
-                className="rounded-xl border border-slate-200/80 p-5 bg-white shadow-sm"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="h-8 w-8 rounded-full bg-blue-100 text-blue-700 text-sm font-semibold flex items-center justify-center">
-                    {index + 1}
-                  </span>
-                  <h3 className="font-semibold text-lg">{item.title}</h3>
+      <section className="relative overflow-hidden border-y border-slate-200/80 bg-gradient-to-b from-slate-50/80 to-white py-14 sm:py-20">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+          <div className="grid gap-10 lg:grid-cols-[1.1fr_1fr] items-start">
+            <div className="space-y-4">
+              <span className="inline-block text-xs font-semibold uppercase tracking-wider text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full">
+                Advantages
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Why teams choose ScriptGen</h2>
+              <p className="text-slate-600 text-base leading-relaxed max-w-md">
+                Move faster from concept to publish-ready scripts while keeping quality high.
+              </p>
+              <div className="h-px w-12 bg-gradient-to-r from-blue-500 to-transparent rounded-full" aria-hidden />
+            </div>
+            <div className="grid gap-4">
+              {advantages.map((item, index) => (
+                <div
+                  key={item.title}
+                  className="group rounded-2xl border border-slate-200/80 p-5 sm:p-6 bg-white shadow-sm hover:shadow-lg hover:shadow-blue-500/5 hover:border-blue-200/60 transition-all duration-300 relative overflow-hidden"
+                >
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500 to-blue-400 rounded-l-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" aria-hidden />
+                  <div className="flex items-center gap-3">
+                    <span className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white text-sm font-bold flex items-center justify-center flex-shrink-0 shadow-sm">
+                      {index + 1}
+                    </span>
+                    <h3 className="font-semibold text-lg text-slate-900">{item.title}</h3>
+                  </div>
+                  <p className="text-slate-600 mt-3 text-sm leading-relaxed">{item.description}</p>
                 </div>
-                <p className="text-slate-600 mt-3">{item.description}</p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="border-y border-slate-200/80 bg-white">
-        <div className="max-w-6xl mx-auto px-6 py-14 sm:py-20">
-          <div className="text-center max-w-2xl mx-auto space-y-2 mb-10">
-            <p className="text-xs font-medium uppercase tracking-wider text-blue-600">
+      <section className="border-y border-slate-200/80 bg-slate-50/30">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20">
+          <div className="text-center max-w-2xl mx-auto space-y-3 mb-12">
+            <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">
               How it works
             </p>
-            <h2 className="text-2xl font-semibold text-slate-900 tracking-tight">From idea to publish-ready</h2>
-            <p className="text-slate-600 text-sm">
+            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">From idea to publish-ready</h2>
+            <p className="text-slate-600 text-base">
               A streamlined workflow for speed and quality.
             </p>
           </div>
-          <div className="grid gap-5 lg:grid-cols-3">
+          <div className="grid gap-6 lg:grid-cols-3">
             {steps.map((step, index) => (
               <div
                 key={step.title}
-                className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm"
+                className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm hover:shadow-md transition-all"
               >
                 <div className="flex items-center gap-3">
-                  <span className="h-10 w-10 rounded-full bg-blue-600 text-white text-sm font-semibold flex items-center justify-center">
+                  <span className="h-11 w-11 rounded-xl bg-blue-600 text-white text-base font-bold flex items-center justify-center flex-shrink-0">
                     {index + 1}
                   </span>
-                  <h3 className="text-xl font-semibold">{step.title}</h3>
+                  <h3 className="text-xl font-semibold text-slate-900">{step.title}</h3>
                 </div>
-                <p className="text-slate-600 mt-3">{step.description}</p>
+                <p className="text-slate-600 mt-3 text-sm leading-relaxed">{step.description}</p>
               </div>
             ))}
           </div>
@@ -403,39 +409,39 @@ export default function Home() {
 
       <section
         id="features"
-        className="border-y border-slate-200/80 bg-slate-50/50"
+        className="border-y border-slate-200/80 bg-white"
       >
-        <div className="max-w-6xl mx-auto px-6 py-14 sm:py-20">
-          <div className="space-y-2">
-            <p className="text-xs font-medium uppercase tracking-wider text-blue-600">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20">
+          <div className="space-y-3 mb-10">
+            <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">
               Features
             </p>
-            <h2 className="text-2xl font-semibold text-slate-900 tracking-tight">Built for growth</h2>
-            <p className="text-slate-600 text-sm max-w-2xl">
+            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Built for growth</h2>
+            <p className="text-slate-600 text-base max-w-2xl">
               Clear, persuasive scripts that align with your goals.
             </p>
           </div>
-          <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr] items-center mt-8">
-            <div className="relative">
-              <div className="absolute -inset-4 rounded-2xl bg-slate-100/80 blur-2xl" />
-              <div className="relative rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
+          <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] items-center">
+            <div className="relative order-2 lg:order-1">
+              <div className="absolute -inset-4 rounded-2xl bg-slate-100/60 blur-2xl" />
+              <div className="relative rounded-2xl border border-slate-200/80 bg-white p-4 shadow-lg shadow-slate-200/40 ring-1 ring-slate-200/50">
                 <Image
                   src="/features-illustration.png"
                   alt="Feature illustration with cards"
                   width={900}
                   height={675}
-                  className="w-full h-auto rounded-2xl"
+                  className="w-full h-auto rounded-xl"
                 />
               </div>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2 order-1 lg:order-2">
               {features.map((feature) => (
                 <div
                   key={feature.title}
-                  className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm"
+                  className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm hover:shadow-md hover:border-slate-200 transition-all"
                 >
                   <h3 className="font-semibold text-slate-900">{feature.title}</h3>
-                  <p className="text-slate-600 text-sm mt-1.5">{feature.description}</p>
+                  <p className="text-slate-600 text-sm mt-2 leading-relaxed">{feature.description}</p>
                 </div>
               ))}
             </div>
@@ -443,97 +449,97 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-6 py-14 sm:py-20">
-        <div className="text-center max-w-2xl mx-auto space-y-2">
-          <p className="text-xs font-medium uppercase tracking-wider text-blue-600">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20 bg-slate-50/30">
+        <div className="text-center max-w-2xl mx-auto space-y-3 mb-10">
+          <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">
             Testimonials
           </p>
-          <h2 className="text-2xl font-semibold text-slate-900 tracking-tight">Trusted by teams</h2>
-          <p className="text-slate-600 text-sm">
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Trusted by teams</h2>
+          <p className="text-slate-600 text-base">
             Scale production without sacrificing quality.
           </p>
         </div>
-        <div className="grid gap-4 sm:grid-cols-3 mt-8">
+        <div className="grid gap-5 sm:grid-cols-3">
           {testimonials.map((item) => (
             <div
               key={item.name}
-              className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm"
+              className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm hover:shadow-md transition-all"
             >
-              <p className="text-amber-500 text-sm font-medium">
+              <p className="text-amber-500 text-sm font-medium" aria-hidden>
                 ★★★★★
               </p>
-              <p className="text-slate-700 text-sm mt-2 leading-relaxed">“{item.quote}”</p>
-              <div className="mt-3">
-                <p className="text-sm font-medium text-slate-900">{item.name}</p>
-                <p className="text-xs text-slate-500">{item.role}</p>
+              <p className="text-slate-700 text-sm mt-3 leading-relaxed">“{item.quote}”</p>
+              <div className="mt-4 pt-3 border-t border-slate-100">
+                <p className="text-sm font-semibold text-slate-900">{item.name}</p>
+                <p className="text-xs text-slate-500 mt-0.5">{item.role}</p>
               </div>
             </div>
           ))}
         </div>
       </section>
 
-      <section id="pricing" className="border-y border-slate-200/80 bg-slate-50/50 scroll-mt-20">
-        <div className="max-w-6xl mx-auto px-6 py-14 sm:py-20">
+      <section id="pricing" className="border-y border-slate-200/80 bg-white scroll-mt-20">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-2xl space-y-2">
-              <p className="text-xs font-medium uppercase tracking-wider text-blue-600">
+              <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">
                 Pricing
               </p>
-              <h2 className="text-2xl font-semibold text-slate-900 tracking-tight">Simple token pricing</h2>
-              <p className="text-slate-600 text-sm">
+              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Simple token pricing</h2>
+              <p className="text-slate-600 text-base">
                 Script: 10 tokens. Each feature: +10 tokens. Top up anytime.
               </p>
             </div>
-            <HomeCta className="px-5 py-2.5 rounded-lg bg-blue-700 text-white font-semibold shadow-md shadow-blue-700/20 hover:bg-blue-800 transition">
+            <HomeCta className="px-6 py-3 rounded-xl bg-blue-600 text-white font-semibold shadow-lg shadow-blue-600/25 hover:bg-blue-700 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 w-fit">
               Start free
             </HomeCta>
           </div>
-          <div className="mt-6 flex items-center gap-3 p-4 rounded-xl bg-green-50 border border-green-100 text-green-800 text-sm font-medium">
-            <span className="h-8 w-8 rounded-full bg-green-200 flex items-center justify-center text-green-700 font-bold" aria-hidden>✓</span>
+          <div className="mt-8 flex items-center gap-3 p-4 sm:p-5 rounded-2xl bg-green-50/80 border border-green-200/80 text-green-800 text-sm font-medium">
+            <span className="h-9 w-9 rounded-full bg-green-200 flex items-center justify-center text-green-700 font-bold flex-shrink-0" aria-hidden>✓</span>
             <span>
               Secure payment via Razorpay. Your card details are never stored. PCI DSS compliant • Instant token delivery.
             </span>
           </div>
-          <div className="mt-6 rounded-xl border border-slate-200/80 bg-white p-5">
-            <p className="text-sm font-medium text-slate-900 mb-3">
+          <div className="mt-8 rounded-2xl border border-slate-200/80 bg-slate-50/50 p-6">
+            <p className="text-sm font-semibold text-slate-900 mb-4">
               Feature cost
             </p>
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 text-sm text-slate-600">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 text-sm text-slate-600">
               {pricingBreakdown.map((item) => (
-                <div key={item.label} className="flex items-center justify-between">
+                <div key={item.label} className="flex items-center justify-between py-1">
                   <span>{item.label}</span>
                   <span className="font-semibold text-slate-800">{item.tokens} tokens</span>
                 </div>
               ))}
             </div>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mt-8">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 mt-10">
             {pricing.map((plan) => (
               <div
                 key={plan.name}
-                className={`relative overflow-hidden rounded-xl border p-5 ${
+                className={`relative overflow-hidden rounded-2xl border-2 p-6 transition-all ${
                   plan.highlight
-                    ? "border-blue-500 bg-white shadow-md ring-1 ring-blue-500/20"
-                    : "border-slate-200/80 bg-white shadow-sm"
+                    ? "border-blue-500 bg-white shadow-lg ring-1 ring-blue-500/20"
+                    : "border-slate-200/80 bg-white shadow-sm hover:shadow-md hover:border-slate-200"
                 }`}
               >
                 {plan.highlight && (
-                  <span className="absolute right-3 top-3 text-[10px] font-medium uppercase tracking-wider text-blue-600">
+                  <span className="absolute right-4 top-4 text-[10px] font-semibold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-1 rounded-md">
                     Popular
                   </span>
                 )}
-                <p className="text-sm font-medium text-slate-900">{plan.name}</p>
-                <div className="mt-3 flex items-baseline gap-1.5">
-                  <p className="text-2xl font-semibold text-slate-900 tracking-tight">₹{plan.price}</p>
+                <p className="text-base font-semibold text-slate-900">{plan.name}</p>
+                <div className="mt-4 flex items-baseline gap-2">
+                  <p className="text-2xl font-bold text-slate-900 tracking-tight">₹{plan.price}</p>
                   <p className="text-xs text-slate-500">/ {Math.floor(plan.tokens / 10)} outputs</p>
                 </div>
                 <p className="text-xs text-slate-500 mt-1">{plan.tokens} tokens</p>
-                <div className="mt-5">
+                <div className="mt-6">
                   <HomeCta
-                    className={`w-full px-4 py-2.5 rounded-lg text-sm font-medium transition ${
+                    className={`w-full px-4 py-3 rounded-xl text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
                       plan.highlight
                         ? "bg-blue-600 text-white hover:bg-blue-700"
-                        : "border border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50"
+                        : "border-2 border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50"
                     }`}
                   >
                     Get {plan.name}
@@ -543,50 +549,62 @@ export default function Home() {
               </div>
             ))}
           </div>
-          <p className="mt-6 text-center text-sm text-slate-500">
+          <p className="mt-8 text-center text-sm text-slate-500">
             50 free tokens to start • No subscription • Refund policy available
           </p>
         </div>
       </section>
 
-      <section id="faq" className="max-w-6xl mx-auto px-6 py-14 sm:py-20">
-        <div className="grid gap-10 lg:grid-cols-[1fr_1.2fr]">
-          <div className="space-y-2">
-            <p className="text-xs font-medium uppercase tracking-wider text-blue-600">
-              FAQ
-            </p>
-            <h2 className="text-2xl font-semibold text-slate-900 tracking-tight">Frequently asked questions</h2>
-            <p className="text-slate-600 text-sm">
-              Questions? Reach out and we’ll help.
-            </p>
-          </div>
-          <div className="space-y-3">
-            {faqs.map((faq) => (
-              <div
-                key={faq.question}
-                className="rounded-xl border border-slate-200/80 p-5 bg-white shadow-sm"
-              >
-                <h3 className="font-medium text-slate-900">{faq.question}</h3>
-                <p className="text-slate-600 text-sm mt-1.5">{faq.answer}</p>
-              </div>
-            ))}
+      <section id="faq" className="relative border-y border-slate-200/80 bg-gradient-to-b from-white to-slate-50/50 py-14 sm:py-20">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+          <div className="grid gap-10 lg:grid-cols-[1fr_1.2fr]">
+            <div className="space-y-4">
+              <span className="inline-block text-xs font-semibold uppercase tracking-wider text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full">
+                FAQ
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Frequently asked questions</h2>
+              <p className="text-slate-600 text-base max-w-sm">
+                Questions? Reach out and we’ll help.
+              </p>
+              <div className="h-px w-12 bg-gradient-to-r from-blue-500 to-transparent rounded-full" aria-hidden />
+            </div>
+            <div className="space-y-4">
+              {faqs.map((faq) => (
+                <div
+                  key={faq.question}
+                  className="group rounded-2xl border border-slate-200/80 p-5 sm:p-6 bg-white shadow-sm hover:shadow-lg hover:shadow-blue-500/5 hover:border-blue-200/60 transition-all duration-300 relative overflow-hidden"
+                >
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500 to-blue-400 rounded-l-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" aria-hidden />
+                  <div className="flex gap-3">
+                    <span className="flex-shrink-0 h-8 w-8 rounded-lg bg-slate-100 text-slate-600 text-xs font-bold flex items-center justify-center mt-0.5 group-hover:bg-blue-100 group-hover:text-blue-700 transition-colors duration-300">
+                      Q
+                    </span>
+                    <div>
+                      <h3 className="font-semibold text-slate-900 text-base sm:text-lg">{faq.question}</h3>
+                      <p className="text-slate-600 text-sm mt-2 leading-relaxed">{faq.answer}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       <section className="border-t border-slate-200/80 bg-white">
-        <div className="max-w-6xl mx-auto px-6 py-12 sm:py-16">
-          <div className="rounded-2xl bg-slate-900 text-white p-8 sm:p-10 flex flex-col gap-3 sm:items-center sm:text-center">
-            <p className="text-xs font-medium uppercase tracking-wider text-slate-400">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20">
+          <div className="rounded-2xl bg-slate-900 text-white p-8 sm:p-12 flex flex-col gap-4 sm:items-center sm:text-center relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 to-transparent" />
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 relative">
               Get started
             </p>
-            <h2 className="text-2xl font-semibold text-white tracking-tight">
+            <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight relative">
               Ready to create better scripts?
             </h2>
-            <p className="text-slate-300 text-sm max-w-xl">
+            <p className="text-slate-300 text-base max-w-xl relative">
               Sign in with Google. 50 free tokens — no card required.
             </p>
-            <HomeCta className="mt-2 px-5 py-2.5 rounded-lg bg-white text-slate-900 font-medium text-sm hover:bg-slate-100 transition">
+            <HomeCta className="mt-2 px-6 py-3 rounded-xl bg-white text-slate-900 font-semibold hover:bg-slate-100 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 relative">
               Get started
             </HomeCta>
           </div>
