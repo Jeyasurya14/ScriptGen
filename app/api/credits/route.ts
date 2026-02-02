@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sanitizeError } from "@/lib/api-utils";
 
 const FREE_TOKENS = 50;
 
@@ -57,8 +59,8 @@ export async function GET() {
             canGenerate,
         });
     } catch (error) {
-        console.error("Error fetching tokens:", error);
-        return NextResponse.json({ error: "Internal error" }, { status: 500 });
+        console.error("[credits] GET error:", error);
+        return NextResponse.json({ error: sanitizeError(error) }, { status: 500 });
     }
 }
 
@@ -87,9 +89,9 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "No tokens found" }, { status: 404 });
         }
 
-        // Check what to deduct
-        // Parse count from body, default to 10 tokens
-        const { count = 10 } = await req.json().catch(() => ({}));
+        const body = await req.json().catch(() => ({}));
+        const parsed = z.object({ count: z.coerce.number().int().min(1).max(200).default(10) }).safeParse(body);
+        const count = parsed.success ? parsed.data.count : 10;
 
         // Check availability
         const freeRemaining = Math.max(0, FREE_TOKENS - credits.freeScriptsUsed);
@@ -132,7 +134,7 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({ success: true });
     } catch (error) {
-        console.error("Error using tokens:", error);
-        return NextResponse.json({ error: "Internal error" }, { status: 500 });
+        console.error("[credits] POST error:", error);
+        return NextResponse.json({ error: sanitizeError(error) }, { status: 500 });
     }
 }

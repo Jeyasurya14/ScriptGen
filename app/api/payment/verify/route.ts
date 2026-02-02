@@ -5,11 +5,12 @@ import crypto from "crypto";
 // POST - Verify payment and add tokens
 export async function POST(req: NextRequest) {
     try {
-        const {
-            razorpay_order_id,
-            razorpay_payment_id,
-            razorpay_signature,
-        } = await req.json();
+        const body = await req.json().catch(() => ({}));
+        const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = body;
+
+        if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+            return NextResponse.json({ error: "Invalid payment data" }, { status: 400 });
+        }
 
         // Verify signature
         const secret = process.env.RAZORPAY_KEY_SECRET;
@@ -17,10 +18,10 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Payment not configured" }, { status: 503 });
         }
 
-        const body = razorpay_order_id + "|" + razorpay_payment_id;
+        const signaturePayload = razorpay_order_id + "|" + razorpay_payment_id;
         const expectedSignature = crypto
             .createHmac("sha256", secret)
-            .update(body)
+            .update(signaturePayload)
             .digest("hex");
 
         if (expectedSignature !== razorpay_signature) {
@@ -53,17 +54,18 @@ export async function POST(req: NextRequest) {
             }
         });
 
-        // Add tokens to user
-        // Using atomic increment for safety
-        await prisma.userCredits.update({
-            where: {
-                userId: transaction.userId
+        // Add tokens to user (upsert in case credits row doesn't exist)
+        await prisma.userCredits.upsert({
+            where: { userId: transaction.userId },
+            create: {
+                userId: transaction.userId,
+                freeScriptsUsed: 0,
+                paidCredits: transaction.creditsPurchased,
+                totalGenerated: 0,
             },
-            data: {
-                paidCredits: {
-                    increment: transaction.creditsPurchased
-                }
-            }
+            update: {
+                paidCredits: { increment: transaction.creditsPurchased },
+            },
         });
 
         return NextResponse.json({

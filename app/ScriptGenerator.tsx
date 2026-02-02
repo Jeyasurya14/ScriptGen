@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useSession, signIn, signOut } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
+import { useSession, signIn, signOut } from "next-auth/react";
 import Image from "next/image";
 // import { jsPDF } from "jspdf"; // Dynamic import used instead
 import {
@@ -27,10 +27,10 @@ import {
     Trash2,
     Clock,
     Settings2,
-    Share2,
     ShieldCheck,
     Lock,
     Tag,
+    Share2,
 } from "lucide-react";
 
 // Types
@@ -238,8 +238,12 @@ export default function ScriptGenerator() {
     const [promoLoading, setPromoLoading] = useState<boolean>(false);
     const [promoMessage, setPromoMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
     const [referralLink, setReferralLink] = useState<string>("");
+    const [referralLinkLoading, setReferralLinkLoading] = useState<boolean>(false);
+    const [referralLinkError, setReferralLinkError] = useState<boolean>(false);
     const [referralCode, setReferralCode] = useState<string>("");
     const [referralCopied, setReferralCopied] = useState<boolean>(false);
+    const [referralShared, setReferralShared] = useState<boolean>(false);
+    const [canShare, setCanShare] = useState<boolean>(false);
     const [referralApplyCode, setReferralApplyCode] = useState<string>("");
     const [referralApplyLoading, setReferralApplyLoading] = useState<boolean>(false);
     const [referralApplyMessage, setReferralApplyMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -469,31 +473,69 @@ export default function ScriptGenerator() {
         return cost;
     };
 
-    // Handle payment
-    // Fetch referral link when modal opens (logged in user)
+    // Fetch referral link when modal opens (logged-in user)
     useEffect(() => {
-        if (session && showPaymentModal && !referralLink) {
-            fetch("/api/referral")
-                .then((r) => r.ok ? r.json() : null)
-                .then((data) => {
-                    if (data?.link) setReferralLink(data.link);
-                    if (data?.code) setReferralCode(data.code);
-                })
-                .catch(() => {});
+        if (!session || !showPaymentModal) return;
+        if (referralLink) {
+            setReferralLinkError(false);
+            return;
         }
+        setReferralLinkLoading(true);
+        setReferralLinkError(false);
+        fetch("/api/referral")
+            .then((r) => (r.ok ? r.json() : null))
+            .then((data) => {
+                if (data?.link) setReferralLink(data.link);
+                if (data?.code) setReferralCode(data.code);
+                setReferralLinkError(!data?.link);
+            })
+            .catch(() => setReferralLinkError(true))
+            .finally(() => setReferralLinkLoading(false));
     }, [session, showPaymentModal, referralLink]);
+
+    // Reset referral link state when modal closes (refetch on next open)
+    useEffect(() => {
+        if (!showPaymentModal) {
+            setReferralLink("");
+            setReferralLinkError(false);
+            setReferralApplyMessage(null);
+        }
+    }, [showPaymentModal]);
 
     // Pre-fill referral code from ?ref param
     useEffect(() => {
         const ref = searchParams?.get("ref");
-        if (ref && !referralApplyCode) setReferralApplyCode(ref);
+        if (ref && !referralApplyCode) setReferralApplyCode(String(ref).toUpperCase());
     }, [searchParams, referralApplyCode]);
+
+    useEffect(() => {
+        setCanShare(typeof navigator !== "undefined" && !!navigator.share);
+    }, []);
 
     const handleCopyReferralLink = async () => {
         if (!referralLink) return;
         await navigator.clipboard.writeText(referralLink);
         setReferralCopied(true);
         setTimeout(() => setReferralCopied(false), 2000);
+    };
+
+    const handleShareReferralLink = async () => {
+        if (!referralLink) return;
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: "ScriptGen - AI YouTube Script Generator",
+                    text: "Get 25 free tokens when you sign up with my referral link!",
+                    url: referralLink,
+                });
+                setReferralShared(true);
+                setTimeout(() => setReferralShared(false), 2000);
+            } catch (err) {
+                if ((err as Error).name !== "AbortError") handleCopyReferralLink();
+            }
+        } else {
+            handleCopyReferralLink();
+        }
     };
 
     const handleReferralApply = async () => {
@@ -525,6 +567,7 @@ export default function ScriptGenerator() {
         }
     };
 
+    // Handle payment
     const handlePromoCode = async () => {
         if (!promoCode.trim()) {
             setPromoMessage({ type: "error", text: "Please enter a promo code" });
@@ -1501,32 +1544,56 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                     </div>
                                 )}
                             </div>
-                            {/* Referral - Invite friends */}
+                            {/* Referral - Invite friends, shareable link */}
                             <div className="pt-4 border-t border-slate-200 space-y-3">
                                 <p className="text-xs font-medium text-slate-600 flex items-center gap-1">
                                     <Share2 className="w-3.5 h-3.5 flex-shrink-0" />
                                     Invite friends, get 25 tokens each
                                 </p>
                                 {referralLink ? (
-                                    <div className="flex gap-2">
-                                        <input
-                                            type="text"
-                                            readOnly
-                                            value={referralLink}
-                                            className="flex-1 min-w-0 px-3 py-2.5 text-xs border border-slate-200 rounded-xl bg-slate-50 text-slate-600 truncate"
-                                        />
-                                        <button
-                                            onClick={handleCopyReferralLink}
-                                            className="px-3 py-2.5 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl flex-shrink-0"
-                                        >
-                                            {referralCopied ? <Check className="w-4 h-4" /> : "Copy"}
-                                        </button>
+                                    <div className="space-y-2">
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                readOnly
+                                                value={referralLink}
+                                                className="flex-1 min-w-0 px-3 py-2.5 text-xs border border-slate-200 rounded-xl bg-slate-50 text-slate-600 truncate"
+                                                aria-label="Your referral link"
+                                            />
+                                            <button
+                                                onClick={handleCopyReferralLink}
+                                                className="px-3 py-2.5 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl flex-shrink-0 transition-colors"
+                                                title="Copy link"
+                                            >
+                                                {referralCopied ? <Check className="w-4 h-4" /> : "Copy"}
+                                            </button>
+                                            {canShare ? (
+                                                <button
+                                                    onClick={handleShareReferralLink}
+                                                    className="px-3 py-2.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-xl flex-shrink-0 transition-colors"
+                                                    title="Share link"
+                                                >
+                                                    {referralShared ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
+                                                </button>
+                                            ) : null}
+                                        </div>
+                                        <p className="text-[11px] text-slate-500">Share this link — friends get 25 tokens when they sign up.</p>
                                     </div>
+                                ) : referralLinkError ? (
+                                    <p className="text-xs text-amber-700">Could not load referral link. Close and reopen to retry.</p>
+                                ) : referralLinkLoading ? (
+                                    <p className="text-xs text-slate-500 flex items-center gap-2">
+                                        <Loader2 className="w-4 h-4 animate-spin" /> Loading…
+                                    </p>
                                 ) : (
-                                    <p className="text-xs text-slate-500">Your referral link will appear when you open this modal.</p>
+                                    <p className="text-xs text-slate-500">Loading your referral link…</p>
                                 )}
                                 <p className="text-[11px] text-slate-500">
-                                    Have a referral code? Apply below:
+                                    {searchParams?.get("ref") ? (
+                                        <span className="text-emerald-600 font-medium">You have a referral code — apply below:</span>
+                                    ) : (
+                                        "Have a referral code? Apply below:"
+                                    )}
                                 </p>
                                 <div className="flex gap-2">
                                     <input

@@ -12,8 +12,12 @@ export default function Error({
     reset: () => void;
 }) {
     useEffect(() => {
-        // Log the error to an error reporting service
-        console.error("Application Error:", error);
+        if (process.env.NODE_ENV === "production") {
+            // Send to error tracking (e.g. Sentry) here
+            console.error("[error-boundary]", error?.message || error);
+        } else {
+            console.error("[error-boundary]", error);
+        }
     }, [error]);
 
     return (

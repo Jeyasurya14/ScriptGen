@@ -12,13 +12,28 @@ model User {
   email            String            @unique
   name             String?
   image            String?
+  referralCode     String?           @unique @map("referral_code")
   createdAt        DateTime          @default(now()) @map("created_at")
   scripts          Script[]
   transactions     Transaction[]
   credits          UserCredits?
   promoRedemptions PromoRedemption[]
+  referralsGiven   Referral[]        @relation("referrer")
+  referralReceived Referral?         @relation("referred")
 
   @@map("users")
+}
+
+model Referral {
+  id         String   @id @default(uuid())
+  referrerId String   @map("referrer_id")
+  referredId String   @unique @map("referred_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+  referrer   User     @relation("referrer", fields: [referrerId], references: [id], onDelete: Cascade)
+  referred   User     @relation("referred", fields: [referredId], references: [id], onDelete: Cascade)
+
+  @@index([referrerId])
+  @@map("referrals")
 }
 
 model UserCredits {

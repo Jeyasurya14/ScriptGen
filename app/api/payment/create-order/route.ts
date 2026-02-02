@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Razorpay from "razorpay";
@@ -37,7 +38,11 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const { packageId = "pro" } = await req.json();
+        const body = await req.json().catch(() => ({}));
+        const parsed = z.object({
+            packageId: z.enum(["starter", "plus", "growth", "pro", "scale", "enterprise"]).default("pro"),
+        }).safeParse(body);
+        const packageId = parsed.success ? parsed.data.packageId : "pro";
         const selected = getPackage(packageId) || getPackage("pro");
         if (!selected) {
             return NextResponse.json({ error: "Invalid package" }, { status: 400 });

@@ -18,9 +18,10 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const { code } = await req.json();
+        const body = await req.json().catch(() => ({}));
+        const code = typeof body?.code === "string" ? body.code : "";
 
-        if (!code || typeof code !== "string") {
+        if (!code.trim()) {
             return NextResponse.json({ error: "Invalid promo code" }, { status: 400 });
         }
 
