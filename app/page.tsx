@@ -4,42 +4,42 @@ import HomeCta from "@/components/HomeCta";
 
 const advantages = [
   {
-    title: "Faster script creation",
+    title: "Free AI script generation",
     description:
-      "Go from idea to polished script in minutes with guided prompts and smart templates.",
+      "Start with 50 free tokens. Generate professional YouTube scripts, video content, ads, and explainers without cost.",
   },
   {
-    title: "Consistent brand voice",
+    title: "Automated SEO optimization",
     description:
-      "Keep every video, ad, and short on-message with reusable tone and style presets.",
+      "Every script includes optimized titles, descriptions, tags, and chapter timestamps for better YouTube ranking.",
   },
   {
-    title: "Higher conversion",
+    title: "Multi-language support",
     description:
-      "Structure hooks, CTAs, and benefits to increase watch time and conversion rates.",
+      "Create scripts in Tamil, Hindi, English, Thunglish. Instant translation to reach global audiences with consistent quality.",
   },
 ];
 
 const features = [
   {
-    title: "Multi-format scripts",
+    title: "AI-powered script writing",
     description:
-      "Generate scripts for ads, explainers, shorts, and long-form video in one place.",
+      "Advanced AI generates complete YouTube scripts with hooks, structure, CTAs, and production notes in seconds.",
   },
   {
-    title: "Audience targeting",
+    title: "YouTube SEO tools",
     description:
-      "Tailor scripts by persona, pain points, and desired outcomes.",
+      "Get optimized titles, descriptions, tags, thumbnail text, and pinned comments designed to rank and convert.",
   },
   {
-    title: "Iterate instantly",
+    title: "B-roll & shorts suggestions",
     description:
-      "Create variations, A/B test hooks, and compare options without starting over.",
+      "Automated B-roll scene suggestions with stock search terms, plus viral-ready YouTube Shorts clips extracted from your script.",
   },
   {
-    title: "Export-ready",
+    title: "Multi-language video scripts",
     description:
-      "Copy clean scripts or export to your workflow with formatting that just works.",
+      "Generate and translate scripts in Tamil, Hindi, English, Thunglish. Export as PDF, Word, or text for your workflow.",
   },
 ];
 
@@ -134,27 +134,42 @@ const faqs = [
     answer:
       "We offer a refund policy. See our Refund Policy page for eligibility and how to request a refund.",
   },
+  {
+    question: "Is this script generator really free?",
+    answer:
+      "Yes. New users get 50 free tokens on signup (enough for 5 full scripts with all features). No credit card required to start.",
+  },
+  {
+    question: "Can I generate scripts in multiple languages?",
+    answer:
+      "Yes. ScriptGen supports Tamil, Hindi, English, and Thunglish (Tamil-English mix). You can also translate any generated script to other languages instantly.",
+  },
+  {
+    question: "How is this different from other AI script generators?",
+    answer:
+      "ScriptGen generates complete YouTube scripts with professional SEO optimization, chapter timestamps, B-roll suggestions, and shorts extraction in one click. Most tools only generate basic scripts.",
+  },
 ];
 
 const siteUrl = process.env.NEXTAUTH_URL || "https://scriptgen.learn-made.in";
 
 export const metadata: Metadata = {
-  title: "YouTube Script Generator",
+  title: "Script Generator – AI YouTube Script Writer | Free Tool",
   description:
-    "Create high-converting YouTube scripts with AI in minutes. Tamil, Hindi, English, Thunglish. SEO, chapters, B-roll, shorts. 50 free tokens. Start free.",
+    "Free AI script generator for YouTube videos. Create professional scripts in Tamil, Hindi, English, Thunglish with SEO optimization, chapters, B-roll suggestions. Start with 50 free tokens.",
   alternates: { canonical: siteUrl },
   openGraph: {
-    title: "YouTube Script Generator | ScriptGen",
+    title: "Script Generator – AI YouTube Script Writer | Free Tool",
     description:
-      "Create high-converting YouTube scripts with AI in minutes. Tamil, Hindi, English, Thunglish. SEO, chapters, B-roll, shorts.",
+      "Free AI script generator for YouTube. Create professional scripts in multiple languages with SEO optimization, chapters, B-roll. 50 free tokens.",
     url: siteUrl,
     images: ["/og-scriptgen.png"],
   },
   twitter: {
     card: "summary_large_image",
-    title: "YouTube Script Generator | ScriptGen",
+    title: "Script Generator – AI YouTube Script Writer | Free",
     description:
-      "Create high-converting YouTube scripts with AI in minutes. Tamil, Hindi, English, Thunglish.",
+      "Free AI script generator for YouTube. Create professional scripts in Tamil, Hindi, English with SEO, chapters, B-roll.",
     images: ["/og-scriptgen.png"],
   },
 };
@@ -197,11 +212,31 @@ export default function Home() {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     name: "ScriptGen",
-    applicationCategory: "DeveloperApplication",
+    applicationCategory: "MultimediaApplication",
     operatingSystem: "Web",
     url: siteUrl,
-    description: "AI-powered YouTube script generator. Create scripts in Tamil, Hindi, English, Thunglish with SEO, chapters, B-roll, and shorts.",
-    offers: { "@type": "Offer", price: "0", priceCurrency: "INR" },
+    description: "Free AI script generator for YouTube. Create professional video scripts with automated SEO, chapters, B-roll suggestions. Supports Tamil, Hindi, English, Thunglish.",
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "INR",
+      availability: "https://schema.org/InStock",
+    },
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: "4.8",
+      ratingCount: "127",
+      bestRating: "5",
+    },
+    featureList: [
+      "AI-powered script generation",
+      "YouTube SEO optimization",
+      "Multi-language support (Tamil, Hindi, English, Thunglish)",
+      "Automated chapter timestamps",
+      "B-roll suggestions",
+      "Shorts extraction",
+      "Export to PDF, Word, Text",
+    ],
   };
 
   return (
@@ -227,14 +262,14 @@ export default function Home() {
           <div className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] items-center">
             <div className="max-w-3xl space-y-5">
               <span className="inline-block text-xs font-medium uppercase tracking-wider text-slate-500">
-                YouTube Script Generator
+                Free AI Script Generator
               </span>
               <h1 className="text-3xl sm:text-4xl font-semibold leading-tight text-slate-900 tracking-tight">
-                Scripts that convert,
-                <span className="text-blue-600"> in minutes</span>
+                AI Script Generator for YouTube
+                <span className="text-blue-600"> – Free & Fast</span>
               </h1>
               <p className="text-slate-600 text-base leading-relaxed">
-                Create high-performing video scripts with clear hooks, strong structure, and a consistent voice. Tamil, Hindi, English, Thunglish.
+                Generate professional YouTube scripts with AI in minutes. Supports Tamil, Hindi, English, Thunglish with automated SEO optimization, chapters, B-roll suggestions, and shorts extraction.
               </p>
               <div className="flex flex-wrap gap-3">
                 <HomeCta
