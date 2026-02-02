@@ -2151,25 +2151,22 @@ Aspect Ratio: ${prompt.aspectRatio}`;
 
                     {/* Right Panel - Output */}
                     <div className="w-full lg:w-3/5">
-                        <div className="rounded-2xl min-h-[600px] flex flex-col relative overflow-hidden bg-white/95 backdrop-blur-sm border border-slate-200/80 shadow-xl shadow-slate-200/30">
+                        <div className="rounded-2xl min-h-[600px] flex flex-col relative overflow-hidden bg-white border border-slate-200/80 shadow-xl shadow-slate-200/20">
                             {/* Accent Top Border */}
                             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-violet-500 to-blue-600"></div>
 
                             {/* Tabs Header */}
-                            <div className="flex items-center justify-between px-2 pt-2 border-b border-slate-200/80 bg-slate-50/50">
-                                <div className="flex items-center gap-1 overflow-x-auto w-full no-scrollbar pb-0">
+                            <div className="px-4 pt-3 pb-0 bg-slate-50/80 border-b border-slate-200/80">
+                                <div className="flex gap-1 overflow-x-auto no-scrollbar">
                                     {tabs.map((tab) => (
                                         <button
                                             key={tab.id}
                                             onClick={() => setActiveTab(tab.id)}
-                                            className={`relative flex-shrink-0 px-5 py-3 text-sm font-medium transition-all rounded-t-lg z-10 ${activeTab === tab.id
-                                                ? "bg-white text-blue-600 border border-slate-200/80 border-b-0 shadow-sm -mb-px"
-                                                : "text-slate-500 hover:text-slate-700 hover:bg-white/60 border border-transparent"
+                                            className={`relative flex-shrink-0 px-4 py-3 text-sm font-semibold rounded-t-xl transition-all ${activeTab === tab.id
+                                                ? "bg-white text-blue-600 shadow-sm border border-slate-200/80 border-b-0 -mb-px"
+                                                : "text-slate-500 hover:text-slate-700 hover:bg-white/80"
                                                 }`}
                                         >
-                                            {activeTab === tab.id && (
-                                                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-500 to-violet-500 rounded-t"></div>
-                                            )}
                                             {tab.label}
                                         </button>
                                     ))}
@@ -2177,156 +2174,108 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                             </div>
 
                             {/* Content */}
-                            <div className="p-4 sm:p-5 md:p-6 bg-white/50 min-h-[400px]">
+                            <div className="flex-1 p-4 sm:p-5 md:p-6 bg-white min-h-[400px]">
                                 {activeTab === "script" ? (
                                     script ? (
-                                        <>
-                                            {/* Action Buttons */}
-                                            <div className="flex flex-wrap gap-2 mb-4">
-                                                {/* Translate Dropdown */}
-                                                <div className="relative">
-                                                    <button
-                                                        onClick={() => setShowTranslateDropdown(!showTranslateDropdown)}
-                                                        disabled={isTranslating}
-                                                        className="flex items-center gap-2 px-3 py-2 text-sm border border-slate-200 bg-white text-slate-600 rounded-md hover:bg-slate-50 transition-colors disabled:opacity-50"
-                                                    >
-                                                        {isTranslating ? (
-                                                            <>
-                                                                <Loader2 className="w-4 h-4 animate-spin" />
-                                                                Translating...
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <Sparkles className="w-4 h-4 text-amber-500" />
-                                                                Translate
-                                                                <ChevronDown className="w-3 h-3 ml-1" />
-                                                            </>
+                                        <div className="space-y-4">
+                                            {/* Action Bar */}
+                                            <div className="flex flex-wrap items-center gap-2 p-3 rounded-xl bg-slate-50/80 border border-slate-200/80">
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    {/* Translate */}
+                                                    <div className="relative">
+                                                        <button
+                                                            onClick={() => setShowTranslateDropdown(!showTranslateDropdown)}
+                                                            disabled={isTranslating}
+                                                            className="px-4 py-2.5 text-sm font-medium rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                        >
+                                                            {isTranslating ? "Translating…" : "Translate"}
+                                                            <ChevronDown className="inline-block w-4 h-4 ml-1 align-middle" />
+                                                        </button>
+                                                        {showTranslateDropdown && (
+                                                            <div className="absolute top-full left-0 mt-2 w-44 bg-white rounded-xl shadow-lg border border-slate-200 py-1 z-20">
+                                                                {languages.map((lang) => (
+                                                                    <button
+                                                                        key={lang.value}
+                                                                        onClick={() => translateScript(lang.value)}
+                                                                        className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                                                    >
+                                                                        {lang.label.split(" ")[0]}
+                                                                    </button>
+                                                                ))}
+                                                            </div>
                                                         )}
-                                                    </button>
+                                                    </div>
 
-                                                    {showTranslateDropdown && (
-                                                        <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-xl border border-slate-200 py-1 z-10">
-                                                            {languages.map((lang) => (
+                                                    {/* Regenerate */}
+                                                    {hookSection && (
+                                                        <div className="flex gap-1.5 pl-2 border-l border-slate-200">
+                                                            {(["hook_intro", "main_content", "demo_outro"] as const).map((stage) => (
                                                                 <button
-                                                                    key={lang.value}
-                                                                    onClick={() => translateScript(lang.value)}
-                                                                    className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors"
+                                                                    key={stage}
+                                                                    onClick={() => regenerateSection(stage)}
+                                                                    disabled={loading}
+                                                                    className="px-3 py-2 text-xs font-medium rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors disabled:opacity-50"
+                                                                    title={`Regenerate ${stage === "hook_intro" ? "Hook" : stage === "main_content" ? "Main" : "Outro"} (10 tokens)`}
                                                                 >
-                                                                    To {lang.label.split(" ")[0]}
+                                                                    {stage === "hook_intro" ? "Hook" : stage === "main_content" ? "Main" : "Outro"}
                                                                 </button>
                                                             ))}
                                                         </div>
                                                     )}
-                                                </div>
 
-                                                {/* Regenerate Section */}
-                                                {hookSection && (
-                                                    <div className="flex flex-wrap gap-1">
-                                                        <button
-                                                            onClick={() => regenerateSection("hook_intro")}
-                                                            disabled={loading}
-                                                            className="px-2 py-1.5 text-xs font-medium border border-slate-200 bg-white text-slate-600 rounded-md hover:bg-slate-50 disabled:opacity-50"
-                                                            title="Regenerate Hook & Intro (10 tokens)"
-                                                        >
-                                                            Regenerate Hook
-                                                        </button>
-                                                        <button
-                                                            onClick={() => regenerateSection("main_content")}
-                                                            disabled={loading}
-                                                            className="px-2 py-1.5 text-xs font-medium border border-slate-200 bg-white text-slate-600 rounded-md hover:bg-slate-50 disabled:opacity-50"
-                                                            title="Regenerate Main (10 tokens)"
-                                                        >
-                                                            Regenerate Main
-                                                        </button>
-                                                        <button
-                                                            onClick={() => regenerateSection("demo_outro")}
-                                                            disabled={loading}
-                                                            className="px-2 py-1.5 text-xs font-medium border border-slate-200 bg-white text-slate-600 rounded-md hover:bg-slate-50 disabled:opacity-50"
-                                                            title="Regenerate Demo & Outro (10 tokens)"
-                                                        >
-                                                            Regenerate Outro
-                                                        </button>
-                                                    </div>
-                                                )}
-
-                                                <button
-                                                    onClick={copyToClipboard}
-                                                    className="flex items-center gap-2 px-3 py-2 text-sm border border-slate-200 bg-white text-slate-600 rounded-md hover:bg-slate-50 transition-colors"
-                                                >
-                                                    {copied ? (
-                                                        <>
-                                                            <Check className="w-4 h-4 text-green-600" />
-                                                            Copied!
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <Copy className="w-4 h-4" />
-                                                            Copy
-                                                        </>
-                                                    )}
-                                                </button>
-
-
-                                                {/* Export Dropdown */}
-                                                <div className="relative">
+                                                    {/* Copy */}
                                                     <button
-                                                        onClick={() => setShowExportDropdown(!showExportDropdown)}
-                                                        className="flex items-center gap-2 px-3 py-2 text-sm border border-slate-200 bg-white text-slate-600 rounded-md hover:bg-slate-50 transition-colors"
+                                                        onClick={copyToClipboard}
+                                                        className="px-4 py-2.5 text-sm font-medium rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-colors"
                                                     >
-                                                        <Download className="w-4 h-4" />
-                                                        Export
-                                                        <ChevronDown className="w-3 h-3 ml-1" />
+                                                        {copied ? "Copied!" : "Copy"}
                                                     </button>
 
-                                                    {showExportDropdown && (
-                                                        <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-xl border border-slate-200 py-1 z-10">
-                                                            <button
-                                                                onClick={downloadAsPDF}
-                                                                className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors flex items-center gap-2"
-                                                            >
-                                                                <FileText className="w-4 h-4 text-red-500" />
-                                                                Export as PDF
-                                                            </button>
-                                                            <button
-                                                                onClick={downloadAsDOC}
-                                                                className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors flex items-center gap-2"
-                                                            >
-                                                                <FileText className="w-4 h-4 text-blue-600" />
-                                                                Export as Word
-                                                            </button>
-                                                            <button
-                                                                onClick={() => { downloadScript(); setShowExportDropdown(false); }}
-                                                                className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors flex items-center gap-2"
-                                                            >
-                                                                <FileText className="w-4 h-4 text-slate-500" />
-                                                                Export as Text
-                                                            </button>
-                                                            <button
-                                                                onClick={downloadAsSRT}
-                                                                className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors flex items-center gap-2"
-                                                            >
-                                                                <Film className="w-4 h-4 text-emerald-600" />
-                                                                Export as SRT (captions)
-                                                            </button>
-                                                        </div>
-                                                    )}
+                                                    {/* Export */}
+                                                    <div className="relative">
+                                                        <button
+                                                            onClick={() => setShowExportDropdown(!showExportDropdown)}
+                                                            className="px-4 py-2.5 text-sm font-medium rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-colors flex items-center gap-1.5"
+                                                        >
+                                                            Export
+                                                            <ChevronDown className="w-4 h-4" />
+                                                        </button>
+                                                        {showExportDropdown && (
+                                                            <div className="absolute top-full left-0 mt-2 w-52 bg-white rounded-xl shadow-lg border border-slate-200 py-1.5 z-20">
+                                                                <button onClick={downloadAsPDF} className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                                                                    PDF
+                                                                </button>
+                                                                <button onClick={downloadAsDOC} className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                                                                    Word
+                                                                </button>
+                                                                <button onClick={() => { downloadScript(); setShowExportDropdown(false); }} className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                                                                    Text
+                                                                </button>
+                                                                <button onClick={downloadAsSRT} className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                                                                    SRT (captions)
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
 
-                                            {/* Script Display - Paper Look */}
-                                            <div className="bg-slate-50 rounded-lg p-6 overflow-auto max-h-[70vh] border border-slate-200 shadow-inner">
-                                                <pre className="text-slate-800 text-sm whitespace-pre-wrap font-sans leading-relaxed">
+                                            {/* Script Display */}
+                                            <div className="rounded-xl border border-slate-200/80 bg-slate-50/50 p-6 overflow-auto max-h-[65vh] shadow-inner">
+                                                <pre className="text-slate-800 text-[15px] leading-[1.7] whitespace-pre-wrap font-sans antialiased">
                                                     {script}
                                                 </pre>
                                             </div>
-                                        </>
+                                        </div>
                                     ) : (
-                                        <div className="empty-state">
-                                            <div className="empty-state-icon">
-                                                <FileText className="w-8 h-8" />
+                                        <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+                                            <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
+                                                <FileText className="w-8 h-8 text-slate-400" />
                                             </div>
-                                            <p className="text-base font-medium text-slate-600">No script generated yet</p>
-                                            <p className="text-sm mt-1 text-slate-500">Configure your video settings and click Generate</p>
+                                            <p className="text-lg font-semibold text-slate-800">No script yet</p>
+                                            <p className="text-sm text-slate-500 mt-1 max-w-xs">
+                                                Configure your video and click Generate to create your script
+                                            </p>
                                         </div>
                                     )
                                 ) : activeTab === "seo" ? (
