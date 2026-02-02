@@ -46,9 +46,12 @@ export async function POST(req: Request) {
 
 
         // Use server-side API key
-        const apiKey = process.env.OPENAI_API_KEY;
+        const apiKey = process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY;
         if (!apiKey) {
-            return NextResponse.json({ error: "Server API configuration missing" }, { status: 500 });
+            return NextResponse.json(
+                { error: "Server API configuration missing (set OPENAI_API_KEY)" },
+                { status: 500 }
+            );
         }
 
         let promptConfig;
