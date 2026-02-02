@@ -662,52 +662,49 @@ export default function ScriptGenerator() {
             setScript(fullScript);
             setProgress("Stage 5/6: Generating SEO & Media Assets...");
 
-            // Stage 5: Generate SEO, Images, Chapters, B-Roll in parallel
-            const promises: Promise<void>[] = [];
+            // Stage 5: Generate SEO, Images, Chapters, B-Roll in parallel (capture results for save)
+            const seoPromise = generateSEOData(fullScript, controller.signal).catch((e) => {
+                console.error("SEO generation failed", e);
+                return null;
+            });
+            const imagesPromise = formData.generateImages
+                ? generateImagePrompts(fullScript, timestamps, controller.signal).catch((e) => {
+                    console.error("Image prompts generation failed", e);
+                    return null;
+                })
+                : Promise.resolve(null);
+            const chaptersPromise = formData.includeChapters
+                ? generateChapters(fullScript, timestamps, controller.signal).catch((e) => {
+                    console.error("Chapters generation failed", e);
+                    return null;
+                })
+                : Promise.resolve(null);
+            const brollPromise = formData.includeBRoll
+                ? generateBRoll(fullScript, timestamps, controller.signal).catch((e) => {
+                    console.error("B-Roll generation failed", e);
+                    return null;
+                })
+                : Promise.resolve(null);
 
-            // SEO Data (Always included)
-            promises.push(
-                generateSEOData(controller.signal)
-                    .then((seo) => setSeoData(seo))
-                    .catch(() => console.error("SEO generation failed"))
-            );
+            const [seoResult, imagesResult, chaptersResult, brollResult] = await Promise.all([
+                seoPromise,
+                imagesPromise,
+                chaptersPromise,
+                brollPromise,
+            ]);
 
-            // Image Prompts (if enabled)
-            if (formData.generateImages) {
-                promises.push(
-                    generateImagePrompts(fullScript, timestamps, controller.signal)
-                        .then((images) => setImagesData(images))
-                        .catch(() => console.error("Image prompts generation failed"))
-                );
-            }
-
-            // Chapters (if enabled)
-            if (formData.includeChapters) {
-                promises.push(
-                    generateChapters(fullScript, timestamps, controller.signal)
-                        .then((chapters) => setChaptersData(chapters))
-                        .catch(() => console.error("Chapters generation failed"))
-                );
-            }
-
-            // B-Roll (if enabled)
-            if (formData.includeBRoll) {
-                promises.push(
-                    generateBRoll(fullScript, timestamps, controller.signal)
-                        .then((broll) => setBrollData(broll))
-                        .catch(() => console.error("B-Roll generation failed"))
-                );
-            }
-
-            // Execute parallel promises
-            await Promise.all(promises);
+            if (seoResult) setSeoData(seoResult);
+            if (imagesResult) setImagesData(imagesResult);
+            if (chaptersResult) setChaptersData(chaptersResult);
+            if (brollResult) setBrollData(brollResult);
 
             // Shorts (Sequential or if enabled)
+            let shortsResult: typeof shortsData = null;
             if (formData.includeShorts) {
                 setProgress("Stage 6/6: Generating Shorts Clips...");
                 try {
-                    const shorts = await generateShorts(fullScript, controller.signal);
-                    setShortsData(shorts);
+                    shortsResult = await generateShorts(fullScript, controller.signal);
+                    setShortsData(shortsResult);
                 } catch {
                     console.error("Shorts generation failed");
                 }
@@ -717,23 +714,18 @@ export default function ScriptGenerator() {
 
             // Deduct tokens after successful generation
             try {
-                // Pass the count of tokens to deduct
                 await fetch("/api/credits", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ count: requiredTokens })
                 });
-
-                // Refresh credits
                 const creditsRes = await fetch("/api/credits");
-                if (creditsRes.ok) {
-                    setCredits(await creditsRes.json());
-                }
+                if (creditsRes.ok) setCredits(await creditsRes.json());
             } catch {
                 console.error("Failed to deduct tokens");
             }
 
-            // Save to history
+            // Save to history using captured results (not stale state)
             try {
                 await fetch("/api/scripts", {
                     method: "POST",
@@ -744,11 +736,11 @@ export default function ScriptGenerator() {
                         duration: formData.duration,
                         contentType: formData.contentType,
                         scriptContent: fullScript,
-                        seoData: seoData,
-                        imagesData: imagesData,
-                        chaptersData: chaptersData,
-                        brollData: brollData,
-                        shortsData: shortsData,
+                        seoData: seoResult ?? null,
+                        imagesData: imagesResult ?? null,
+                        chaptersData: chaptersResult ?? null,
+                        brollData: brollResult ?? null,
+                        shortsData: shortsResult ?? null,
                     }),
                 });
             } catch {
@@ -799,15 +791,16 @@ export default function ScriptGenerator() {
         return data.content;
     };
 
-    // Generate SEO data
-    const generateSEOData = async (signal?: AbortSignal): Promise<SEOData> => {
+    // Generate SEO data (pass fullScript when available for better description/tags)
+    const generateSEOData = async (fullScript: string, signal?: AbortSignal): Promise<SEOData> => {
         const response = await fetch("/api/generate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             signal,
             body: JSON.stringify({
                 type: "seo",
-                formData
+                formData,
+                fullScript: fullScript || undefined,
             }),
         });
 
@@ -817,46 +810,47 @@ export default function ScriptGenerator() {
         }
 
         const data = await response.json();
-        const text = data.content || "";
+        let text = (data.content || "").trim();
 
-        const coerceRanked = (items: Array<string | { text: string; score?: number }>, fallbackScore = 80) =>
-            items
+        const coerceRanked = (items: Array<string | { text: string; score?: number }>, fallbackScore = 80): RankedItem[] =>
+            (Array.isArray(items) ? items : [])
                 .map((item) => {
                     if (typeof item === "string") {
                         return { text: item.trim(), score: fallbackScore };
                     }
-                    return { text: item.text?.trim() || "", score: item.score ?? fallbackScore };
+                    if (item && typeof item === "object" && "text" in item) {
+                        return { text: String(item.text || "").trim(), score: Number(item.score) || fallbackScore };
+                    }
+                    return { text: "", score: fallbackScore };
                 })
                 .filter((item) => item.text.length > 0);
 
-        const parseJsonSEO = (raw: string) => {
+        const parseJsonSEO = (raw: string): SEOData | null => {
+            let str = raw.trim();
+            const codeBlockMatch = str.match(/```(?:json)?\s*([\s\S]*?)```/);
+            if (codeBlockMatch) str = codeBlockMatch[1].trim();
+            const objectMatch = str.match(/\{[\s\S]*\}/);
+            if (objectMatch) str = objectMatch[0];
             try {
-                const parsed = JSON.parse(raw);
-                if (parsed && parsed.titles && parsed.description) return parsed;
+                const parsed = JSON.parse(str);
+                if (parsed && typeof parsed === "object") {
+                    const titles = coerceRanked(parsed.titles || [], 88);
+                    const description = typeof parsed.description === "string" ? parsed.description.trim() : "";
+                    const tags = coerceRanked(parsed.tags || [], 78);
+                    const thumbnails = coerceRanked(parsed.thumbnails || [], 84);
+                    const comment = typeof parsed.comment === "string" ? parsed.comment.trim() : "";
+                    if (titles.length > 0 || description || tags.length > 0 || thumbnails.length > 0 || comment) {
+                        return { titles, description, tags, thumbnails, comment };
+                    }
+                }
             } catch {
-                // ignore
-            }
-            const match = raw.match(/\{[\s\S]*\}/);
-            if (!match) return null;
-            try {
-                const parsed = JSON.parse(match[0]);
-                if (parsed && parsed.titles && parsed.description) return parsed;
-            } catch {
-                return null;
+                // fall through to legacy parsing
             }
             return null;
         };
 
         const parsedJson = parseJsonSEO(text);
-        if (parsedJson) {
-            return {
-                titles: coerceRanked(parsedJson.titles || [], 88),
-                description: parsedJson.description || "",
-                tags: coerceRanked(parsedJson.tags || [], 78),
-                thumbnails: coerceRanked(parsedJson.thumbnails || [], 84),
-                comment: parsedJson.comment || "",
-            };
-        }
+        if (parsedJson) return parsedJson;
 
         // Parse the SEO data (legacy text format)
         const titlesMatch = text.match(/TITLES:\n([\s\S]*?)(?=\n\nDESCRIPTION:)/);
@@ -1241,112 +1235,116 @@ Aspect Ratio: ${prompt.aspectRatio}`;
 
             {/* Payment Modal */}
             {showPaymentModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl border border-slate-200">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold text-slate-900">Recharge Tokens</h3>
-                            <button onClick={() => setShowPaymentModal(false)} className="text-slate-400 hover:text-slate-600">
+                <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+                    <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md max-h-[92vh] sm:max-h-[90vh] shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
+                        <div className="flex-shrink-0 flex items-center justify-between p-4 sm:p-6 pb-2 sm:pb-4">
+                            <h3 className="text-lg sm:text-xl font-semibold text-slate-900">Recharge Tokens</h3>
+                            <button
+                                onClick={() => setShowPaymentModal(false)}
+                                className="p-2 -m-2 text-slate-400 hover:text-slate-600 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center"
+                                aria-label="Close"
+                            >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
-                        <div className="flex items-center gap-2 mb-4 p-3 rounded-lg bg-green-50 border border-green-100">
-                            <ShieldCheck className="w-5 h-5 text-green-600 flex-shrink-0" />
-                            <p className="text-sm text-green-800 font-medium">
-                                Secure payment via Razorpay. Your card details are never stored.
-                            </p>
-                        </div>
-                        <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-4 space-y-3">
-                            <p className="text-sm text-slate-700">
-                                Script costs <span className="font-semibold">10 tokens</span>. Each selected feature costs{" "}
-                                <span className="font-semibold">10 tokens</span> extra.
-                            </p>
-                            <div className="grid gap-2 text-xs text-slate-600">
-                                {tokenBreakdown.map((item) => (
-                                    <div key={item.label} className="flex items-center justify-between">
-                                        <span>{item.label}</span>
-                                        <span className="font-semibold text-slate-800">{item.tokens} tokens</span>
-                                    </div>
+                        <div className="flex-1 overflow-y-auto overscroll-contain px-4 sm:px-6 pb-4 sm:pb-6 space-y-4">
+                            <div className="flex items-start gap-3 p-3 sm:p-4 rounded-xl bg-green-50 border border-green-100">
+                                <ShieldCheck className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                                <p className="text-sm text-green-800 font-medium leading-relaxed">
+                                    Secure payment via Razorpay. Your card details are never stored.
+                                </p>
+                            </div>
+                            <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 space-y-3">
+                                <p className="text-sm text-slate-700 leading-relaxed">
+                                    Script costs <span className="font-semibold">10 tokens</span>. Each selected feature costs{" "}
+                                    <span className="font-semibold">10 tokens</span> extra.
+                                </p>
+                                <div className="grid gap-2 text-xs text-slate-600">
+                                    {tokenBreakdown.map((item) => (
+                                        <div key={item.label} className="flex items-center justify-between gap-3 min-w-0">
+                                            <span className="truncate">{item.label}</span>
+                                            <span className="font-semibold text-slate-800 flex-shrink-0">{item.tokens} tokens</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="grid gap-2 sm:gap-3">
+                                {tokenPackages.map((pkg) => (
+                                    <button
+                                        key={pkg.id}
+                                        onClick={() => setSelectedPackageId(pkg.id)}
+                                        className={`w-full text-left p-3 sm:p-4 rounded-xl border-2 transition-all min-h-[60px] sm:min-h-0 ${
+                                            selectedPackageId === pkg.id
+                                                ? "border-blue-600 bg-blue-50 shadow-sm"
+                                                : "border-slate-200 hover:border-slate-300"
+                                        }`}
+                                    >
+                                        <div className="flex items-center justify-between gap-3 min-w-0">
+                                            <div className="min-w-0">
+                                                <p className="text-sm font-semibold text-slate-900">{pkg.name}</p>
+                                                <p className="text-xs text-slate-500 mt-0.5">
+                                                    {pkg.tokens} tokens • {Math.floor(pkg.tokens / 10)} generations
+                                                </p>
+                                            </div>
+                                            <p className="text-sm font-semibold text-slate-900 flex-shrink-0">₹{pkg.price}</p>
+                                        </div>
+                                    </button>
                                 ))}
                             </div>
-                        </div>
-                        <div className="grid gap-3 mb-4">
-                            {tokenPackages.map((pkg) => (
-                                <button
-                                    key={pkg.id}
-                                    onClick={() => setSelectedPackageId(pkg.id)}
-                                    className={`w-full text-left p-3 rounded-lg border transition-all ${
-                                        selectedPackageId === pkg.id
-                                            ? "border-blue-600 bg-blue-50 shadow-sm"
-                                            : "border-slate-200 hover:border-slate-300"
-                                    }`}
-                                >
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <p className="text-sm font-semibold text-slate-900">{pkg.name}</p>
-                                            <p className="text-xs text-slate-500">
-                                                {pkg.tokens} tokens • {Math.floor(pkg.tokens / 10)} generations
-                                            </p>
-                                        </div>
-                                        <p className="text-sm font-semibold text-slate-900">₹{pkg.price}</p>
-                                    </div>
-                                </button>
-                            ))}
-                        </div>
-                        <button
-                            onClick={handlePayment}
-                            disabled={processingPayment}
-                            className="w-full py-3 text-slate-900 rounded-lg font-semibold bg-amber-400 brand-glow hover:bg-amber-500 transition-colors disabled:opacity-50"
-                        >
-                            {processingPayment ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Buy tokens with Razorpay"}
-                        </button>
-                        
-                        <div className="mt-4 pt-4 border-t border-slate-200">
-                            <p className="text-xs font-medium text-slate-600 mb-2 flex items-center gap-1">
-                                <Tag className="w-3.5 h-3.5" />
-                                Have a promo code?
-                            </p>
-                            <div className="flex gap-2">
-                                <input
-                                    type="text"
-                                    value={promoCode}
-                                    onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                                    onKeyDown={(e) => e.key === "Enter" && handlePromoCode()}
-                                    placeholder="Enter code"
-                                    className="flex-1 px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                />
-                                <button
-                                    onClick={handlePromoCode}
-                                    disabled={promoLoading || !promoCode.trim()}
-                                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                >
-                                    {promoLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
-                                </button>
-                            </div>
-                            {promoMessage && (
-                                <div className={`mt-2 p-2 rounded-lg text-xs font-medium ${
-                                    promoMessage.type === "success" 
-                                        ? "bg-green-50 text-green-700 border border-green-200" 
-                                        : "bg-red-50 text-red-700 border border-red-200"
-                                }`}>
-                                    {promoMessage.text}
-                                </div>
-                            )}
-                        </div>
-                        
-                        <div className="mt-4 flex flex-col items-center gap-2 text-xs text-slate-500 text-center">
-                            <div className="flex items-center gap-2">
-                                <Lock className="w-3.5 h-3.5" />
-                                <span>PCI DSS compliant • Instant token delivery</span>
-                            </div>
-                            <span>No subscription • Pay once, use your tokens anytime</span>
-                            <a
-                                href="/refund-policy"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-600 hover:text-blue-700 font-medium underline underline-offset-2"
+                            <button
+                                onClick={handlePayment}
+                                disabled={processingPayment}
+                                className="w-full py-3.5 sm:py-3 text-slate-900 rounded-xl font-semibold bg-amber-400 brand-glow hover:bg-amber-500 transition-colors disabled:opacity-50 min-h-[48px]"
                             >
-                                Not satisfied? See our Refund Policy
-                            </a>
+                                {processingPayment ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Buy tokens with Razorpay"}
+                            </button>
+                            <div className="pt-4 border-t border-slate-200">
+                                <p className="text-xs font-medium text-slate-600 mb-2 flex items-center gap-1">
+                                    <Tag className="w-3.5 h-3.5 flex-shrink-0" />
+                                    Have a promo code?
+                                </p>
+                                <div className="flex flex-col sm:flex-row gap-2">
+                                    <input
+                                        type="text"
+                                        value={promoCode}
+                                        onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                                        onKeyDown={(e) => e.key === "Enter" && handlePromoCode()}
+                                        placeholder="Enter code"
+                                        className="flex-1 min-w-0 px-3 py-3 sm:py-2.5 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                    <button
+                                        onClick={handlePromoCode}
+                                        disabled={promoLoading || !promoCode.trim()}
+                                        className="px-4 py-3 sm:py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-[44px] flex-shrink-0"
+                                    >
+                                        {promoLoading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : "Apply"}
+                                    </button>
+                                </div>
+                                {promoMessage && (
+                                    <div className={`mt-2 p-3 rounded-xl text-xs font-medium ${
+                                        promoMessage.type === "success"
+                                            ? "bg-green-50 text-green-700 border border-green-200"
+                                            : "bg-red-50 text-red-700 border border-red-200"
+                                    }`}>
+                                        {promoMessage.text}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="mt-4 flex flex-col items-center gap-2 text-xs text-slate-500 text-center">
+                                <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
+                                    <Lock className="w-3.5 h-3.5 flex-shrink-0" />
+                                    <span>PCI DSS compliant • Instant token delivery</span>
+                                </div>
+                                <span>No subscription • Pay once, use your tokens anytime</span>
+                                <a
+                                    href="/refund-policy"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600 hover:text-blue-700 font-medium underline underline-offset-2"
+                                >
+                                    Not satisfied? See our Refund Policy
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>

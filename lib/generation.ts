@@ -147,31 +147,45 @@ ${includeCode ? `
     return { systemPrompt, userPrompt, model: "gpt-4o-mini", max_tokens: 1400 };
 };
 
-export const constructSEOPrompt = (formData: FormData) => {
+export const constructSEOPrompt = (formData: FormData, fullScript?: string) => {
     const { title, contentType } = formData;
+    const scriptContext = fullScript ? truncateText(fullScript, 800) : "";
 
-    const systemPrompt = `You are a YouTube SEO expert. Provide high-performing, professional outputs. Be concise.`;
+    const systemPrompt = `You are a YouTube SEO expert. Output ONLY valid JSON. No markdown, no code fences, no extra text.`;
 
-    const userPrompt = `Create a professional SEO pack for YouTube.
+    const userPrompt = fullScript
+        ? `Create a professional SEO pack for this YouTube video.
+
+Title: ${title}
+Content type: ${contentType}
+
+Script summary (use this to make description and tags accurate):
+---
+${scriptContext}
+---
+
+Return ONLY valid JSON with this exact shape (no other keys, no markdown):
+{"titles":[{"text":"...","score":85}],"description":"...","tags":[{"text":"...","score":80}],"thumbnails":[{"text":"...","score":82}],"comment":"..."}
+
+Rules:
+- titles: 5 items, each <=60 chars, include primary keyword, distinct angles. score 0-100.
+- description: 170-230 words, reflect the script: hook, 3 bullets, CTA, 3-5 hashtags.
+- tags: 18-22 items, from script topics + SEO. No duplicates. score 0-100.
+- thumbnails: 3 items, 3-5 words each, high contrast. score 0-100.
+- comment: 2-3 lines, engaging, invite feedback.`
+        : `Create a professional SEO pack for YouTube.
 Title: ${title}
 Type: ${contentType}
 
 Return ONLY valid JSON with this shape:
-{
-  "titles": [{"text":"...", "score": 0-100}],
-  "description": "string",
-  "tags": [{"text":"...", "score": 0-100}],
-  "thumbnails": [{"text":"...", "score": 0-100}],
-  "comment": "string"
-}
+{"titles":[{"text":"...","score":85}],"description":"...","tags":[{"text":"...","score":80}],"thumbnails":[{"text":"...","score":82}],"comment":"..."}
 
 Rules:
-- 5 titles, <=60 chars, include primary keyword, distinct angles.
-- Description 170-230 words: hook (2 lines), 3 bullets, timestamps, CTA, hashtags.
+- 5 titles, <=60 chars, primary keyword, distinct angles.
+- Description 170-230 words: hook, 3 bullets, CTA, hashtags.
 - 18-22 tags, mix primary/secondary/long-tail, no duplicates.
-- 3 thumbnail texts (3-5 words), high contrast language.
-- Comment: professional, engaging, 2-3 lines, invite feedback.
-Add score based on rank potential (higher is better).`;
+- 3 thumbnail texts (3-5 words), high contrast.
+- Comment: 2-3 lines, invite feedback.`;
 
     return { systemPrompt, userPrompt, model: "gpt-4o-mini", max_tokens: 1200, expectsJson: true };
 };

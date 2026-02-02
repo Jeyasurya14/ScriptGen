@@ -67,7 +67,7 @@ export async function POST(req: Request) {
                 promptConfig = constructProductionNotesPrompt(formData, fullScript);
                 break;
             case "seo":
-                promptConfig = constructSEOPrompt(formData);
+                promptConfig = constructSEOPrompt(formData, fullScript || undefined);
                 break;
             case "image_prompts":
                 if (!fullScript || !timestamps) return NextResponse.json({ error: "Missing script or timestamps" }, { status: 400 });
