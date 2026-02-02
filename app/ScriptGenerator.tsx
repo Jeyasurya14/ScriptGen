@@ -1461,7 +1461,7 @@ Aspect Ratio: ${prompt.aspectRatio}`;
 
                                     {/* Tokens Display */}
                                     {credits && (
-                                        <div className="hidden sm:flex items-center gap-2">
+                                        <div className="flex items-center gap-2">
                                             {totalTokens < 20 && (
                                                 <button
                                                     onClick={() => setShowPaymentModal(true)}
@@ -1470,12 +1470,17 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                                     Low balance — Recharge
                                                 </button>
                                             )}
-                                            <div className="flex items-center gap-2 px-4 py-1.5 brand-pill rounded-full shadow-inner">
-                                                <CreditCard className="w-4 h-4 text-amber-600" />
+                                            <button
+                                                onClick={() => setShowPaymentModal(true)}
+                                                className="flex items-center gap-2 px-3 sm:px-4 py-1.5 brand-pill rounded-full shadow-inner hover:shadow-md transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-1"
+                                                title="Recharge tokens or use promo code"
+                                            >
+                                                <CreditCard className="w-4 h-4 text-amber-600 flex-shrink-0" />
                                                 <span className="text-sm font-semibold text-amber-900">
                                                     {totalTokens} tokens
                                                 </span>
-                                            </div>
+                                                <span className="text-xs font-medium text-amber-700/80 hidden sm:inline">· Recharge</span>
+                                            </button>
                                         </div>
                                     )}
 
@@ -1519,7 +1524,7 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                 </div>
             </header>
 
-            <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 relative z-10">
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6 relative z-10">
                 <div className="mb-6 text-center">
                     <h2 className="text-2xl font-semibold text-slate-900 tracking-tight">
                         Create YouTube scripts with AI
@@ -1575,22 +1580,23 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                 </div>
                             ) : (
                                 /* Authenticated - Show Configuration */
-                                /* Authenticated - Show Configuration */
-                                <div className="brand-card rounded-2xl p-6 sm:p-8 h-full relative overflow-hidden">
-                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
+                                <div className="brand-card rounded-2xl p-5 sm:p-6 lg:p-8 h-full relative overflow-hidden">
+                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6 pb-4 border-b border-slate-200/80">
                                         <div className="flex items-center gap-2">
-                                            <Settings2 className="w-5 h-5 text-slate-400" />
-                                            <h2 className="text-lg font-semibold text-slate-800">Configuration</h2>
+                                            <div className="p-1.5 rounded-lg bg-slate-100 text-slate-600">
+                                                <Settings2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                                            </div>
+                                            <h2 className="text-base sm:text-lg font-semibold text-slate-800">Configuration</h2>
                                         </div>
                                         {credits && (
-                                            <span className="text-xs px-3 py-1 brand-pill rounded-full font-semibold">
+                                            <span className="text-xs px-3 py-1.5 brand-pill rounded-full font-semibold">
                                                 {totalTokens} tokens
                                             </span>
                                         )}
                                     </div>
 
                                     {/* Video Title */}
-                                    <div className="mb-5">
+                                    <div className="mb-6 sm:mb-5">
                                         <label className="block text-sm font-medium text-slate-700 mb-2">
                                             Video Title <span className="text-red-500">*</span>
                                         </label>
@@ -1599,12 +1605,12 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                             value={formData.title}
                                             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                             placeholder="e.g., React useState hook complete guide"
-                                            className="w-full px-4 py-2.5 bg-white/90 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600/15 focus:border-blue-600 text-slate-900 placeholder-slate-400 transition-all shadow-sm"
+                                            className="w-full px-4 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 placeholder-slate-400 transition-all shadow-sm hover:border-slate-300"
                                         />
                                     </div>
 
                                     {/* Channel Name */}
-                                    <div className="mb-5">
+                                    <div className="mb-6 sm:mb-5">
                                         <label className="block text-sm font-medium text-slate-700 mb-2">
                                             Channel Name <span className="text-slate-400 normal-case font-normal">(optional)</span>
                                         </label>
@@ -1613,16 +1619,16 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                             value={formData.channelName}
                                             onChange={(e) => setFormData({ ...formData, channelName: e.target.value })}
                                             placeholder="Your channel name"
-                                            className="w-full px-4 py-2.5 bg-white/90 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600/15 focus:border-blue-600 text-slate-900 placeholder-slate-400 transition-all shadow-sm"
+                                            className="w-full px-4 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 placeholder-slate-400 transition-all shadow-sm hover:border-slate-300"
                                         />
                                     </div>
 
                                     {/* Duration Slider */}
-                                    <div className="mb-8">
-                                        <label className="block text-sm font-medium text-slate-700 mb-4">
-                                            Video Duration: <span className="font-bold text-blue-600">{formData.duration} minutes</span>
+                                    <div className="mb-6 sm:mb-8 p-4 sm:p-5 rounded-xl bg-gradient-to-br from-slate-50 to-white border border-slate-200/80 shadow-sm">
+                                        <label className="block text-sm font-medium text-slate-700 mb-3">
+                                            Video Duration: <span className="font-bold text-blue-600">{formData.duration} min</span>
                                         </label>
-                                        <div className="w-full bg-slate-100 rounded-full h-2 relative">
+                                        <div className="w-full h-3 sm:h-2.5 bg-slate-200/80 rounded-full relative touch-none">
                                             <input
                                                 type="range"
                                                 min="5"
@@ -1630,18 +1636,18 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                                 step="1"
                                                 value={formData.duration}
                                                 onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) })}
-                                                className="absolute w-full h-full opacity-0 z-10 cursor-pointer"
+                                                className="absolute w-full h-full opacity-0 z-10 cursor-pointer min-h-[44px] min-w-[44px]"
                                             />
                                             <div
-                                                className="absolute h-full bg-blue-600 rounded-full transition-all duration-150"
+                                                className="absolute h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all duration-200"
                                                 style={{ width: `${((formData.duration - 5) / 15) * 100}%` }}
-                                            ></div>
+                                            />
                                             <div
-                                                className="absolute h-5 w-5 bg-blue-700 rounded-full shadow-md border-2 border-white top-1/2 -translate-y-1/2 transition-all duration-150 pointer-events-none"
+                                                className="absolute h-6 w-6 sm:h-5 sm:w-5 bg-white rounded-full shadow-lg border-2 border-blue-600 top-1/2 -translate-y-1/2 transition-all duration-200 pointer-events-none ring-4 ring-blue-500/10"
                                                 style={{ left: `${((formData.duration - 5) / 15) * 100}%`, transform: `translate(-50%, -50%)` }}
-                                            ></div>
+                                            />
                                         </div>
-                                        <div className="flex justify-between mt-2 text-xs text-slate-400 font-medium">
+                                        <div className="flex justify-between mt-2.5 text-xs text-slate-500 font-medium">
                                             <span>5 min</span>
                                             <span>20 min</span>
                                         </div>
@@ -1650,8 +1656,8 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                         </p>
                                     </div>
                                     {/* Content Type & Difficulty */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
-                                        <div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 mb-6 sm:mb-5">
+                                        <div className="min-w-0">
                                             <label className="block text-sm font-medium text-slate-700 mb-2">
                                                 Content Type
                                             </label>
@@ -1659,7 +1665,7 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                                 <select
                                                     value={formData.contentType}
                                                     onChange={(e) => setFormData({ ...formData, contentType: e.target.value })}
-                                                    className="w-full pl-4 pr-10 py-2.5 bg-white/90 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-600/15 focus:border-blue-600 text-slate-900 appearance-none cursor-pointer transition-all shadow-sm"
+                                                    className="w-full pl-4 pr-10 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 appearance-none cursor-pointer transition-all shadow-sm hover:border-slate-300"
                                                 >
                                                     <option value="Tutorial">Tutorial / How-to</option>
                                                     <option value="Review">Product Review</option>
@@ -1670,7 +1676,7 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                                             </div>
                                         </div>
-                                        <div>
+                                        <div className="min-w-0">
                                             <label className="block text-sm font-medium text-slate-700 mb-2">
                                                 Difficulty Level
                                             </label>
@@ -1678,7 +1684,7 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                                 <select
                                                     value={formData.difficulty}
                                                     onChange={(e) => setFormData({ ...formData, difficulty: e.target.value })}
-                                                    className="w-full pl-4 pr-10 py-2.5 bg-white/90 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-600/15 focus:border-blue-600 text-slate-900 appearance-none cursor-pointer transition-all shadow-sm"
+                                                    className="w-full pl-4 pr-10 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 appearance-none cursor-pointer transition-all shadow-sm hover:border-slate-300"
                                                 >
                                                     <option value="Beginner">Beginner</option>
                                                     <option value="Intermediate">Intermediate</option>
@@ -1690,31 +1696,32 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                     </div>
 
                                     {/* Project Language */}
-                                    <div className="space-y-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <label className="block text-sm font-bold text-slate-700 flex items-center gap-2">
-                                                <span className="w-1.5 h-1.5 rounded-full bg-blue-700"></span>
+                                    <div className="space-y-3 p-4 sm:p-5 rounded-xl bg-gradient-to-br from-slate-50/80 to-white border border-slate-200/80 shadow-sm mb-6 sm:mb-0">
+                                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
+                                            <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                                                <span className="w-2 h-2 rounded-full bg-blue-600" />
                                                 Project Language
                                             </label>
-                                            <span className="text-xs text-amber-900 font-semibold bg-amber-100 px-2 py-0.5 rounded border border-amber-200">
+                                            <span className="text-xs text-amber-800 font-semibold bg-amber-100/90 px-2.5 py-1 rounded-lg border border-amber-200/80">
                                                 AI Optimized
                                             </span>
                                         </div>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                                             {languages.map((lang) => (
                                                 <button
                                                     key={lang.value}
+                                                    type="button"
                                                     onClick={() => setFormData({ ...formData, language: lang.value })}
-                                                    className={`px-3 py-2.5 text-sm font-semibold rounded-lg border transition-all ${formData.language === lang.value
-                                                        ? "bg-blue-700 border-blue-700 text-white shadow-md shadow-blue-500/20"
-                                                        : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                                                    className={`px-4 py-3 sm:py-2.5 text-sm font-semibold rounded-xl border-2 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${formData.language === lang.value
+                                                        ? "bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-500/25"
+                                                        : "bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 active:scale-[0.98]"
                                                         }`}
                                                 >
                                                     {lang.label}
                                                 </button>
                                             ))}
                                         </div>
-                                        <p className="text-xs text-slate-500 mt-2 italic px-1">
+                                        <p className="text-xs text-slate-500 mt-3 px-0.5 leading-relaxed">
                                             {formData.language === "Thunglish" && "ℹ️ 60% Tamil + 40% English Mix (High Retention)"}
                                             {formData.language === "English" && "ℹ️ International Standard English"}
                                             {formData.language === "Tamil" && "ℹ️ Pure Tamil with English Technical Terms"}
@@ -1723,108 +1730,103 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                     </div>
 
                                     {/* Tone & Style */}
-                                    <div className="mt-5">
+                                    <div className="mt-6 sm:mt-5">
                                         <label className="block text-sm font-medium text-slate-700 mb-2">
                                             Tone
                                         </label>
-                                        <select
-                                            value={formData.tone}
-                                            onChange={(e) => setFormData({ ...formData, tone: e.target.value })}
-                                            className="w-full px-4 py-2.5 bg-white/90 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600/15 focus:border-blue-600 text-slate-900 transition-all shadow-sm"
-                                        >
-                                            {tones.map((t) => (
-                                                <option key={t.value} value={t.value}>
-                                                    {t.label}
-                                                </option>
-                                            ))}
-                                        </select>
+                                        <div className="relative">
+                                            <select
+                                                value={formData.tone}
+                                                onChange={(e) => setFormData({ ...formData, tone: e.target.value })}
+                                                className="w-full pl-4 pr-10 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 appearance-none cursor-pointer transition-all shadow-sm hover:border-slate-300"
+                                            >
+                                                {tones.map((t) => (
+                                                    <option key={t.value} value={t.value}>
+                                                        {t.label}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                                        </div>
                                     </div>
 
                                     {/* Advanced Settings */}
-                                    <div className="mt-5 space-y-3">
-                                        <div className="flex items-center gap-5">
-                                            <label className="flex items-center gap-2 cursor-pointer group">
+                                    <div className="mt-6 sm:mt-5 space-y-3">
+                                        <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+                                            <label className="flex items-center gap-3 cursor-pointer group min-h-[44px] py-1">
                                                 <input
                                                     type="checkbox"
                                                     checked={formData.includeCode}
                                                     onChange={(e) => setFormData({ ...formData, includeCode: e.target.checked })}
-                                                    className="w-4 h-4 text-blue-700 bg-white border-slate-300 rounded focus:ring-blue-600 transition-colors"
+                                                    className="w-5 h-5 text-blue-600 bg-white border-slate-300 rounded focus:ring-2 focus:ring-blue-500 transition-colors"
                                                 />
                                                 <span className="text-sm text-slate-600 group-hover:text-slate-900">Include code examples</span>
                                             </label>
-                                            <label className="flex items-center gap-2 cursor-pointer group">
+                                            <label className="flex items-center gap-3 cursor-pointer group min-h-[44px] py-1">
                                                 <input
                                                     type="checkbox"
                                                     checked={formData.localContext}
                                                     onChange={(e) => setFormData({ ...formData, localContext: e.target.checked })}
-                                                    className="w-4 h-4 text-blue-700 bg-white border-slate-300 rounded focus:ring-blue-600 transition-colors"
+                                                    className="w-5 h-5 text-blue-600 bg-white border-slate-300 rounded focus:ring-2 focus:ring-blue-500 transition-colors"
                                                 />
                                                 <span className="text-sm text-slate-600 group-hover:text-slate-900">Add Tamil Nadu context</span>
                                             </label>
                                         </div>
 
                                         {/* Image Settings Divider */}
-                                        <div className="mt-5 pt-4 border-t border-slate-200">
+                                        <div className="mt-6 pt-5 border-t border-slate-200">
                                             <h4 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
                                                 <Sparkles className="w-4 h-4 text-amber-500" />
-                                                Premium Features (₹9 each)
+                                                Premium Features (10 tokens each)
                                             </h4>
 
-                                            <div className="space-y-3">
-                                                <label className="flex items-center gap-3 cursor-pointer group p-2 hover:bg-slate-50 rounded-lg transition-colors -ml-2">
+                                            <div className="space-y-1 sm:space-y-2">
+                                                <label className="flex items-center gap-3 cursor-pointer group p-3 sm:p-2 hover:bg-slate-50 rounded-xl transition-colors min-h-[44px] sm:min-h-0">
                                                     <input
                                                         type="checkbox"
                                                         checked={formData.includeChapters}
                                                         onChange={(e) => setFormData({ ...formData, includeChapters: e.target.checked })}
-                                                        className="w-5 h-5 text-blue-700 bg-white border-slate-300 rounded focus:ring-blue-600"
+                                                        className="w-5 h-5 text-blue-600 bg-white border-slate-300 rounded focus:ring-2 focus:ring-blue-500"
                                                     />
-                                                    <div>
-                                                        <span className="text-sm font-medium text-slate-700">Generate YouTube Chapters</span>
-                                                    </div>
+                                                    <span className="text-sm font-medium text-slate-700">Generate YouTube Chapters</span>
                                                 </label>
 
-                                                <label className="flex items-center gap-3 cursor-pointer group p-2 hover:bg-slate-50 rounded-lg transition-colors -ml-2">
+                                                <label className="flex items-center gap-3 cursor-pointer group p-3 sm:p-2 hover:bg-slate-50 rounded-xl transition-colors min-h-[44px] sm:min-h-0">
                                                     <input
                                                         type="checkbox"
                                                         checked={formData.includeBRoll}
                                                         onChange={(e) => setFormData({ ...formData, includeBRoll: e.target.checked })}
-                                                        className="w-5 h-5 text-blue-700 bg-white border-slate-300 rounded focus:ring-blue-600"
+                                                        className="w-5 h-5 text-blue-600 bg-white border-slate-300 rounded focus:ring-2 focus:ring-blue-500"
                                                     />
-                                                    <div>
-                                                        <span className="text-sm font-medium text-slate-700">B-Roll Suggestions</span>
-                                                    </div>
+                                                    <span className="text-sm font-medium text-slate-700">B-Roll Suggestions</span>
                                                 </label>
 
-                                                <label className="flex items-center gap-3 cursor-pointer group p-2 hover:bg-slate-50 rounded-lg transition-colors -ml-2">
+                                                <label className="flex items-center gap-3 cursor-pointer group p-3 sm:p-2 hover:bg-slate-50 rounded-xl transition-colors min-h-[44px] sm:min-h-0">
                                                     <input
                                                         type="checkbox"
                                                         checked={formData.includeShorts}
                                                         onChange={(e) => setFormData({ ...formData, includeShorts: e.target.checked })}
-                                                        className="w-5 h-5 text-blue-700 bg-white border-slate-300 rounded focus:ring-blue-600"
+                                                        className="w-5 h-5 text-blue-600 bg-white border-slate-300 rounded focus:ring-2 focus:ring-blue-500"
                                                     />
-                                                    <div>
-                                                        <span className="text-sm font-medium text-slate-700">Viral Shorts Ideas</span>
-                                                    </div>
+                                                    <span className="text-sm font-medium text-slate-700">Viral Shorts Ideas</span>
                                                 </label>
 
-                                                <div className="flex items-start gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors -ml-2">
+                                                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-3 sm:p-2 hover:bg-slate-50 rounded-xl transition-colors min-h-[44px] sm:min-h-0">
                                                     <label className="flex items-center gap-3 cursor-pointer group flex-1">
                                                         <input
                                                             type="checkbox"
                                                             checked={formData.generateImages}
                                                             onChange={(e) => setFormData({ ...formData, generateImages: e.target.checked })}
-                                                            className="w-5 h-5 text-blue-700 bg-white border-slate-300 rounded focus:ring-blue-600"
+                                                            className="w-5 h-5 text-blue-600 bg-white border-slate-300 rounded focus:ring-2 focus:ring-blue-500"
                                                         />
-                                                        <div>
-                                                            <span className="text-sm font-medium text-slate-700">Generate AI Image Prompts</span>
-                                                        </div>
+                                                        <span className="text-sm font-medium text-slate-700">Generate AI Image Prompts</span>
                                                     </label>
 
                                                     {formData.generateImages && (
                                                         <select
                                                             value={formData.imageFormat}
                                                             onChange={(e) => setFormData({ ...formData, imageFormat: e.target.value })}
-                                                            className="w-32 px-2 py-1 bg-white border border-slate-300 rounded-md text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-600/15 focus:border-blue-600"
+                                                            className="w-full sm:w-36 px-3 py-2 sm:py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                                                         >
                                                             {imageFormats.map((format) => (
                                                                 <option key={format.value} value={format.value}>
