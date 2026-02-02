@@ -2218,7 +2218,7 @@ Aspect Ratio: ${prompt.aspectRatio}`;
 
                     {/* Right Panel - Output */}
                     <div className="w-full lg:w-3/5">
-                        <div className="rounded-2xl min-h-[600px] flex flex-col relative overflow-hidden bg-white border border-slate-200/80 shadow-xl shadow-slate-200/20">
+                        <div className="rounded-2xl min-h-[600px] flex flex-col relative overflow-hidden bg-white border-2 border-slate-200 shadow-xl shadow-slate-300/30">
                             {/* Accent Top Border */}
                             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-violet-500 to-blue-600"></div>
 
@@ -2328,19 +2328,19 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                             </div>
 
                                             {/* Script Display */}
-                                            <div className="rounded-xl border border-slate-200/80 bg-slate-50/50 p-6 overflow-auto max-h-[65vh] shadow-inner">
-                                                <pre className="text-slate-800 text-[15px] leading-[1.7] whitespace-pre-wrap font-sans antialiased">
+                                            <div className="rounded-xl border-2 border-slate-200 bg-white p-6 sm:p-8 overflow-auto max-h-[70vh] shadow-lg shadow-slate-200/40 ring-1 ring-slate-100">
+                                                <pre className="text-slate-900 text-base sm:text-[17px] leading-[1.85] whitespace-pre-wrap font-sans antialiased tracking-[0.01em]">
                                                     {script}
                                                 </pre>
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-                                            <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
-                                                <FileText className="w-8 h-8 text-slate-400" />
+                                        <div className="flex flex-col items-center justify-center py-20 px-8 text-center border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/80">
+                                            <div className="w-20 h-20 rounded-2xl bg-white border border-slate-200 flex items-center justify-center mb-5 shadow-sm">
+                                                <FileText className="w-10 h-10 text-slate-500" />
                                             </div>
-                                            <p className="text-lg font-semibold text-slate-800">No script yet</p>
-                                            <p className="text-sm text-slate-500 mt-1 max-w-xs">
+                                            <p className="text-xl font-bold text-slate-800">No script yet</p>
+                                            <p className="text-base text-slate-600 mt-2 max-w-sm">
                                                 Configure your video and click Generate to create your script
                                             </p>
                                         </div>
