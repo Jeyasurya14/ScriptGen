@@ -130,7 +130,8 @@ export async function POST(req: Request) {
         };
 
         if (type === "translate") {
-            const chunkSize = 2400;
+            // Optimized chunk size: 2400 → 1800 (smaller chunks = less context overhead per call)
+            const chunkSize = 1800;
             const raw = fullScript || "";
             const paragraphs = raw.split(/\n{2,}/);
             const chunks: string[] = [];
@@ -147,6 +148,7 @@ export async function POST(req: Request) {
             }
             if (current) chunks.push(current);
 
+            // Process chunks (sequential to maintain order)
             const translatedParts: string[] = [];
             for (const chunk of chunks) {
                 const chunkPrompt = constructTranslatePrompt(targetLanguage as string, chunk);

@@ -36,8 +36,12 @@ const formatTime = (seconds: number): string => {
     return `${mins}:${secs.toString().padStart(2, "0")}`;
 };
 
+// Optimized truncation - adaptive based on content importance
 const truncateText = (text: string, maxChars: number): string =>
     text.length > maxChars ? `${text.slice(0, maxChars).trim()}…` : text;
+
+// Compact time range string
+const timeRange = (start: number, end: number): string => `${formatTime(start)}-${formatTime(end)}`;
 
 export const constructSectionPrompt = (
     stage: string,
@@ -45,149 +49,85 @@ export const constructSectionPrompt = (
     timestamps: Timestamps,
     previousContent: string = ""
 ) => {
-    const { language, title, channelName, difficulty } = formData;
+    const { language, title, channelName, difficulty, includeCode } = formData;
 
-    // Build system message based on selected language
-    let languageInstruction = "";
+    // Compact language instruction
+    const langMap: Record<string, string> = {
+        English: "Clear English, energetic.",
+        Hindi: "Hinglish, tech terms in English.",
+        Tamil: "Spoken Tamil, tech terms in English.",
+    };
+    const langInst = langMap[language] || "Thunglish (Tamil+English mix).";
 
-    if (language === "English") {
-        languageInstruction = "Use clear international English. Energetic, no fluff.";
-    } else if (language === "Hindi") {
-        languageInstruction = "Use Hinglish. Keep technical terms in English.";
-    } else if (language === "Tamil") {
-        languageInstruction = "Use spoken Tamil; keep technical terms in English.";
-    } else {
-        languageInstruction = "Use Thunglish (Tamil+English mix).";
-    }
-
-    const systemPrompt = `You are an expert YouTube script writer.
-Prioritize retention, clarity, and brevity. No filler, no repetition.
-${languageInstruction}
-Output only the script content.`;
+    // Ultra-compact system prompt
+    const systemPrompt = `YouTube script writer. ${langInst} No filler. Output script only.`;
 
     let userPrompt = "";
+    const prev = previousContent ? `Prev:${truncateText(previousContent, 300)}\n` : "";
 
     if (stage === "hook_intro") {
-        userPrompt = `Write hook + intro.
-Title: ${title}
-${channelName ? `Channel: ${channelName}` : ""}
-Difficulty: ${difficulty}
-Hook: ${formatTime(timestamps.hookStart)}-${formatTime(timestamps.hookEnd)}
-Intro: ${formatTime(timestamps.introStart)}-${formatTime(timestamps.introEnd)}
-Requirements: attention in first 3 seconds, clear value promise, curiosity loop.
-Format:
-[${formatTime(timestamps.hookStart)}-${formatTime(timestamps.hookEnd)}] HOOK
-Visual: ...
-Script...
-[${formatTime(timestamps.introStart)}-${formatTime(timestamps.introEnd)}] INTRO
-Visual: ...
-Script...`;
+        userPrompt = `Hook+Intro for "${title}"${channelName ? ` [${channelName}]` : ""} (${difficulty})
+Hook:${timeRange(timestamps.hookStart, timestamps.hookEnd)} Intro:${timeRange(timestamps.introStart, timestamps.introEnd)}
+Format:[time]SECTION\\nVisual:...\\nScript...
+Require:3s attention grab,value promise,curiosity loop.`;
 
     } else if (stage === "main_content") {
-        userPrompt = `Write main content.
-Previous: ${truncateText(previousContent, 400)}
-Requirements: 3-5 subsections, punchy lines, clear steps, 1 analogy per subsection.
-${formData.includeCode ? "Show working code first, then explain briefly." : ""}
-Format:
-[Timestamp] SUBSECTION
-Script...`;
+        userPrompt = `${prev}Main content. 3-5 subsections,punchy,clear steps,1 analogy each.${includeCode ? " Code first,explain briefly." : ""}
+Format:[time]SUBSECTION\\nScript...`;
+
     } else if (stage === "demo_outro") {
-        userPrompt = `Write demo + outro.
-Previous: ${truncateText(previousContent, 400)}
-Requirements: step-by-step demo, 3 crisp takeaways, short CTA.
-Format:
-[Timestamp] DEMO
-Script...
-[Timestamp] OUTRO
-Script...`;
+        userPrompt = `${prev}Demo+Outro. Step-by-step demo,3 takeaways,short CTA.
+Format:[time]DEMO\\n...[time]OUTRO\\n...`;
     }
 
-    return { systemPrompt, userPrompt, model: "gpt-4o-mini", max_tokens: 1400 };
+    // Reduced max_tokens: 1400 → 1100
+    return { systemPrompt, userPrompt, model: "gpt-4.1", max_tokens: 1100 };
 };
 
 export const constructProductionNotesPrompt = (formData: FormData, fullScript: string) => {
     const { title, includeCode } = formData;
 
-    const systemPrompt = `You are a professional YouTube video producer. Create practical, concise production notes.`;
+    // Compact system prompt
+    const systemPrompt = `YouTube producer. Concise production notes.`;
 
-    const userPrompt = `Create production notes that look premium and scannable.
-Use tasteful emojis, clean separators, and a compact table where asked. Keep it concise.
-Title: ${title}
-Script summary: ${truncateText(fullScript, 1200)}
-Output sections (use this order and headings):
-1) 🎬 B-ROLL (6-8 items, timestamp + description)
-2) 🎨 GRAPHICS (4-6 items)
-${includeCode ? `
-- Code snippet reveal
-- Function callouts
-- Before/after split
-- Error vs fix overlay
-` : `
-- Key concept text
-- Diagram/flowchart
-- Step list animation
-`}
-3) 📝 ON-SCREEN TEXT (6-8 items)
-${includeCode ? `
-1. Function names
-2. Key syntax
-3. Pro tips
-4. Error messages
-5. Output examples
-` : `
-1. Title
-2. Key points
-3. Definitions
-4. Step numbers
-`}
-4) ✂️ EDITING NOTES (transitions + pacing)
-5) 🎵 BACKGROUND MUSIC GUIDE (compact table with: Section | Style | Energy | Volume)
-6) 🖼️ THUMBNAIL NOTES (subject + 3-4 word text)`;
+    // Reduced script context: 1200 → 800
+    const userPrompt = `Production notes for "${title}"
+Script:${truncateText(fullScript, 800)}
 
-    return { systemPrompt, userPrompt, model: "gpt-4o-mini", max_tokens: 1400 };
+Output (compact,emojis ok):
+🎬 B-ROLL (6-8,timestamp+desc)
+🎨 GRAPHICS (4-6)${includeCode ? ": code reveal,callouts,before/after,error overlay" : ": concept text,diagram,step animation"}
+📝 ON-SCREEN TEXT (6-8)${includeCode ? ": functions,syntax,tips,errors,output" : ": title,points,definitions,steps"}
+✂️ EDITING (transitions+pacing)
+🎵 MUSIC (table:Section|Style|Energy|Vol)
+🖼️ THUMBNAIL (subject+3-4 words)`;
+
+    return { systemPrompt, userPrompt, model: "gpt-4o-mini", max_tokens: 1000 };
 };
 
 export const constructSEOPrompt = (formData: FormData, fullScript?: string) => {
     const { title, contentType } = formData;
-    const scriptContext = fullScript ? truncateText(fullScript, 800) : "";
+    // Reduced context: 800 → 500
+    const scriptContext = fullScript ? truncateText(fullScript, 500) : "";
 
-    const systemPrompt = `You are a YouTube SEO expert. Output ONLY valid JSON. No markdown, no code fences, no extra text.`;
+    // Minimal system prompt
+    const systemPrompt = `YouTube SEO expert. Output ONLY valid JSON.`;
 
     const userPrompt = fullScript
-        ? `Create a professional SEO pack for this YouTube video.
+        ? `SEO pack for "${title}" (${contentType})
+Script:${scriptContext}
 
-Title: ${title}
-Content type: ${contentType}
+JSON only:{"titles":[{"text":"..","score":85}],"description":"..","tags":[{"text":"..","score":80}],"thumbnails":[{"text":"..","score":82}],"comment":".."}
 
-Script summary (use this to make description and tags accurate):
----
-${scriptContext}
----
+Rules:titles(5,<=60ch,keyword)|description(150-200w,hook+bullets+CTA+hashtags)|tags(15-20,no dupes)|thumbnails(3,3-5w)|comment(2 lines)`
+        : `SEO pack for "${title}" (${contentType})
 
-Return ONLY valid JSON with this exact shape (no other keys, no markdown):
-{"titles":[{"text":"...","score":85}],"description":"...","tags":[{"text":"...","score":80}],"thumbnails":[{"text":"...","score":82}],"comment":"..."}
+JSON only:{"titles":[{"text":"..","score":85}],"description":"..","tags":[{"text":"..","score":80}],"thumbnails":[{"text":"..","score":82}],"comment":".."}
 
-Rules:
-- titles: 5 items, each <=60 chars, include primary keyword, distinct angles. score 0-100.
-- description: 170-230 words, reflect the script: hook, 3 bullets, CTA, 3-5 hashtags.
-- tags: 18-22 items, from script topics + SEO. No duplicates. score 0-100.
-- thumbnails: 3 items, 3-5 words each, high contrast. score 0-100.
-- comment: 2-3 lines, engaging, invite feedback.`
-        : `Create a professional SEO pack for YouTube.
-Title: ${title}
-Type: ${contentType}
+Rules:titles(5,<=60ch)|description(150-200w)|tags(15-20)|thumbnails(3,3-5w)|comment(2 lines)`;
 
-Return ONLY valid JSON with this shape:
-{"titles":[{"text":"...","score":85}],"description":"...","tags":[{"text":"...","score":80}],"thumbnails":[{"text":"...","score":82}],"comment":"..."}
-
-Rules:
-- 5 titles, <=60 chars, primary keyword, distinct angles.
-- Description 170-230 words: hook, 3 bullets, CTA, hashtags.
-- 18-22 tags, mix primary/secondary/long-tail, no duplicates.
-- 3 thumbnail texts (3-5 words), high contrast.
-- Comment: 2-3 lines, invite feedback.`;
-
-    return { systemPrompt, userPrompt, model: "gpt-4o-mini", max_tokens: 1200, expectsJson: true };
+    // Reduced max_tokens: 1200 → 900
+    return { systemPrompt, userPrompt, model: "gpt-4.1", max_tokens: 900, expectsJson: true };
 };
 
 export const constructImagePromptsPrompt = (
@@ -197,32 +137,25 @@ export const constructImagePromptsPrompt = (
 ) => {
     const { title, contentType, includeCode, imageFormat } = formData;
 
-    const aspectRatio = imageFormat === "portrait" ? "9:16" : imageFormat === "square" ? "1:1" : "16:9";
-    const formatHint = imageFormat === "portrait" ? "vertical mobile-first" : imageFormat === "square" ? "centered balanced" : "cinematic wide";
+    const ar = imageFormat === "portrait" ? "9:16" : imageFormat === "square" ? "1:1" : "16:9";
+    const comp = imageFormat === "portrait" ? "vertical" : imageFormat === "square" ? "centered" : "cinematic wide";
 
-    const systemPrompt = `Image prompt engineer. Output JSON array only.`;
+    // Ultra-compact system prompt
+    const systemPrompt = `Image prompt generator. JSON array only.`;
 
-    const userPrompt = `Generate 8 ${aspectRatio} image prompts for: "${title}"
-Type: ${contentType}${includeCode ? " (coding tutorial)" : ""}
-Composition: ${formatHint}
+    // Reduced context: 500 → 350
+    const userPrompt = `8 ${ar} prompts for "${title}" (${contentType}${includeCode ? ",coding" : ""})
+Comp:${comp}
+Timeline:H${timeRange(timestamps.hookStart, timestamps.hookEnd)}|I${timeRange(timestamps.introStart, timestamps.introEnd)}|M${timeRange(timestamps.mainStart, timestamps.mainEnd)}|D${timeRange(timestamps.demoStart, timestamps.demoEnd)}|O${timeRange(timestamps.outroStart, timestamps.outroEnd)}
+Context:${truncateText(fullScript, 350)}
 
-Timeline:
-Hook ${formatTime(timestamps.hookStart)}-${formatTime(timestamps.hookEnd)} | Intro ${formatTime(timestamps.introStart)}-${formatTime(timestamps.introEnd)} | Main ${formatTime(timestamps.mainStart)}-${formatTime(timestamps.mainEnd)} | Demo ${formatTime(timestamps.demoStart)}-${formatTime(timestamps.demoEnd)} | Outro ${formatTime(timestamps.outroStart)}-${formatTime(timestamps.outroEnd)}
+Dist:2Hook,1Intro,3Main,1Demo,1Outro
 
-Context: ${truncateText(fullScript, 500)}
+JSON:[{"id":1,"timestamp":"0:00-0:24","scene":"Hook","description":"[40-50w:subject,comp,lighting,angle,8K]","style":"..","mood":"..","colorPalette":"3colors","aspectRatio":"${ar}"}]
 
-Distribution: 2 Hook, 1 Intro, 3 Main, 1 Demo, 1 Outro
+Include:lighting(rim/neon),depth(bokeh),camera angle.${includeCode ? " Show:IDE,code,terminal." : ""}`;
 
-JSON format:
-[{"id":1,"timestamp":"0:00-0:24","scene":"Hook","description":"[40-60 words: subject, composition, lighting, angle, quality modifiers like 8K, ultra detailed]","style":"[specific art style]","mood":"[atmosphere]","colorPalette":"[3 colors]","aspectRatio":"${aspectRatio}"}]
-
-Requirements per prompt:
-- Include lighting (rim/ambient/neon), depth (bokeh/layers), camera (lens/angle)
-- Style: Cyberpunk/Photorealistic/Minimalist/Cinematic/Neon-futuristic
-${includeCode ? "- Show: IDE screens, code snippets, terminal outputs, tech devices" : "- Show: Concept diagrams, infographics, professional visuals"}
-- Optimized for ${aspectRatio} framing`;
-
-    return { systemPrompt, userPrompt, model: "gpt-4o-mini", max_tokens: 1200 };
+    return { systemPrompt, userPrompt, model: "gpt-4o-mini", max_tokens: 900 };
 };
 
 export const constructChaptersPrompt = (
@@ -232,21 +165,15 @@ export const constructChaptersPrompt = (
 ) => {
     const { title } = formData;
 
-    const userPrompt = `Generate YouTube video chapters for: "${title}"
+    // Reduced context: 400 → 300
+    const userPrompt = `Chapters for "${title}"
+Timeline:H0:00-${formatTime(timestamps.hookEnd)}|I${formatTime(timestamps.introStart)}-${formatTime(timestamps.introEnd)}|M${formatTime(timestamps.mainStart)}-${formatTime(timestamps.mainEnd)}|D${formatTime(timestamps.demoStart)}-${formatTime(timestamps.demoEnd)}|O${formatTime(timestamps.outroStart)}-${formatTime(timestamps.outroEnd)}
+Script:${truncateText(fullScript, 300)}
 
-Timeline: Hook 0:00-${formatTime(timestamps.hookEnd)} | Intro ${formatTime(timestamps.introStart)}-${formatTime(timestamps.introEnd)} | Main ${formatTime(timestamps.mainStart)}-${formatTime(timestamps.mainEnd)} | Demo ${formatTime(timestamps.demoStart)}-${formatTime(timestamps.demoEnd)} | Outro ${formatTime(timestamps.outroStart)}-${formatTime(timestamps.outroEnd)}
+6-10 chapters, JSON:[{"timestamp":"0:00","title":"max 5 words","description":"1 line"}]
+First=0:00. Engaging titles.`;
 
-Script summary: ${truncateText(fullScript, 400)}
-
-Create 6-10 chapters. JSON array only:
-[{"timestamp":"0:00","title":"Short engaging title (max 5 words)","description":"One line about this section"}]
-
-Rules:
-- First chapter MUST be 0:00
-- Titles: engaging, curiosity-inducing
-- Cover all major topic transitions`;
-
-    return { systemPrompt: "You are a YouTube chapter generator.", userPrompt, model: "gpt-4o-mini", max_tokens: 600 };
+    return { systemPrompt: "Chapter generator.", userPrompt, model: "gpt-4o-mini", max_tokens: 450 };
 };
 
 export const constructBRollPrompt = (
@@ -256,25 +183,16 @@ export const constructBRollPrompt = (
 ) => {
     const { title, contentType, includeCode } = formData;
 
-    const userPrompt = `Generate B-Roll suggestions for: "${title}"
-Type: ${contentType}${includeCode ? " (coding)" : ""}
+    // Reduced context: 350 → 250
+    const userPrompt = `B-Roll for "${title}" (${contentType}${includeCode ? ",coding" : ""})
+Timeline:H-${formatTime(timestamps.hookEnd)}|I-${formatTime(timestamps.introEnd)}|M-${formatTime(timestamps.mainEnd)}|D-${formatTime(timestamps.demoEnd)}|O-${formatTime(timestamps.outroEnd)}
+Script:${truncateText(fullScript, 250)}
 
-Timeline: Hook-${formatTime(timestamps.hookEnd)} | Intro-${formatTime(timestamps.introEnd)} | Main-${formatTime(timestamps.mainEnd)} | Demo-${formatTime(timestamps.demoEnd)} | Outro-${formatTime(timestamps.outroEnd)}
+10-12 suggestions, JSON:[{"id":1,"timestamp":"0:00-0:24","scene":"Hook","suggestion":"desc","source":"stock|screen|animation|self-record","searchTerms":["t1","t2","t3"]}]
 
-Script: ${truncateText(fullScript, 350)}
+Sources:stock=Pexels clips,screen=recordings,animation=motion graphics,self-record=camera.${includeCode ? " Focus:IDE,terminal,code." : ""}`;
 
-Create 10-12 B-Roll suggestions. JSON array only:
-[{"id":1,"timestamp":"0:00-0:24","scene":"Hook","suggestion":"Specific B-Roll description","source":"stock|screen|animation|self-record","searchTerms":["term1","term2","term3"]}]
-
-Sources:
-- stock: Pexels/Pixabay clips (general visuals)
-- screen: Screen recordings (demos, code, tutorials)
-- animation: Motion graphics, text animations
-- self-record: Camera footage you film
-
-${includeCode ? "Focus on: IDE screenshots, terminal outputs, code animations, typing sequences" : "Focus on: concept visuals, reactions, professional footage"}`;
-
-    return { systemPrompt: "You are a B-Roll suggestion generator.", userPrompt, model: "gpt-4o-mini", max_tokens: 800 };
+    return { systemPrompt: "B-Roll generator.", userPrompt, model: "gpt-4o-mini", max_tokens: 600 };
 };
 
 export const constructShortsPrompt = (
@@ -283,57 +201,38 @@ export const constructShortsPrompt = (
 ) => {
     const { title, contentType } = formData;
 
-    const userPrompt = `Extract 4 viral YouTube Shorts from this video: "${title}"
-Type: ${contentType}
+    // Reduced context: 900 → 600
+    const userPrompt = `Extract 4 Shorts from "${title}" (${contentType})
+Script:${truncateText(fullScript, 600)}
 
-Full script:
-${truncateText(fullScript, 900)}
+JSON:[{"id":1,"title":"catchy","hook":"3s attention grab","content":"20-40s script","cta":"like/follow prompt","originalTimestamp":"2:30-3:15","viralScore":85}]
 
-Create 4 standalone 30-60 second Shorts. JSON array only:
-[{"id":1,"title":"Catchy Shorts title (curiosity/value)","hook":"Opening line (first 3 sec - must grab attention)","content":"Main content script (20-40 sec, complete thought, valuable standalone)","cta":"Closing CTA (like/follow/comment prompt)","originalTimestamp":"2:30-3:15","viralScore":85}]
+Score(1-100):hook(25)+value(25)+shareability(25)+engagement(25)
+Focus:surprising facts,quick tips,relatable moments.`;
 
-Viral Score criteria (1-100):
-- Hook strength (0-25)
-- Standalone value (0-25) 
-- Shareability (0-25)
-- Engagement potential (0-25)
-
-Focus on: surprising facts, quick tips, relatable moments, controversy/opinions`;
-
-    return { systemPrompt: "You are a viral content extractor.", userPrompt, model: "gpt-4o-mini", max_tokens: 1200 };
+    // Reduced max_tokens: 1200 → 900
+    return { systemPrompt: "Viral Shorts extractor.", userPrompt, model: "gpt-4.1", max_tokens: 900 };
 };
 
 export const constructTranslatePrompt = (targetLanguage: string, fullScript: string) => {
-    const systemPrompt = `You are a professional translator for YouTube scripts. Preserve structure and timestamps. No extra text.`;
+    // Compact system prompt
+    const systemPrompt = `Translator. Preserve timestamps,structure. Output translation only.`;
 
-    const rules = [
-        "Maintain ALL timestamps exactly as they are [00:00].",
-        "Keep the original tone (Casual/Professional).",
-        "Keep technical terms in English (e.g., React, API, Database).",
-        "Do not translate proper nouns or channel names.",
-        `Ensure the flow is natural for a native speaker of ${targetLanguage}.`,
-        "Preserve line breaks, headings, lists, and tables exactly.",
-        "Do not add or remove sections.",
-    ];
-
+    // Compact rules based on language
+    let langRule = "";
     if (targetLanguage === "Thunglish") {
-        rules.push("Mix Tamil and English naturally (60% Tamil, 40% English).");
+        langRule = " Mix Tamil+English(60/40).";
+    } else if (targetLanguage === "Hindi") {
+        langRule = " Use Hinglish for tech.";
     }
 
-    if (targetLanguage === "Hindi") {
-        rules.push("Use Hinglish (Hindi + English tech terms) for a natural tech review feel.");
-    }
-
-    const userPrompt = `Translate the following script to ${targetLanguage}.
-
-RULES:
-${rules.map((rule, index) => `${index + 1}. ${rule}`).join("\n")}
-
-Input format: Full script text
-Output format: Translated script text ONLY. No other text.
+    const userPrompt = `Translate to ${targetLanguage}.${langRule}
+Keep:timestamps,tone,tech terms in English,proper nouns,formatting.
+No additions/removals.
 
 SCRIPT:
 ${fullScript}`;
 
-    return { systemPrompt, userPrompt, model: "gpt-4o-mini", max_tokens: 1400 };
+    // Reduced max_tokens: 1400 → 1100
+    return { systemPrompt, userPrompt, model: "gpt-4.1", max_tokens: 1100 };
 };

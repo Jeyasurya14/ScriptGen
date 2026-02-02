@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 // import { jsPDF } from "jspdf"; // Dynamic import used instead
 import {
@@ -26,6 +27,7 @@ import {
     Trash2,
     Clock,
     Settings2,
+    Share2,
     ShieldCheck,
     Lock,
     Tag,
@@ -169,6 +171,40 @@ const imageFormats = [
 
 const STORAGE_KEY = "scriptgen:lastState";
 
+// Script templates - quick start presets
+const scriptTemplates = [
+    {
+        id: "tutorial",
+        label: "Tutorial",
+        icon: "📚",
+        formData: { contentType: "Tutorial", duration: 10, tone: "casual", difficulty: "Beginner", titlePlaceholder: "e.g., How to use React useState" },
+    },
+    {
+        id: "review",
+        label: "Product Review",
+        icon: "🛒",
+        formData: { contentType: "Review", duration: 8, tone: "professional", difficulty: "Beginner", titlePlaceholder: "e.g., iPhone 16 Pro review after 1 month" },
+    },
+    {
+        id: "explainer",
+        label: "Explainers",
+        icon: "💡",
+        formData: { contentType: "Educational", duration: 12, tone: "professional", difficulty: "Intermediate", titlePlaceholder: "e.g., What is API and how it works" },
+    },
+    {
+        id: "vlog",
+        label: "Vlog / Storytelling",
+        icon: "🎬",
+        formData: { contentType: "Vlog", duration: 8, tone: "casual", difficulty: "Beginner", titlePlaceholder: "e.g., A day in my life as a creator" },
+    },
+    {
+        id: "ad",
+        label: "Ad / Promo",
+        icon: "📢",
+        formData: { contentType: "Entertainment", duration: 2, tone: "humorous", difficulty: "Beginner", titlePlaceholder: "e.g., Introducing our new product launch" },
+    },
+];
+
 export default function ScriptGenerator() {
     // Form state
     const [formData, setFormData] = useState<FormData>({
@@ -190,6 +226,10 @@ export default function ScriptGenerator() {
 
     // Output state
     const [script, setScript] = useState<string>("");
+    const [hookSection, setHookSection] = useState<string>("");
+    const [mainSection, setMainSection] = useState<string>("");
+    const [demoSection, setDemoSection] = useState<string>("");
+    const [productionNotesSection, setProductionNotesSection] = useState<string>("");
     const [seoData, setSeoData] = useState<SEOData | null>(null);
     const [imagesData, setImagesData] = useState<ImagePrompt[] | null>(null);
     const [chaptersData, setChaptersData] = useState<Chapter[] | null>(null);
@@ -222,6 +262,13 @@ export default function ScriptGenerator() {
     const [promoCode, setPromoCode] = useState<string>("");
     const [promoLoading, setPromoLoading] = useState<boolean>(false);
     const [promoMessage, setPromoMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+    const [referralLink, setReferralLink] = useState<string>("");
+    const [referralCode, setReferralCode] = useState<string>("");
+    const [referralCopied, setReferralCopied] = useState<boolean>(false);
+    const [referralApplyCode, setReferralApplyCode] = useState<string>("");
+    const [referralApplyLoading, setReferralApplyLoading] = useState<boolean>(false);
+    const [referralApplyMessage, setReferralApplyMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+    const searchParams = useSearchParams();
 
     const tokenPackages = [
         { id: "starter", name: "Starter", tokens: 100, price: 99 },
@@ -407,6 +454,10 @@ export default function ScriptGenerator() {
                     contentType: normalizeContentType(s.content_type) || "Tutorial",
                 });
                 setScript(s.script_content || "");
+                setHookSection("");
+                setMainSection("");
+                setDemoSection("");
+                setProductionNotesSection("");
                 setSeoData(s.seo_data || null);
                 setImagesData(s.images_data || null);
                 setChaptersData(s.chapters_data || null);
@@ -444,6 +495,61 @@ export default function ScriptGenerator() {
     };
 
     // Handle payment
+    // Fetch referral link when modal opens (logged in user)
+    useEffect(() => {
+        if (session && showPaymentModal && !referralLink) {
+            fetch("/api/referral")
+                .then((r) => r.ok ? r.json() : null)
+                .then((data) => {
+                    if (data?.link) setReferralLink(data.link);
+                    if (data?.code) setReferralCode(data.code);
+                })
+                .catch(() => {});
+        }
+    }, [session, showPaymentModal, referralLink]);
+
+    // Pre-fill referral code from ?ref param
+    useEffect(() => {
+        const ref = searchParams?.get("ref");
+        if (ref && !referralApplyCode) setReferralApplyCode(ref);
+    }, [searchParams, referralApplyCode]);
+
+    const handleCopyReferralLink = async () => {
+        if (!referralLink) return;
+        await navigator.clipboard.writeText(referralLink);
+        setReferralCopied(true);
+        setTimeout(() => setReferralCopied(false), 2000);
+    };
+
+    const handleReferralApply = async () => {
+        if (!referralApplyCode.trim()) {
+            setReferralApplyMessage({ type: "error", text: "Please enter a referral code" });
+            return;
+        }
+        setReferralApplyLoading(true);
+        setReferralApplyMessage(null);
+        try {
+            const res = await fetch("/api/referral", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ code: referralApplyCode.trim() }),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setReferralApplyMessage({ type: "success", text: data.message || `You both got 25 tokens!` });
+                setReferralApplyCode("");
+                const creditsRes = await fetch("/api/credits");
+                if (creditsRes.ok) setCredits(await creditsRes.json());
+            } else {
+                setReferralApplyMessage({ type: "error", text: data.error || "Invalid referral code" });
+            }
+        } catch {
+            setReferralApplyMessage({ type: "error", text: "Failed to apply referral code" });
+        } finally {
+            setReferralApplyLoading(false);
+        }
+    };
+
     const handlePromoCode = async () => {
         if (!promoCode.trim()) {
             setPromoMessage({ type: "error", text: "Please enter a promo code" });
@@ -598,6 +704,54 @@ export default function ScriptGenerator() {
         return data.content;
     };
 
+    // Regenerate a single section (hook, main, or demo) - costs 10 tokens
+    const REGEN_TOKEN_COST = 10;
+    const regenerateSection = async (stage: "hook_intro" | "main_content" | "demo_outro") => {
+        if (!session || !script) return;
+        const available = (credits?.freeTokensRemaining || 0) + (credits?.paidTokens || 0);
+        if (available < REGEN_TOKEN_COST) {
+            setShowPaymentModal(true);
+            return;
+        }
+        setError("");
+        setLoading(true);
+        setProgress(`Regenerating ${stage === "hook_intro" ? "Hook" : stage === "main_content" ? "Main" : "Demo & Outro"}...`);
+        try {
+            const timestamps = generateTimestamps(formData.duration);
+            let previousContent = "";
+            if (stage === "main_content") previousContent = hookSection;
+            if (stage === "demo_outro") previousContent = hookSection + (mainSection ? "\n\n" + mainSection : "");
+
+            const newContent = await generateSection(stage, timestamps, previousContent);
+
+            if (stage === "hook_intro") setHookSection(newContent);
+            if (stage === "main_content") setMainSection(newContent);
+            if (stage === "demo_outro") setDemoSection(newContent);
+
+            const notesPart = productionNotesSection ? "\n\n" + productionNotesSection : "";
+            const full =
+                stage === "hook_intro"
+                    ? newContent + (mainSection ? "\n\n" + mainSection : "") + (demoSection ? "\n\n" + demoSection : "") + notesPart
+                    : stage === "main_content"
+                        ? hookSection + "\n\n" + newContent + (demoSection ? "\n\n" + demoSection : "") + notesPart
+                        : hookSection + (mainSection ? "\n\n" + mainSection : "") + "\n\n" + newContent + notesPart;
+            setScript(full);
+
+            await fetch("/api/credits", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ count: REGEN_TOKEN_COST }),
+            });
+            const creditsRes = await fetch("/api/credits");
+            if (creditsRes.ok) setCredits(await creditsRes.json());
+        } catch (err: unknown) {
+            setError(getErrorMessage(err, "Failed to regenerate. Please try again."));
+        } finally {
+            setLoading(false);
+            setProgress("");
+        }
+    };
+
     // Main generate function
     const generateScript = async () => {
         if (!session) {
@@ -623,6 +777,10 @@ export default function ScriptGenerator() {
         setError("");
         setProgress("Stage 1/6: Initializing & Generating Hook...");
         setScript("");
+        setHookSection("");
+        setMainSection("");
+        setDemoSection("");
+        setProductionNotesSection("");
         setSeoData(null);
         setImagesData(null);
         setChaptersData(null);
@@ -640,24 +798,28 @@ export default function ScriptGenerator() {
 
             // Stage 1: Hook & Intro
             const hookIntro = await generateSection("hook_intro", timestamps, "", controller.signal);
+            setHookSection(hookIntro);
             fullScript = hookIntro;
             setScript(fullScript);
             setProgress("Stage 2/6: Generating Main Content...");
 
             // Stage 2: Main Content
             const mainContent = await generateSection("main_content", timestamps, fullScript, controller.signal);
+            setMainSection(mainContent);
             fullScript += "\n\n" + mainContent;
             setScript(fullScript);
             setProgress("Stage 3/6: Generating Demo & Outro...");
 
             // Stage 3: Demo & Outro
             const demoOutro = await generateSection("demo_outro", timestamps, fullScript, controller.signal);
+            setDemoSection(demoOutro);
             fullScript += "\n\n" + demoOutro;
             setScript(fullScript);
             setProgress("Stage 4/6: Generating Production Notes...");
 
             // Stage 4: Production Notes
             const productionNotes = await generateProductionNotes(fullScript, controller.signal);
+            setProductionNotesSection(productionNotes);
             fullScript += "\n\n" + productionNotes;
             setScript(fullScript);
             setProgress("Stage 5/6: Generating SEO & Media Assets...");
@@ -1132,6 +1294,40 @@ Aspect Ratio: ${prompt.aspectRatio}`;
         setShowExportDropdown(false);
     };
 
+    // Download as SRT (subtitles/captions)
+    const downloadAsSRT = () => {
+        const paragraphs = script.split(/\n{2,}/).filter((p) => p.trim());
+        const totalSeconds = formData.duration * 60;
+        const secPerParagraph = paragraphs.length > 0 ? totalSeconds / paragraphs.length : 4;
+        const formatSRTTime = (sec: number) => {
+            const h = Math.floor(sec / 3600);
+            const m = Math.floor((sec % 3600) / 60);
+            const s = Math.floor(sec % 60);
+            const ms = Math.floor((sec % 1) * 1000);
+            return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")},${ms.toString().padStart(3, "0")}`;
+        };
+        const srtLines: string[] = [];
+        let currentTime = 0;
+        paragraphs.forEach((para, i) => {
+            const nextTime = Math.min(currentTime + secPerParagraph, totalSeconds);
+            srtLines.push(`${i + 1}`);
+            srtLines.push(`${formatSRTTime(currentTime)} --> ${formatSRTTime(nextTime)}`);
+            srtLines.push(para.trim().replace(/\n/g, " "));
+            srtLines.push("");
+            currentTime = nextTime;
+        });
+        const blob = new Blob([srtLines.join("\n")], { type: "text/plain;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${formData.title.replace(/[^a-zA-Z0-9]/g, "_")}_captions.srt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        setShowExportDropdown(false);
+    };
+
     // Download as Word Doc
     const downloadAsDOC = () => {
         const preHtml = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Export HTML To Doc</title></head><body>";
@@ -1327,6 +1523,60 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                             : "bg-red-50 text-red-700 border border-red-200"
                                     }`}>
                                         {promoMessage.text}
+                                    </div>
+                                )}
+                            </div>
+                            {/* Referral - Invite friends */}
+                            <div className="pt-4 border-t border-slate-200 space-y-3">
+                                <p className="text-xs font-medium text-slate-600 flex items-center gap-1">
+                                    <Share2 className="w-3.5 h-3.5 flex-shrink-0" />
+                                    Invite friends, get 25 tokens each
+                                </p>
+                                {referralLink ? (
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            readOnly
+                                            value={referralLink}
+                                            className="flex-1 min-w-0 px-3 py-2.5 text-xs border border-slate-200 rounded-xl bg-slate-50 text-slate-600 truncate"
+                                        />
+                                        <button
+                                            onClick={handleCopyReferralLink}
+                                            className="px-3 py-2.5 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl flex-shrink-0"
+                                        >
+                                            {referralCopied ? <Check className="w-4 h-4" /> : "Copy"}
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <p className="text-xs text-slate-500">Your referral link will appear when you open this modal.</p>
+                                )}
+                                <p className="text-[11px] text-slate-500">
+                                    Have a referral code? Apply below:
+                                </p>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={referralApplyCode}
+                                        onChange={(e) => setReferralApplyCode(e.target.value.toUpperCase())}
+                                        onKeyDown={(e) => e.key === "Enter" && handleReferralApply()}
+                                        placeholder="Enter friend's code"
+                                        className="flex-1 min-w-0 px-3 py-2.5 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                    />
+                                    <button
+                                        onClick={handleReferralApply}
+                                        disabled={referralApplyLoading || !referralApplyCode.trim()}
+                                        className="px-3 py-2.5 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl disabled:opacity-50 flex-shrink-0"
+                                    >
+                                        {referralApplyLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
+                                    </button>
+                                </div>
+                                {referralApplyMessage && (
+                                    <div className={`p-3 rounded-xl text-xs ${
+                                        referralApplyMessage.type === "success"
+                                            ? "bg-green-50 text-green-700 border border-green-200"
+                                            : "bg-red-50 text-red-700 border border-red-200"
+                                    }`}>
+                                        {referralApplyMessage.text}
                                     </div>
                                 )}
                             </div>
@@ -1592,6 +1842,38 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                         )}
                                     </div>
 
+                                    {/* Script Templates */}
+                                    <div className="mb-6">
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                                            Quick start template
+                                        </label>
+                                        <div className="flex flex-wrap gap-2">
+                                            {scriptTemplates.map((t) => (
+                                                <button
+                                                    key={t.id}
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setFormData({
+                                                            ...formData,
+                                                            contentType: t.formData.contentType,
+                                                            duration: t.formData.duration,
+                                                            tone: t.formData.tone,
+                                                            difficulty: t.formData.difficulty,
+                                                        })
+                                                    }
+                                                    className={`px-3 py-2 text-sm font-medium rounded-xl border transition-all ${
+                                                        formData.contentType === t.formData.contentType
+                                                            ? "bg-blue-50 border-blue-200 text-blue-700"
+                                                            : "bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+                                                    }`}
+                                                >
+                                                    <span className="mr-1.5">{t.icon}</span>
+                                                    {t.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
                                     {/* Video Title */}
                                     <div className="mb-6 sm:mb-5">
                                         <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -1601,7 +1883,10 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                             type="text"
                                             value={formData.title}
                                             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                            placeholder="e.g., React useState hook complete guide"
+                                            placeholder={
+                                                scriptTemplates.find((t) => t.formData.contentType === formData.contentType)?.formData.titlePlaceholder ||
+                                                "e.g., React useState hook complete guide"
+                                            }
                                             className="w-full px-4 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 placeholder-slate-400 transition-all shadow-sm hover:border-slate-300"
                                         />
                                     </div>
@@ -1979,6 +2264,36 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                                     )}
                                                 </div>
 
+                                                {/* Regenerate Section */}
+                                                {hookSection && (
+                                                    <div className="flex flex-wrap gap-1">
+                                                        <button
+                                                            onClick={() => regenerateSection("hook_intro")}
+                                                            disabled={loading}
+                                                            className="px-2 py-1.5 text-xs font-medium border border-slate-200 bg-white text-slate-600 rounded-md hover:bg-slate-50 disabled:opacity-50"
+                                                            title="Regenerate Hook & Intro (10 tokens)"
+                                                        >
+                                                            Regenerate Hook
+                                                        </button>
+                                                        <button
+                                                            onClick={() => regenerateSection("main_content")}
+                                                            disabled={loading}
+                                                            className="px-2 py-1.5 text-xs font-medium border border-slate-200 bg-white text-slate-600 rounded-md hover:bg-slate-50 disabled:opacity-50"
+                                                            title="Regenerate Main (10 tokens)"
+                                                        >
+                                                            Regenerate Main
+                                                        </button>
+                                                        <button
+                                                            onClick={() => regenerateSection("demo_outro")}
+                                                            disabled={loading}
+                                                            className="px-2 py-1.5 text-xs font-medium border border-slate-200 bg-white text-slate-600 rounded-md hover:bg-slate-50 disabled:opacity-50"
+                                                            title="Regenerate Demo & Outro (10 tokens)"
+                                                        >
+                                                            Regenerate Outro
+                                                        </button>
+                                                    </div>
+                                                )}
+
                                                 <button
                                                     onClick={copyToClipboard}
                                                     className="flex items-center gap-2 px-3 py-2 text-sm border border-slate-200 bg-white text-slate-600 rounded-md hover:bg-slate-50 transition-colors"
@@ -2030,6 +2345,13 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                                             >
                                                                 <FileText className="w-4 h-4 text-slate-500" />
                                                                 Export as Text
+                                                            </button>
+                                                            <button
+                                                                onClick={downloadAsSRT}
+                                                                className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors flex items-center gap-2"
+                                                            >
+                                                                <Film className="w-4 h-4 text-emerald-600" />
+                                                                Export as SRT (captions)
                                                             </button>
                                                         </div>
                                                     )}
