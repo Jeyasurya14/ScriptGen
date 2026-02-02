@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import ScriptGenerator from "../ScriptGenerator";
 import type { Metadata } from "next";
 
@@ -9,5 +10,9 @@ export const metadata: Metadata = {
 };
 
 export default function AppPage() {
-  return <ScriptGenerator />;
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-slate-50"><div className="animate-pulse text-slate-400">Loading...</div></div>}>
+      <ScriptGenerator />
+    </Suspense>
+  );
 }
