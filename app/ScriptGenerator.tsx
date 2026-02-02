@@ -173,36 +173,11 @@ const STORAGE_KEY = "scriptgen:lastState";
 
 // Script templates - quick start presets
 const scriptTemplates = [
-    {
-        id: "tutorial",
-        label: "Tutorial",
-        icon: "📚",
-        formData: { contentType: "Tutorial", duration: 10, tone: "casual", difficulty: "Beginner", titlePlaceholder: "e.g., How to use React useState" },
-    },
-    {
-        id: "review",
-        label: "Product Review",
-        icon: "🛒",
-        formData: { contentType: "Review", duration: 8, tone: "professional", difficulty: "Beginner", titlePlaceholder: "e.g., iPhone 16 Pro review after 1 month" },
-    },
-    {
-        id: "explainer",
-        label: "Explainers",
-        icon: "💡",
-        formData: { contentType: "Educational", duration: 12, tone: "professional", difficulty: "Intermediate", titlePlaceholder: "e.g., What is API and how it works" },
-    },
-    {
-        id: "vlog",
-        label: "Vlog / Storytelling",
-        icon: "🎬",
-        formData: { contentType: "Vlog", duration: 8, tone: "casual", difficulty: "Beginner", titlePlaceholder: "e.g., A day in my life as a creator" },
-    },
-    {
-        id: "ad",
-        label: "Ad / Promo",
-        icon: "📢",
-        formData: { contentType: "Entertainment", duration: 2, tone: "humorous", difficulty: "Beginner", titlePlaceholder: "e.g., Introducing our new product launch" },
-    },
+    { id: "tutorial", label: "Tutorial", formData: { contentType: "Tutorial", duration: 10, tone: "casual", difficulty: "Beginner", titlePlaceholder: "e.g., How to use React useState" } },
+    { id: "review", label: "Product Review", formData: { contentType: "Review", duration: 8, tone: "professional", difficulty: "Beginner", titlePlaceholder: "e.g., iPhone 16 Pro review after 1 month" } },
+    { id: "explainer", label: "Explainers", formData: { contentType: "Educational", duration: 12, tone: "professional", difficulty: "Intermediate", titlePlaceholder: "e.g., What is API and how it works" } },
+    { id: "vlog", label: "Vlog / Storytelling", formData: { contentType: "Vlog", duration: 8, tone: "casual", difficulty: "Beginner", titlePlaceholder: "e.g., A day in my life as a creator" } },
+    { id: "ad", label: "Ad / Promo", formData: { contentType: "Entertainment", duration: 2, tone: "humorous", difficulty: "Beginner", titlePlaceholder: "e.g., Introducing our new product launch" } },
 ];
 
 export default function ScriptGenerator() {
@@ -1864,13 +1839,12 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                                             difficulty: t.formData.difficulty,
                                                         })
                                                     }
-                                                    className={`inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium rounded-xl border-2 transition-all ${
+                                                    className={`inline-flex items-center px-4 py-2.5 text-sm font-medium rounded-xl border-2 transition-all ${
                                                         formData.contentType === t.formData.contentType
                                                             ? "bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-500/20"
                                                             : "bg-white border-slate-200 text-slate-600 hover:border-blue-200 hover:bg-blue-50/50"
                                                     }`}
                                                 >
-                                                    <span className="text-base">{t.icon}</span>
                                                     {t.label}
                                                 </button>
                                             ))}
