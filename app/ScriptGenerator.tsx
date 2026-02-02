@@ -1827,26 +1827,29 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                 </div>
                             ) : (
                                 /* Authenticated - Show Configuration */
-                                <div className="brand-card rounded-2xl p-5 sm:p-6 lg:p-8 h-full relative overflow-hidden">
-                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6 pb-4 border-b border-slate-200/80">
-                                        <div className="flex items-center gap-2">
-                                            <div className="p-1.5 rounded-lg bg-slate-100 text-slate-600">
-                                                <Settings2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                                <div className="space-y-6 sm:space-y-7">
+                                    {/* Header */}
+                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-4 border-b border-slate-200/80">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500/10 to-violet-500/10 text-blue-600">
+                                                <Settings2 className="w-5 h-5" />
                                             </div>
-                                            <h2 className="text-base sm:text-lg font-semibold text-slate-800">Configuration</h2>
+                                            <div>
+                                                <h2 className="text-lg font-bold text-slate-900">Configuration</h2>
+                                                <p className="text-xs text-slate-500">Set your video details</p>
+                                            </div>
                                         </div>
                                         {credits && (
-                                            <span className="text-xs px-3 py-1.5 brand-pill rounded-full font-semibold">
+                                            <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-50 border border-amber-200/80 text-amber-800 font-semibold text-sm">
+                                                <CreditCard className="w-4 h-4" />
                                                 {totalTokens} tokens
                                             </span>
                                         )}
                                     </div>
 
-                                    {/* Script Templates */}
-                                    <div className="mb-6">
-                                        <label className="block text-sm font-medium text-slate-700 mb-2">
-                                            Quick start template
-                                        </label>
+                                    {/* Section 1: Quick start */}
+                                    <div>
+                                        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">Quick start</p>
                                         <div className="flex flex-wrap gap-2">
                                             {scriptTemplates.map((t) => (
                                                 <button
@@ -1861,280 +1864,258 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                                             difficulty: t.formData.difficulty,
                                                         })
                                                     }
-                                                    className={`px-3 py-2 text-sm font-medium rounded-xl border transition-all ${
+                                                    className={`inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium rounded-xl border-2 transition-all ${
                                                         formData.contentType === t.formData.contentType
-                                                            ? "bg-blue-50 border-blue-200 text-blue-700"
-                                                            : "bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+                                                            ? "bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-500/20"
+                                                            : "bg-white border-slate-200 text-slate-600 hover:border-blue-200 hover:bg-blue-50/50"
                                                     }`}
                                                 >
-                                                    <span className="mr-1.5">{t.icon}</span>
+                                                    <span className="text-base">{t.icon}</span>
                                                     {t.label}
                                                 </button>
                                             ))}
                                         </div>
                                     </div>
 
-                                    {/* Video Title */}
-                                    <div className="mb-6 sm:mb-5">
-                                        <label className="block text-sm font-medium text-slate-700 mb-2">
-                                            Video Title <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={formData.title}
-                                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                            placeholder={
-                                                scriptTemplates.find((t) => t.formData.contentType === formData.contentType)?.formData.titlePlaceholder ||
-                                                "e.g., React useState hook complete guide"
-                                            }
-                                            className="w-full px-4 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 placeholder-slate-400 transition-all shadow-sm hover:border-slate-300"
-                                        />
-                                    </div>
-
-                                    {/* Channel Name */}
-                                    <div className="mb-6 sm:mb-5">
-                                        <label className="block text-sm font-medium text-slate-700 mb-2">
-                                            Channel Name <span className="text-slate-400 normal-case font-normal">(optional)</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={formData.channelName}
-                                            onChange={(e) => setFormData({ ...formData, channelName: e.target.value })}
-                                            placeholder="Your channel name"
-                                            className="w-full px-4 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 placeholder-slate-400 transition-all shadow-sm hover:border-slate-300"
-                                        />
-                                    </div>
-
-                                    {/* Duration Slider */}
-                                    <div className="mb-6 sm:mb-8 p-4 sm:p-5 rounded-xl bg-gradient-to-br from-slate-50 to-white border border-slate-200/80 shadow-sm">
-                                        <label className="block text-sm font-medium text-slate-700 mb-3">
-                                            Video Duration: <span className="font-bold text-blue-600">{formData.duration} min</span>
-                                        </label>
-                                        <div className="w-full h-3 sm:h-2.5 bg-slate-200/80 rounded-full relative touch-none">
+                                    {/* Section 2: Video basics */}
+                                    <div className="p-5 rounded-2xl bg-slate-50/80 border border-slate-200/80 space-y-4">
+                                        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Video basics</p>
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                                                Title <span className="text-red-500">*</span>
+                                            </label>
                                             <input
-                                                type="range"
-                                                min="5"
-                                                max="20"
-                                                step="1"
-                                                value={formData.duration}
-                                                onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) })}
-                                                className="absolute w-full h-full opacity-0 z-10 cursor-pointer min-h-[44px] min-w-[44px]"
-                                            />
-                                            <div
-                                                className="absolute h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all duration-200"
-                                                style={{ width: `${((formData.duration - 5) / 15) * 100}%` }}
-                                            />
-                                            <div
-                                                className="absolute h-6 w-6 sm:h-5 sm:w-5 bg-white rounded-full shadow-lg border-2 border-blue-600 top-1/2 -translate-y-1/2 transition-all duration-200 pointer-events-none ring-4 ring-blue-500/10"
-                                                style={{ left: `${((formData.duration - 5) / 15) * 100}%`, transform: `translate(-50%, -50%)` }}
+                                                type="text"
+                                                value={formData.title}
+                                                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                                placeholder={
+                                                    scriptTemplates.find((t) => t.formData.contentType === formData.contentType)?.formData.titlePlaceholder ||
+                                                    "e.g., React useState hook complete guide"
+                                                }
+                                                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 placeholder-slate-400 transition-all"
                                             />
                                         </div>
-                                        <div className="flex justify-between mt-2.5 text-xs text-slate-500 font-medium">
-                                            <span>5 min</span>
-                                            <span>20 min</span>
-                                        </div>
-                                        <p className="mt-2 text-xs text-slate-500">
-                                            Estimated length: ~{estimatedWords} words
-                                        </p>
-                                    </div>
-                                    {/* Content Type & Difficulty */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 mb-6 sm:mb-5">
-                                        <div className="min-w-0">
-                                            <label className="block text-sm font-medium text-slate-700 mb-2">
-                                                Content Type
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                                                Channel <span className="text-slate-400 font-normal">(optional)</span>
                                             </label>
-                                            <div className="relative">
-                                                <select
-                                                    value={formData.contentType}
-                                                    onChange={(e) => setFormData({ ...formData, contentType: e.target.value })}
-                                                    className="w-full pl-4 pr-10 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 appearance-none cursor-pointer transition-all shadow-sm hover:border-slate-300"
+                                            <input
+                                                type="text"
+                                                value={formData.channelName}
+                                                onChange={(e) => setFormData({ ...formData, channelName: e.target.value })}
+                                                placeholder="Your channel name"
+                                                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 placeholder-slate-400 transition-all"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Section 3: Duration */}
+                                    <div className="p-5 rounded-2xl bg-gradient-to-br from-blue-50/60 to-slate-50/80 border border-blue-100/80 space-y-4">
+                                        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Duration</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {[5, 8, 10, 12, 15, 20].map((m) => (
+                                                <button
+                                                    key={m}
+                                                    type="button"
+                                                    onClick={() => setFormData({ ...formData, duration: m })}
+                                                    className={`px-4 py-2 text-sm font-semibold rounded-xl transition-all ${
+                                                        formData.duration === m
+                                                            ? "bg-blue-600 text-white shadow-md"
+                                                            : "bg-white border border-slate-200 text-slate-600 hover:border-blue-200 hover:bg-blue-50/50"
+                                                    }`}
                                                 >
-                                                    <option value="Tutorial">Tutorial / How-to</option>
-                                                    <option value="Review">Product Review</option>
-                                                    <option value="Vlog">Vlog / Storytelling</option>
-                                                    <option value="Educational">Educational</option>
-                                                    <option value="Entertainment">Entertainment</option>
-                                                </select>
-                                                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                                                    {m} min
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex-1 h-3 bg-slate-200/80 rounded-full relative overflow-hidden">
+                                                <div
+                                                    className="absolute h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all duration-200"
+                                                    style={{ width: `${((formData.duration - 5) / 15) * 100}%` }}
+                                                />
+                                                <input
+                                                    type="range"
+                                                    min="5"
+                                                    max="20"
+                                                    step="1"
+                                                    value={formData.duration}
+                                                    onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) })}
+                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                                />
+                                                <div
+                                                    className="absolute h-5 w-5 bg-white rounded-full shadow-lg border-2 border-blue-600 top-1/2 -translate-y-1/2 pointer-events-none ring-4 ring-blue-500/10"
+                                                    style={{ left: `calc(${((formData.duration - 5) / 15) * 100}% - 10px)` }}
+                                                />
+                                            </div>
+                                            <span className="text-sm font-bold text-blue-600 w-12">{formData.duration} min</span>
+                                        </div>
+                                        <p className="text-xs text-slate-500">~{estimatedWords} words</p>
+                                    </div>
+
+                                    {/* Section 4: Style */}
+                                    <div className="p-5 rounded-2xl bg-slate-50/80 border border-slate-200/80 space-y-4">
+                                        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Style</p>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-slate-700 mb-1.5">Content Type</label>
+                                                <div className="relative">
+                                                    <select
+                                                        value={formData.contentType}
+                                                        onChange={(e) => setFormData({ ...formData, contentType: e.target.value })}
+                                                        className="w-full pl-4 pr-10 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 appearance-none cursor-pointer"
+                                                    >
+                                                        <option value="Tutorial">Tutorial / How-to</option>
+                                                        <option value="Review">Product Review</option>
+                                                        <option value="Vlog">Vlog / Storytelling</option>
+                                                        <option value="Educational">Educational</option>
+                                                        <option value="Entertainment">Entertainment</option>
+                                                    </select>
+                                                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-slate-700 mb-1.5">Difficulty</label>
+                                                <div className="relative">
+                                                    <select
+                                                        value={formData.difficulty}
+                                                        onChange={(e) => setFormData({ ...formData, difficulty: e.target.value })}
+                                                        className="w-full pl-4 pr-10 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 appearance-none cursor-pointer"
+                                                    >
+                                                        <option value="Beginner">Beginner</option>
+                                                        <option value="Intermediate">Intermediate</option>
+                                                        <option value="Advanced">Advanced</option>
+                                                    </select>
+                                                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                                                </div>
                                             </div>
                                         </div>
-                                        <div className="min-w-0">
-                                            <label className="block text-sm font-medium text-slate-700 mb-2">
-                                                Difficulty Level
-                                            </label>
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1.5">Tone</label>
                                             <div className="relative">
                                                 <select
-                                                    value={formData.difficulty}
-                                                    onChange={(e) => setFormData({ ...formData, difficulty: e.target.value })}
-                                                    className="w-full pl-4 pr-10 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 appearance-none cursor-pointer transition-all shadow-sm hover:border-slate-300"
+                                                    value={formData.tone}
+                                                    onChange={(e) => setFormData({ ...formData, tone: e.target.value })}
+                                                    className="w-full pl-4 pr-10 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 appearance-none cursor-pointer"
                                                 >
-                                                    <option value="Beginner">Beginner</option>
-                                                    <option value="Intermediate">Intermediate</option>
-                                                    <option value="Advanced">Advanced</option>
+                                                    {tones.map((t) => (
+                                                        <option key={t.value} value={t.value}>{t.label}</option>
+                                                    ))}
                                                 </select>
                                                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* Project Language */}
-                                    <div className="space-y-3 p-4 sm:p-5 rounded-xl bg-gradient-to-br from-slate-50/80 to-white border border-slate-200/80 shadow-sm mb-6 sm:mb-0">
-                                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
-                                            <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                                                <span className="w-2 h-2 rounded-full bg-blue-600" />
-                                                Project Language
-                                            </label>
-                                            <span className="text-xs text-amber-800 font-semibold bg-amber-100/90 px-2.5 py-1 rounded-lg border border-amber-200/80">
-                                                AI Optimized
-                                            </span>
+                                    {/* Section 5: Language */}
+                                    <div className="p-5 rounded-2xl border-2 border-blue-100/80 bg-gradient-to-br from-blue-50/40 to-white space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Language</p>
+                                            <span className="text-[10px] font-bold uppercase text-amber-700 bg-amber-100 px-2 py-0.5 rounded-md">AI Optimized</span>
                                         </div>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                                        <div className="grid grid-cols-2 gap-2">
                                             {languages.map((lang) => (
                                                 <button
                                                     key={lang.value}
                                                     type="button"
                                                     onClick={() => setFormData({ ...formData, language: lang.value })}
-                                                    className={`px-4 py-3 sm:py-2.5 text-sm font-semibold rounded-xl border-2 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${formData.language === lang.value
-                                                        ? "bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-500/25"
-                                                        : "bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 active:scale-[0.98]"
-                                                        }`}
+                                                    className={`px-4 py-3 text-sm font-semibold rounded-xl border-2 transition-all ${
+                                                        formData.language === lang.value
+                                                            ? "bg-blue-600 border-blue-600 text-white shadow-md"
+                                                            : "bg-white border-slate-200 text-slate-600 hover:border-blue-200 hover:bg-blue-50/50"
+                                                    }`}
                                                 >
                                                     {lang.label}
                                                 </button>
                                             ))}
                                         </div>
-                                        <p className="text-xs text-slate-500 mt-3 px-0.5 leading-relaxed">
-                                            {formData.language === "Thunglish" && "ℹ️ 60% Tamil + 40% English Mix (High Retention)"}
-                                            {formData.language === "English" && "ℹ️ International Standard English"}
-                                            {formData.language === "Tamil" && "ℹ️ Pure Tamil with English Technical Terms"}
-                                            {formData.language === "Hindi" && "ℹ️ Hinglish - Natural conversational style"}
+                                        <p className="text-xs text-slate-500">
+                                            {formData.language === "Thunglish" && "60% Tamil + 40% English (high retention)"}
+                                            {formData.language === "English" && "International standard English"}
+                                            {formData.language === "Tamil" && "Pure Tamil, tech terms in English"}
+                                            {formData.language === "Hindi" && "Hinglish – natural conversational style"}
                                         </p>
                                     </div>
 
-                                    {/* Tone & Style */}
-                                    <div className="mt-6 sm:mt-5">
-                                        <label className="block text-sm font-medium text-slate-700 mb-2">
-                                            Tone
-                                        </label>
-                                        <div className="relative">
-                                            <select
-                                                value={formData.tone}
-                                                onChange={(e) => setFormData({ ...formData, tone: e.target.value })}
-                                                className="w-full pl-4 pr-10 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 appearance-none cursor-pointer transition-all shadow-sm hover:border-slate-300"
-                                            >
-                                                {tones.map((t) => (
-                                                    <option key={t.value} value={t.value}>
-                                                        {t.label}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                                        </div>
-                                    </div>
-
-                                    {/* Advanced Settings */}
-                                    <div className="mt-6 sm:mt-5 space-y-3">
-                                        <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
-                                            <label className="flex items-center gap-3 cursor-pointer group min-h-[44px] py-1">
+                                    {/* Section 6: Options & Premium */}
+                                    <div className="p-5 rounded-2xl bg-slate-50/80 border border-slate-200/80 space-y-4">
+                                        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Options</p>
+                                        <div className="flex flex-wrap gap-4">
+                                            <label className="flex items-center gap-3 cursor-pointer p-3 rounded-xl hover:bg-white/60 transition-colors min-h-[48px]">
                                                 <input
                                                     type="checkbox"
                                                     checked={formData.includeCode}
                                                     onChange={(e) => setFormData({ ...formData, includeCode: e.target.checked })}
-                                                    className="w-5 h-5 text-blue-600 bg-white border-slate-300 rounded focus:ring-2 focus:ring-blue-500 transition-colors"
+                                                    className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
                                                 />
-                                                <span className="text-sm text-slate-600 group-hover:text-slate-900">Include code examples</span>
+                                                <span className="text-sm font-medium text-slate-700">Include code examples</span>
                                             </label>
-                                            <label className="flex items-center gap-3 cursor-pointer group min-h-[44px] py-1">
+                                            <label className="flex items-center gap-3 cursor-pointer p-3 rounded-xl hover:bg-white/60 transition-colors min-h-[48px]">
                                                 <input
                                                     type="checkbox"
                                                     checked={formData.localContext}
                                                     onChange={(e) => setFormData({ ...formData, localContext: e.target.checked })}
-                                                    className="w-5 h-5 text-blue-600 bg-white border-slate-300 rounded focus:ring-2 focus:ring-blue-500 transition-colors"
+                                                    className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
                                                 />
-                                                <span className="text-sm text-slate-600 group-hover:text-slate-900">Add Tamil Nadu context</span>
+                                                <span className="text-sm font-medium text-slate-700">Tamil Nadu context</span>
                                             </label>
                                         </div>
-
-                                        {/* Image Settings Divider */}
-                                        <div className="mt-6 pt-5 border-t border-slate-200">
-                                            <h4 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+                                        <div className="pt-4 border-t border-slate-200/80">
+                                            <p className="text-xs font-semibold text-slate-600 mb-3 flex items-center gap-2">
                                                 <Sparkles className="w-4 h-4 text-amber-500" />
-                                                Premium Features (10 tokens each)
-                                            </h4>
-
-                                            <div className="space-y-1 sm:space-y-2">
-                                                <label className="flex items-center gap-3 cursor-pointer group p-3 sm:p-2 hover:bg-slate-50 rounded-xl transition-colors min-h-[44px] sm:min-h-0">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={formData.includeChapters}
-                                                        onChange={(e) => setFormData({ ...formData, includeChapters: e.target.checked })}
-                                                        className="w-5 h-5 text-blue-600 bg-white border-slate-300 rounded focus:ring-2 focus:ring-blue-500"
-                                                    />
-                                                    <span className="text-sm font-medium text-slate-700">Generate YouTube Chapters</span>
-                                                </label>
-
-                                                <label className="flex items-center gap-3 cursor-pointer group p-3 sm:p-2 hover:bg-slate-50 rounded-xl transition-colors min-h-[44px] sm:min-h-0">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={formData.includeBRoll}
-                                                        onChange={(e) => setFormData({ ...formData, includeBRoll: e.target.checked })}
-                                                        className="w-5 h-5 text-blue-600 bg-white border-slate-300 rounded focus:ring-2 focus:ring-blue-500"
-                                                    />
-                                                    <span className="text-sm font-medium text-slate-700">B-Roll Suggestions</span>
-                                                </label>
-
-                                                <label className="flex items-center gap-3 cursor-pointer group p-3 sm:p-2 hover:bg-slate-50 rounded-xl transition-colors min-h-[44px] sm:min-h-0">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={formData.includeShorts}
-                                                        onChange={(e) => setFormData({ ...formData, includeShorts: e.target.checked })}
-                                                        className="w-5 h-5 text-blue-600 bg-white border-slate-300 rounded focus:ring-2 focus:ring-blue-500"
-                                                    />
-                                                    <span className="text-sm font-medium text-slate-700">Viral Shorts Ideas</span>
-                                                </label>
-
-                                                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-3 sm:p-2 hover:bg-slate-50 rounded-xl transition-colors min-h-[44px] sm:min-h-0">
-                                                    <label className="flex items-center gap-3 cursor-pointer group flex-1">
+                                                Premium (10 tokens each)
+                                            </p>
+                                            <div className="grid gap-2 sm:grid-cols-2">
+                                                {[
+                                                    { key: "includeChapters", label: "Chapters", icon: List },
+                                                    { key: "includeBRoll", label: "B-Roll", icon: Film },
+                                                    { key: "includeShorts", label: "Shorts", icon: Scissors },
+                                                    { key: "generateImages", label: "Image prompts", icon: ImageIcon },
+                                                ].map(({ key, label, icon: Icon }) => (
+                                                    <label
+                                                        key={key}
+                                                        className="flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-200/80 hover:border-blue-200 cursor-pointer transition-colors"
+                                                    >
                                                         <input
                                                             type="checkbox"
-                                                            checked={formData.generateImages}
-                                                            onChange={(e) => setFormData({ ...formData, generateImages: e.target.checked })}
-                                                            className="w-5 h-5 text-blue-600 bg-white border-slate-300 rounded focus:ring-2 focus:ring-blue-500"
+                                                            checked={(formData as unknown as Record<string, boolean>)[key]}
+                                                            onChange={(e) => setFormData({ ...formData, [key]: e.target.checked })}
+                                                            className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
                                                         />
-                                                        <span className="text-sm font-medium text-slate-700">Generate AI Image Prompts</span>
+                                                        <Icon className="w-4 h-4 text-slate-500" />
+                                                        <span className="text-sm font-medium text-slate-700">{label}</span>
                                                     </label>
-
-                                                    {formData.generateImages && (
-                                                        <select
-                                                            value={formData.imageFormat}
-                                                            onChange={(e) => setFormData({ ...formData, imageFormat: e.target.value })}
-                                                            className="w-full sm:w-36 px-3 py-2 sm:py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                                                        >
-                                                            {imageFormats.map((format) => (
-                                                                <option key={format.value} value={format.value}>
-                                                                    {format.label}
-                                                                </option>
-                                                            ))}
-                                                        </select>
-                                                    )}
-                                                </div>
+                                                ))}
                                             </div>
+                                            {formData.generateImages && (
+                                                <div className="mt-3 pl-8">
+                                                    <select
+                                                        value={formData.imageFormat}
+                                                        onChange={(e) => setFormData({ ...formData, imageFormat: e.target.value })}
+                                                        className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                    >
+                                                        {imageFormats.map((f) => (
+                                                            <option key={f.value} value={f.value}>{f.label}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 
                                     {/* Error Message */}
                                     {error && (
-                                        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
+                                        <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
                                             {error}
                                         </div>
                                     )}
 
                                     {/* Generate Button */}
-                                    <div className="mt-8 space-y-3">
+                                    <div className="pt-2 space-y-3">
                                         <button
                                             onClick={generateScript}
                                             disabled={loading || !formData.title.trim()}
-                                            className="w-full py-3.5 px-4 text-white font-bold rounded-xl bg-blue-700 brand-glow hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all active:transform active:scale-[0.98]"
+                                            className="w-full py-4 px-5 text-white text-base font-bold rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
                                         >
                                             {loading ? (
                                                 <>
