@@ -3,7 +3,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-// GET - Check user credits
+const FREE_TOKENS = 50;
+
+// GET - Check user tokens
 export async function GET() {
     try {
         const session = await getServerSession(authOptions);
@@ -36,30 +38,31 @@ export async function GET() {
             });
 
             return NextResponse.json({
-                freeScriptsUsed: 0,
-                freeScriptsRemaining: 2,
-                paidCredits: 0,
+                freeTokensUsed: 0,
+                freeTokensRemaining: FREE_TOKENS,
+                paidTokens: 0,
+                totalGenerated: 0,
                 canGenerate: true,
             });
         }
 
-        const freeScriptsRemaining = Math.max(0, 2 - credits.freeScriptsUsed);
-        const canGenerate = freeScriptsRemaining > 0 || credits.paidCredits > 0;
+        const freeTokensRemaining = Math.max(0, FREE_TOKENS - credits.freeScriptsUsed);
+        const canGenerate = freeTokensRemaining + credits.paidCredits >= 10;
 
         return NextResponse.json({
-            freeScriptsUsed: credits.freeScriptsUsed,
-            freeScriptsRemaining,
-            paidCredits: credits.paidCredits,
+            freeTokensUsed: credits.freeScriptsUsed,
+            freeTokensRemaining,
+            paidTokens: credits.paidCredits,
             totalGenerated: credits.totalGenerated,
             canGenerate,
         });
     } catch (error) {
-        console.error("Error fetching credits:", error);
+        console.error("Error fetching tokens:", error);
         return NextResponse.json({ error: "Internal error" }, { status: 500 });
     }
 }
 
-// POST - Use a credit (called after successful generation)
+// POST - Use tokens (called after successful generation)
 export async function POST(req: NextRequest) {
     try {
         const session = await getServerSession(authOptions);
@@ -81,20 +84,20 @@ export async function POST(req: NextRequest) {
         });
 
         if (!credits) {
-            return NextResponse.json({ error: "No credits found" }, { status: 404 });
+            return NextResponse.json({ error: "No tokens found" }, { status: 404 });
         }
 
         // Check what to deduct
-        // Parse count from body, default to 1
-        const { count = 1 } = await req.json().catch(() => ({}));
+        // Parse count from body, default to 10 tokens
+        const { count = 10 } = await req.json().catch(() => ({}));
 
         // Check availability
-        const freeRemaining = Math.max(0, 2 - credits.freeScriptsUsed);
+        const freeRemaining = Math.max(0, FREE_TOKENS - credits.freeScriptsUsed);
         const totalAvailable = freeRemaining + credits.paidCredits;
 
         if (totalAvailable < count) {
             return NextResponse.json({
-                error: "Insufficient credits",
+                error: "Insufficient tokens",
                 required: count,
                 available: totalAvailable
             }, { status: 403 });
@@ -123,14 +126,13 @@ export async function POST(req: NextRequest) {
             data: {
                 freeScriptsUsed: newFreeUsed,
                 paidCredits: newPaid,
-                totalGenerated: credits.totalGenerated + 1, // Count generation event, not credits? Or should this track credits? 
-                // Let's keep it as "generations" count for now, or maybe irrelevant.
+                totalGenerated: credits.totalGenerated + count,
             },
         });
 
         return NextResponse.json({ success: true });
     } catch (error) {
-        console.error("Error using credit:", error);
+        console.error("Error using tokens:", error);
         return NextResponse.json({ error: "Internal error" }, { status: 500 });
     }
 }

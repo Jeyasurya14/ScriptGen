@@ -204,16 +204,24 @@ export default function ScriptGenerator() {
     const [hasSavedState, setHasSavedState] = useState<boolean>(false);
     const generationAbortRef = useRef<AbortController | null>(null);
 
-    // Auth and credits state
+    // Auth and token state
     const { data: session } = useSession();
     const [credits, setCredits] = useState<{
-        freeScriptsUsed: number;
-        freeScriptsRemaining: number;
-        paidCredits: number;
+        freeTokensUsed: number;
+        freeTokensRemaining: number;
+        paidTokens: number;
         canGenerate: boolean;
     } | null>(null);
     const [showPaymentModal, setShowPaymentModal] = useState<boolean>(false);
     const [processingPayment, setProcessingPayment] = useState<boolean>(false);
+    const [selectedPackageId, setSelectedPackageId] = useState<string>("pro");
+
+    const tokenPackages = [
+        { id: "starter", name: "Starter", tokens: 100, price: 99 },
+        { id: "growth", name: "Growth", tokens: 300, price: 249 },
+        { id: "pro", name: "Pro", tokens: 500, price: 399 },
+        { id: "scale", name: "Scale", tokens: 1000, price: 699 },
+    ];
 
     // Translation state
     const [isTranslating, setIsTranslating] = useState<boolean>(false);
@@ -331,7 +339,7 @@ export default function ScriptGenerator() {
         }
     };
 
-    // Fetch credits when session changes
+    // Fetch tokens when session changes
     useEffect(() => {
         const fetchCredits = async () => {
             if (session?.user) {
@@ -342,7 +350,7 @@ export default function ScriptGenerator() {
                         setCredits(data);
                     }
                 } catch (err) {
-                    console.error("Failed to fetch credits:", err);
+                    console.error("Failed to fetch tokens:", err);
                 }
             }
         };
@@ -408,31 +416,19 @@ export default function ScriptGenerator() {
         }
     };
 
-    // Calculate required credits
-    const calculateRequiredCredits = () => {
-        let cost = 1; // Base script
-        if (formData.generateImages) cost += 1;
-        if (formData.includeChapters) cost += 1;
-        if (formData.includeBRoll) cost += 1;
-        if (formData.includeShorts) cost += 1;
-        return cost;
-    };
+    // Calculate required tokens
+    const calculateRequiredTokens = () => 10;
 
     // Handle payment
     const handlePayment = async () => {
         setProcessingPayment(true);
-        // Calculate missing credits or just buy a fixed bundle? 
-        // User said "pay 9rs for each". Let's allow buying the exact required amount if they are short, or default to 1.
-        // Actually, let's keep it simple: Buy the required amount for the CURRENT configuration.
-        const required = calculateRequiredCredits();
-        const available = (credits?.freeScriptsRemaining || 0) + (credits?.paidCredits || 0);
-        const needed = Math.max(1, required - available > 0 ? required - available : 1);
+        const selected = tokenPackages.find((pkg) => pkg.id === selectedPackageId) || tokenPackages[2];
 
         try {
             const res = await fetch("/api/payment/create-order", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ credits: needed }),
+                body: JSON.stringify({ packageId: selected.id }),
             });
             const order: RazorpayOrderResponse = await res.json();
 
@@ -441,7 +437,7 @@ export default function ScriptGenerator() {
                 amount: order.amount,
                 currency: order.currency,
                 name: "Thunglish Script Generator",
-                description: `${needed} Script Credit${needed > 1 ? 's' : ''} (₹9/each)`,
+                description: `${selected.tokens} Tokens`,
                 order_id: order.orderId,
                 handler: async (response: RazorpayPaymentResponse) => {
                     // Verify payment
@@ -541,11 +537,11 @@ export default function ScriptGenerator() {
             return;
         }
 
-        // Check credits
-        const requiredCredits = calculateRequiredCredits();
-        const availableCredits = (credits?.freeScriptsRemaining || 0) + (credits?.paidCredits || 0);
+        // Check tokens
+        const requiredTokens = calculateRequiredTokens();
+        const availableTokens = (credits?.freeTokensRemaining || 0) + (credits?.paidTokens || 0);
 
-        if (availableCredits < requiredCredits) {
+        if (availableTokens < requiredTokens) {
             setShowPaymentModal(true);
             return;
         }
@@ -650,13 +646,13 @@ export default function ScriptGenerator() {
                 setProgress("Finalizing...");
             }
 
-            // Deduct credit after successful generation
+            // Deduct tokens after successful generation
             try {
-                // Pass the count of credits to deduct
+                // Pass the count of tokens to deduct
                 await fetch("/api/credits", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ count: requiredCredits })
+                    body: JSON.stringify({ count: requiredTokens })
                 });
 
                 // Refresh credits
@@ -665,7 +661,7 @@ export default function ScriptGenerator() {
                     setCredits(await creditsRes.json());
                 }
             } catch {
-                console.error("Failed to deduct credit");
+                console.error("Failed to deduct tokens");
             }
 
             // Save to history
@@ -754,20 +750,43 @@ export default function ScriptGenerator() {
         const data = await response.json();
         const text = data.content || "";
 
-        // Prefer JSON output when available
-        try {
-            const parsed = JSON.parse(text);
-            if (parsed && parsed.titles && parsed.description) {
-                return {
-                    titles: parsed.titles,
-                    description: parsed.description || "",
-                    tags: parsed.tags || [],
-                    thumbnails: parsed.thumbnails || [],
-                    comment: parsed.comment || "",
-                };
+        const coerceRanked = (items: Array<string | { text: string; score?: number }>, fallbackScore = 80) =>
+            items
+                .map((item) => {
+                    if (typeof item === "string") {
+                        return { text: item.trim(), score: fallbackScore };
+                    }
+                    return { text: item.text?.trim() || "", score: item.score ?? fallbackScore };
+                })
+                .filter((item) => item.text.length > 0);
+
+        const parseJsonSEO = (raw: string) => {
+            try {
+                const parsed = JSON.parse(raw);
+                if (parsed && parsed.titles && parsed.description) return parsed;
+            } catch {
+                // ignore
             }
-        } catch {
-            // fallback to legacy text parsing
+            const match = raw.match(/\{[\s\S]*\}/);
+            if (!match) return null;
+            try {
+                const parsed = JSON.parse(match[0]);
+                if (parsed && parsed.titles && parsed.description) return parsed;
+            } catch {
+                return null;
+            }
+            return null;
+        };
+
+        const parsedJson = parseJsonSEO(text);
+        if (parsedJson) {
+            return {
+                titles: coerceRanked(parsedJson.titles || [], 88),
+                description: parsedJson.description || "",
+                tags: coerceRanked(parsedJson.tags || [], 78),
+                thumbnails: coerceRanked(parsedJson.thumbnails || [], 84),
+                comment: parsedJson.comment || "",
+            };
         }
 
         // Parse the SEO data (legacy text format)
@@ -801,7 +820,9 @@ export default function ScriptGenerator() {
             ? tagsMatch[1]
                 .trim()
                 .split(",")
-                .map((tag: string) => ({ text: tag.trim(), score: 75 }))
+                .map((tag: string) => tag.trim())
+                .filter((tag: string) => tag.length > 0)
+                .map((tag: string) => ({ text: tag, score: 75 }))
             : [];
 
         return {
@@ -1114,7 +1135,8 @@ Aspect Ratio: ${prompt.aspectRatio}`;
         }
     };
 
-    const requiredCredits = calculateRequiredCredits();
+    const requiredTokens = calculateRequiredTokens();
+    const totalTokens = credits ? credits.freeTokensRemaining + credits.paidTokens : 0;
     const estimatedWords = Math.round(formData.duration * 130);
     const tabs: { id: ActiveTab; label: string }[] = [
         { id: "script", label: "Script" },
@@ -1136,26 +1158,46 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-2xl">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold text-slate-900">Purchase Script Credit</h3>
+                            <h3 className="text-lg font-semibold text-slate-900">Recharge Tokens</h3>
                             <button onClick={() => setShowPaymentModal(false)} className="text-slate-400 hover:text-slate-600">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
-                        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 mb-4">
-                            <p className="text-2xl font-bold text-yellow-600">₹9</p>
-                            <p className="text-sm text-slate-600">per script generation</p>
+                        <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-4">
+                            <p className="text-sm text-slate-700">
+                                Each generation costs <span className="font-semibold">10 tokens</span> and includes script, SEO, images,
+                                chapters, B-roll, and shorts.
+                            </p>
                         </div>
-                        <ul className="text-sm text-slate-600 mb-4 space-y-2">
-                            <li className="flex items-center gap-2"><Check className="w-4 h-4 text-green-500" /> Full script with SEO data</li>
-                            <li className="flex items-center gap-2"><Check className="w-4 h-4 text-green-500" /> Image prompts included</li>
-                            <li className="flex items-center gap-2"><Check className="w-4 h-4 text-green-500" /> Chapters, B-Roll & Shorts</li>
-                        </ul>
+                        <div className="grid gap-3 mb-4">
+                            {tokenPackages.map((pkg) => (
+                                <button
+                                    key={pkg.id}
+                                    onClick={() => setSelectedPackageId(pkg.id)}
+                                    className={`w-full text-left p-3 rounded-lg border transition-all ${
+                                        selectedPackageId === pkg.id
+                                            ? "border-blue-600 bg-blue-50 shadow-sm"
+                                            : "border-slate-200 hover:border-slate-300"
+                                    }`}
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-sm font-semibold text-slate-900">{pkg.name}</p>
+                                            <p className="text-xs text-slate-500">
+                                                {pkg.tokens} tokens • {Math.floor(pkg.tokens / 10)} generations
+                                            </p>
+                                        </div>
+                                        <p className="text-sm font-semibold text-slate-900">₹{pkg.price}</p>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
                         <button
                             onClick={handlePayment}
                             disabled={processingPayment}
                             className="w-full py-3 text-slate-900 rounded-lg font-semibold bg-amber-400 brand-glow hover:bg-amber-500 transition-colors disabled:opacity-50"
                         >
-                            {processingPayment ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Pay with Razorpay"}
+                            {processingPayment ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Buy tokens with Razorpay"}
                         </button>
                     </div>
                 </div>
@@ -1230,7 +1272,7 @@ Aspect Ratio: ${prompt.aspectRatio}`;
             <header className="sticky top-0 z-50 transition-all duration-300 border-b border-slate-200 bg-white/95 backdrop-blur shadow-sm">
                 <div className="h-1 w-full brand-gradient" />
                 <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div className="flex items-center gap-4">
                             <div>
                                 <div className="flex items-center gap-2">
@@ -1261,20 +1303,18 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                         <span className="hidden sm:inline text-sm font-medium">History</span>
                                     </button>
 
-                                    {/* Credits Display */}
+                                    {/* Tokens Display */}
                                     {credits && (
                                         <div className="hidden sm:flex items-center gap-2 px-4 py-1.5 brand-pill rounded-full shadow-inner">
                                             <CreditCard className="w-4 h-4 text-amber-600" />
                                             <span className="text-sm font-semibold text-amber-900">
-                                                {credits.freeScriptsRemaining > 0
-                                                    ? `${credits.freeScriptsRemaining} free`
-                                                    : `${credits.paidCredits} credits`}
+                                                {totalTokens} tokens
                                             </span>
                                         </div>
                                     )}
 
                                     {/* User Avatar */}
-                                    <div className="flex items-center gap-4 pl-4 border-l border-slate-200">
+                                    <div className="flex items-center gap-4 sm:pl-4 sm:border-l sm:border-slate-200">
                                         {session.user?.image ? (
                                             <Image
                                                 src={session.user.image}
@@ -1289,9 +1329,9 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                                 <User className="w-5 h-5 text-blue-600" />
                                             </div>
                                         )}
-                                        <button
+                                    <button
                                             onClick={() => signOut()}
-                                            className="hidden sm:flex text-slate-500 hover:text-red-500 transition-colors p-2 rounded-md hover:bg-red-500/10"
+                                        className="flex text-slate-500 hover:text-red-500 transition-colors p-2 rounded-md hover:bg-red-500/10"
                                             title="Sign Out"
                                         >
                                             <LogOut className="w-5 h-5" />
@@ -1387,7 +1427,7 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                             <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
                                         </span>
                                         <p className="text-xs font-medium text-slate-400">
-                                            No credit card required for free trial
+                                            No card required for 50 free tokens
                                         </p>
                                     </div>
                                 </div>
@@ -1395,16 +1435,14 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                 /* Authenticated - Show Configuration */
                                 /* Authenticated - Show Configuration */
                                 <div className="brand-card rounded-2xl p-6 sm:p-8 h-full relative overflow-hidden">
-                                    <div className="flex items-center justify-between mb-6">
+                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
                                         <div className="flex items-center gap-2">
                                             <Settings2 className="w-5 h-5 text-slate-400" />
                                             <h2 className="text-lg font-semibold text-slate-800">Configuration</h2>
                                         </div>
                                         {credits && (
                                             <span className="text-xs px-3 py-1 brand-pill rounded-full font-semibold">
-                                                {credits.freeScriptsRemaining > 0
-                                                    ? `${credits.freeScriptsRemaining} free left`
-                                                    : `${credits.paidCredits} credits`}
+                                                {totalTokens} tokens
                                             </span>
                                         )}
                                     </div>
@@ -1470,7 +1508,7 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                         </p>
                                     </div>
                                     {/* Content Type & Difficulty */}
-                                    <div className="grid grid-cols-2 gap-4 mb-5">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
                                         <div>
                                             <label className="block text-sm font-medium text-slate-700 mb-2">
                                                 Content Type
@@ -1520,7 +1558,7 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                                 AI Optimized
                                             </span>
                                         </div>
-                                        <div className="grid grid-cols-2 gap-2">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                             {languages.map((lang) => (
                                                 <button
                                                     key={lang.value}
@@ -1693,7 +1731,7 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                             </button>
                                         )}
                                         <p className="text-center text-xs text-slate-400 mt-2">
-                                            Consumes {requiredCredits} credit{requiredCredits > 1 ? "s" : ""} (free or paid)
+                                            Consumes {requiredTokens} tokens (free or paid)
                                         </p>
                                         {hasSavedState && (
                                             <button

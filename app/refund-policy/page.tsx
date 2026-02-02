@@ -31,21 +31,21 @@ export default function RefundPolicy() {
                                     Strict No-Refund Policy
                                 </h2>
                                 <p className="text-amber-800 dark:text-amber-300 text-sm mb-0">
-                                    All sales are final. Because Thunglish Script Generator offers immediate access to digital goods and AI generation services, we do not offer refunds or credits for any purchases under any circumstances.
+                                    All sales are final. Because Thunglish Script Generator offers immediate access to digital goods and AI generation services, we do not offer refunds or token recharges for any purchases under any circumstances.
                                 </p>
                             </div>
 
                             <section className="mb-8">
                                 <h2 className="text-xl font-semibold mb-4">1. Digital Services</h2>
                                 <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
-                                    Our service provides instant access to AI-generated content. Once a generation is initiated or credits are purchased, the computing resources are consumed immediately. Therefore, we cannot retrieve or &quot;un-use&quot; the service, making refunds impossible.
+                                    Our service provides instant access to AI-generated content. Once a generation is initiated or tokens are purchased, the computing resources are consumed immediately. Therefore, we cannot retrieve or &quot;un-use&quot; the service, making refunds impossible.
                                 </p>
                             </section>
 
                             <section className="mb-8">
                                 <h2 className="text-xl font-semibold mb-4">2. Non-Tangible Irrevocable Goods</h2>
                                 <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
-                                    You agree that by purchasing credits or services from us, you are purchasing non-tangible, irrevocable digital goods. You acknowledge that no refund will be issued for any transaction once it is completed.
+                                    You agree that by purchasing tokens or services from us, you are purchasing non-tangible, irrevocable digital goods. You acknowledge that no refund will be issued for any transaction once it is completed.
                                 </p>
                             </section>
 
@@ -59,7 +59,7 @@ export default function RefundPolicy() {
                             <section>
                                 <h2 className="text-xl font-semibold mb-4">4. Contact Us</h2>
                                 <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
-                                    If you experience technical issues where you did not receive the credits you purchased, please contact our support team immediately, and we will verify the transaction and manually credit your account if the payment was successful. This is not a refund, but a fulfillment of your purchase.
+                                    If you experience technical issues where you did not receive the tokens you purchased, please contact our support team immediately, and we will verify the transaction and manually credit your account if the payment was successful. This is not a refund, but a fulfillment of your purchase.
                                 </p>
                             </section>
                         </div>

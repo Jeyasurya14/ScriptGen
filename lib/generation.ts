@@ -173,7 +173,7 @@ Rules:
 - Comment: professional, engaging, 2-3 lines, invite feedback.
 Add score based on rank potential (higher is better).`;
 
-    return { systemPrompt, userPrompt, model: "gpt-4o-mini", max_tokens: 1200 };
+    return { systemPrompt, userPrompt, model: "gpt-4o-mini", max_tokens: 1200, expectsJson: true };
 };
 
 export const constructImagePromptsPrompt = (

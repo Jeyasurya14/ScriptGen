@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
 
-// POST - Verify payment and add credits
+// POST - Verify payment and add tokens
 export async function POST(req: NextRequest) {
     try {
         const {
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
             }
         });
 
-        // Add credits to user
+        // Add tokens to user
         // Using atomic increment for safety
         await prisma.userCredits.update({
             where: {
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({
             success: true,
-            creditsAdded: transaction.creditsPurchased
+            tokensAdded: transaction.creditsPurchased
         });
     } catch (error) {
         console.error("Error verifying payment:", error);

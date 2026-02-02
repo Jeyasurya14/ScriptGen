@@ -4,6 +4,15 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Razorpay from "razorpay";
 
+const TOKEN_PACKAGES = [
+    { id: "starter", tokens: 100, price: 99 },
+    { id: "growth", tokens: 300, price: 249 },
+    { id: "pro", tokens: 500, price: 399 },
+    { id: "scale", tokens: 1000, price: 699 },
+];
+
+const getPackage = (id: string) => TOKEN_PACKAGES.find((pkg) => pkg.id === id);
+
 const getRazorpay = () => {
     const keyId = process.env.RAZORPAY_KEY_ID;
     const keySecret = process.env.RAZORPAY_KEY_SECRET;
@@ -26,8 +35,12 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const { credits = 1 } = await req.json();
-        const amount = credits * 9 * 100; // ₹9 per credit, amount in paise
+        const { packageId = "pro" } = await req.json();
+        const selected = getPackage(packageId) || getPackage("pro");
+        if (!selected) {
+            return NextResponse.json({ error: "Invalid package" }, { status: 400 });
+        }
+        const amount = selected.price * 100; // amount in paise
 
         // Create Razorpay order
         const order = await razorpay.orders.create({
@@ -36,7 +49,8 @@ export async function POST(req: NextRequest) {
             receipt: `receipt_${Date.now()}`,
             notes: {
                 email: session.user.email,
-                credits: credits.toString(),
+                tokens: selected.tokens.toString(),
+                packageId: selected.id,
             },
         });
 
@@ -49,9 +63,9 @@ export async function POST(req: NextRequest) {
             await prisma.transaction.create({
                 data: {
                     userId: user.id,
-                    amount: credits * 9,
+                    amount: selected.price,
                     razorpayOrderId: order.id,
-                    creditsPurchased: credits,
+                    creditsPurchased: selected.tokens,
                     status: "pending",
                 },
             });

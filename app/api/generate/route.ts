@@ -95,7 +95,13 @@ export async function POST(req: Request) {
                 return NextResponse.json({ error: "Invalid generation type" }, { status: 400 });
         }
 
-        const callOpenAI = async (systemPrompt: string, userPrompt: string, maxTokens: number, temperature: number) => {
+        const callOpenAI = async (
+            systemPrompt: string,
+            userPrompt: string,
+            maxTokens: number,
+            temperature: number,
+            expectsJson?: boolean
+        ) => {
             const response = await fetch("https://api.openai.com/v1/chat/completions", {
                 method: "POST",
                 headers: {
@@ -106,6 +112,7 @@ export async function POST(req: Request) {
                     model: promptConfig.model,
                     max_tokens: maxTokens,
                     temperature,
+                    ...(expectsJson ? { response_format: { type: "json_object" } } : {}),
                     messages: [
                         { role: "system", content: systemPrompt },
                         { role: "user", content: userPrompt },
@@ -147,7 +154,8 @@ export async function POST(req: Request) {
                     chunkPrompt.systemPrompt,
                     chunkPrompt.userPrompt,
                     chunkPrompt.max_tokens,
-                    0.2
+                    0.2,
+                    false
                 );
                 translatedParts.push(translated.trim());
             }
@@ -159,7 +167,8 @@ export async function POST(req: Request) {
             promptConfig.systemPrompt,
             promptConfig.userPrompt,
             promptConfig.max_tokens,
-            0.7
+            0.7,
+            (promptConfig as { expectsJson?: boolean }).expectsJson
         );
 
         return NextResponse.json({ content });
