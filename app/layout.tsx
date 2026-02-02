@@ -23,6 +23,11 @@ const siteDescription =
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
+  icons: {
+    icon: "/logo-sg.svg",
+    shortcut: "/logo-sg.svg",
+    apple: "/logo-sg.svg",
+  },
   title: {
     default: siteTitle,
     template: "%s | ScriptGen",
