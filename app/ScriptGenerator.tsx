@@ -46,11 +46,16 @@ interface FormData {
     imageFormat: string;
 }
 
+interface RankedItem {
+    text: string;
+    score: number;
+}
+
 interface SEOData {
-    titles: string[];
+    titles: RankedItem[];
     description: string;
-    tags: string[];
-    thumbnails: string[];
+    tags: RankedItem[];
+    thumbnails: RankedItem[];
     comment: string;
 }
 
@@ -749,7 +754,23 @@ export default function ScriptGenerator() {
         const data = await response.json();
         const text = data.content || "";
 
-        // Parse the SEO data
+        // Prefer JSON output when available
+        try {
+            const parsed = JSON.parse(text);
+            if (parsed && parsed.titles && parsed.description) {
+                return {
+                    titles: parsed.titles,
+                    description: parsed.description || "",
+                    tags: parsed.tags || [],
+                    thumbnails: parsed.thumbnails || [],
+                    comment: parsed.comment || "",
+                };
+            }
+        } catch {
+            // fallback to legacy text parsing
+        }
+
+        // Parse the SEO data (legacy text format)
         const titlesMatch = text.match(/TITLES:\n([\s\S]*?)(?=\n\nDESCRIPTION:)/);
         const descMatch = text.match(/DESCRIPTION:\n([\s\S]*?)(?=\n\nTAGS:)/);
         const tagsMatch = text.match(/TAGS:\n([\s\S]*?)(?=\n\nTHUMBNAILS:)/);
@@ -760,20 +781,33 @@ export default function ScriptGenerator() {
             ? titlesMatch[1]
                 .split("\n")
                 .filter((line: string) => line.match(/^\d+\./))
-                .map((line: string) => line.replace(/^\d+\.\s*/, "").trim())
+                .map((line: string) => ({
+                    text: line.replace(/^\d+\.\s*/, "").trim(),
+                    score: 80,
+                }))
             : [];
 
         const thumbnails = thumbMatch
             ? thumbMatch[1]
                 .split("\n")
                 .filter((line: string) => line.match(/^\d+\./))
-                .map((line: string) => line.replace(/^\d+\.\s*/, "").trim())
+                .map((line: string) => ({
+                    text: line.replace(/^\d+\.\s*/, "").trim(),
+                    score: 80,
+                }))
+            : [];
+
+        const tags = tagsMatch
+            ? tagsMatch[1]
+                .trim()
+                .split(",")
+                .map((tag: string) => ({ text: tag.trim(), score: 75 }))
             : [];
 
         return {
             titles,
             description: descMatch ? descMatch[1].trim() : "",
-            tags: tagsMatch ? tagsMatch[1].trim().split(",").map((tag: string) => tag.trim()) : [],
+            tags,
             thumbnails,
             comment: commentMatch ? commentMatch[1].trim() : "",
         };
@@ -1834,8 +1868,9 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                                 <h3 className="text-sm font-semibold text-slate-900 mb-3">Alternative Titles</h3>
                                                 <ul className="space-y-2">
                                                     {seoData.titles.map((title, index) => (
-                                                        <li key={index} className="p-2 bg-slate-50 rounded-md text-sm text-slate-700">
-                                                            {index + 1}. {title}
+                                                        <li key={index} className="p-2 bg-slate-50 rounded-md text-sm text-slate-700 flex items-center justify-between gap-3">
+                                                            <span>{index + 1}. {title.text}</span>
+                                                            <span className="text-xs text-slate-500">Score {title.score}</span>
                                                         </li>
                                                     ))}
                                                 </ul>
@@ -1856,9 +1891,10 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                                     {seoData.tags.map((tag, index) => (
                                                         <span
                                                             key={index}
-                                                            className="px-2 py-1 bg-blue-50 text-blue-700 rounded-md text-xs"
+                                                            className="px-2 py-1 bg-blue-50 text-blue-700 rounded-md text-xs flex items-center gap-2"
                                                         >
-                                                            {tag}
+                                                            {tag.text}
+                                                            <span className="text-[10px] text-blue-500">({tag.score})</span>
                                                         </span>
                                                     ))}
                                                 </div>
@@ -1869,8 +1905,9 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                                 <h3 className="text-sm font-semibold text-slate-900 mb-3">Thumbnail Text Suggestions</h3>
                                                 <ul className="space-y-2">
                                                     {seoData.thumbnails.map((thumb, index) => (
-                                                        <li key={index} className="p-2 bg-slate-50 rounded-md text-sm font-medium text-slate-700">
-                                                            {index + 1}. {thumb}
+                                                        <li key={index} className="p-2 bg-slate-50 rounded-md text-sm font-medium text-slate-700 flex items-center justify-between gap-3">
+                                                            <span>{index + 1}. {thumb.text}</span>
+                                                            <span className="text-xs text-slate-500">Score {thumb.score}</span>
                                                         </li>
                                                     ))}
                                                 </ul>

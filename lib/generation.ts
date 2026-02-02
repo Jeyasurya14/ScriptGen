@@ -150,17 +150,28 @@ ${includeCode ? `
 export const constructSEOPrompt = (formData: FormData) => {
     const { title, contentType } = formData;
 
-    const systemPrompt = `You are a YouTube SEO expert. Be concise and practical.`;
+    const systemPrompt = `You are a YouTube SEO expert. Provide high-performing, professional outputs. Be concise.`;
 
-    const userPrompt = `Create SEO pack.
+    const userPrompt = `Create a professional SEO pack for YouTube.
 Title: ${title}
 Type: ${contentType}
-Return:
-1) 5 alt titles (<=60 chars, keyword + curiosity)
-2) Description (160-220 words) with hook, 3 bullets, timestamps, CTA, hashtags
-3) 18-22 tags (comma-separated)
-4) 3 thumbnail text options (3-5 words)
-5) Pinned comment (friendly Thunglish, 2-3 lines)`;
+
+Return ONLY valid JSON with this shape:
+{
+  "titles": [{"text":"...", "score": 0-100}],
+  "description": "string",
+  "tags": [{"text":"...", "score": 0-100}],
+  "thumbnails": [{"text":"...", "score": 0-100}],
+  "comment": "string"
+}
+
+Rules:
+- 5 titles, <=60 chars, include primary keyword, distinct angles.
+- Description 170-230 words: hook (2 lines), 3 bullets, timestamps, CTA, hashtags.
+- 18-22 tags, mix primary/secondary/long-tail, no duplicates.
+- 3 thumbnail texts (3-5 words), high contrast language.
+- Comment: professional, engaging, 2-3 lines, invite feedback.
+Add score based on rank potential (higher is better).`;
 
     return { systemPrompt, userPrompt, model: "gpt-4o-mini", max_tokens: 1200 };
 };
@@ -279,7 +290,7 @@ Focus on: surprising facts, quick tips, relatable moments, controversy/opinions`
 };
 
 export const constructTranslatePrompt = (targetLanguage: string, fullScript: string) => {
-    const systemPrompt = `You are a professional translator for YouTube scripts. Translate content while preserving timestamps and tone.`;
+    const systemPrompt = `You are a professional translator for YouTube scripts. Preserve structure and timestamps. No extra text.`;
 
     const rules = [
         "Maintain ALL timestamps exactly as they are [00:00].",
@@ -287,6 +298,8 @@ export const constructTranslatePrompt = (targetLanguage: string, fullScript: str
         "Keep technical terms in English (e.g., React, API, Database).",
         "Do not translate proper nouns or channel names.",
         `Ensure the flow is natural for a native speaker of ${targetLanguage}.`,
+        "Preserve line breaks, headings, lists, and tables exactly.",
+        "Do not add or remove sections.",
     ];
 
     if (targetLanguage === "Thunglish") {
@@ -308,5 +321,5 @@ Output format: Translated script text ONLY. No other text.
 SCRIPT:
 ${fullScript}`;
 
-    return { systemPrompt, userPrompt, model: "gpt-4o-mini", max_tokens: 3000 };
+    return { systemPrompt, userPrompt, model: "gpt-4o-mini", max_tokens: 1400 };
 };

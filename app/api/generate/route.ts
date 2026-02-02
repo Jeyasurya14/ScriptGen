@@ -95,31 +95,72 @@ export async function POST(req: Request) {
                 return NextResponse.json({ error: "Invalid generation type" }, { status: 400 });
         }
 
-        // Call OpenAI
-        const response = await fetch("https://api.openai.com/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${apiKey}`,
-            },
-            body: JSON.stringify({
-                model: promptConfig.model,
-                max_tokens: promptConfig.max_tokens,
-                temperature: 0.7,
-                messages: [
-                    { role: "system", content: promptConfig.systemPrompt },
-                    { role: "user", content: promptConfig.userPrompt },
-                ],
-            }),
-        });
+        const callOpenAI = async (systemPrompt: string, userPrompt: string, maxTokens: number, temperature: number) => {
+            const response = await fetch("https://api.openai.com/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${apiKey}`,
+                },
+                body: JSON.stringify({
+                    model: promptConfig.model,
+                    max_tokens: maxTokens,
+                    temperature,
+                    messages: [
+                        { role: "system", content: systemPrompt },
+                        { role: "user", content: userPrompt },
+                    ],
+                }),
+            });
 
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error?.message || "OpenAI API call failed");
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error?.message || "OpenAI API call failed");
+            }
+
+            const data = await response.json();
+            return data.choices[0].message.content as string;
+        };
+
+        if (type === "translate") {
+            const chunkSize = 2400;
+            const raw = fullScript || "";
+            const paragraphs = raw.split(/\n{2,}/);
+            const chunks: string[] = [];
+            let current = "";
+
+            for (const para of paragraphs) {
+                const candidate = current ? `${current}\n\n${para}` : para;
+                if (candidate.length > chunkSize && current) {
+                    chunks.push(current);
+                    current = para;
+                } else {
+                    current = candidate;
+                }
+            }
+            if (current) chunks.push(current);
+
+            const translatedParts: string[] = [];
+            for (const chunk of chunks) {
+                const chunkPrompt = constructTranslatePrompt(targetLanguage as string, chunk);
+                const translated = await callOpenAI(
+                    chunkPrompt.systemPrompt,
+                    chunkPrompt.userPrompt,
+                    chunkPrompt.max_tokens,
+                    0.2
+                );
+                translatedParts.push(translated.trim());
+            }
+
+            return NextResponse.json({ content: translatedParts.join("\n\n") });
         }
 
-        const data = await response.json();
-        const content = data.choices[0].message.content;
+        const content = await callOpenAI(
+            promptConfig.systemPrompt,
+            promptConfig.userPrompt,
+            promptConfig.max_tokens,
+            0.7
+        );
 
         return NextResponse.json({ content });
 
