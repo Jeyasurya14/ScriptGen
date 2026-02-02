@@ -151,6 +151,11 @@ input[type="range"]::-webkit-slider-thumb:hover {
   animation: fadeIn 0.5s ease-out forwards;
 }
 
+/* Script display font - Inter for readability */
+.font-script {
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
 /* Empty state block */
 .empty-state {
   display: flex;

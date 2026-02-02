@@ -2329,7 +2329,7 @@ Aspect Ratio: ${prompt.aspectRatio}`;
 
                                             {/* Script Display */}
                                             <div className="rounded-xl border-2 border-slate-200 bg-white p-6 sm:p-8 overflow-auto max-h-[70vh] shadow-lg shadow-slate-200/40 ring-1 ring-slate-100">
-                                                <pre className="text-slate-900 text-base sm:text-[17px] leading-[1.85] whitespace-pre-wrap font-sans antialiased tracking-[0.01em]">
+                                                <pre className="font-script text-slate-900 text-base sm:text-[17px] leading-[1.85] whitespace-pre-wrap antialiased tracking-[0.01em]">
                                                     {script}
                                                 </pre>
                                             </div>
