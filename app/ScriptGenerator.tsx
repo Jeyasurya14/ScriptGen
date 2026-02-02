@@ -1233,9 +1233,9 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                 </div>
             )}
 
-            {/* Payment Modal */}
+            {/* Payment Modal - z-[60] so it appears above sticky header (z-50) */}
             {showPaymentModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+                <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-[60] p-0 sm:p-4">
                     <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md max-h-[92vh] sm:max-h-[90vh] shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
                         <div className="flex-shrink-0 flex items-center justify-between p-4 sm:p-6 pb-2 sm:pb-4">
                             <h3 className="text-lg sm:text-xl font-semibold text-slate-900">Recharge Tokens</h3>
@@ -1350,9 +1350,9 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                 </div>
             )}
 
-            {/* History Modal */}
+            {/* History Modal - z-[60] above header */}
             {showHistory && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
                     <div className="bg-white rounded-xl p-6 max-w-lg w-full shadow-2xl max-h-[80vh] flex flex-col">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
