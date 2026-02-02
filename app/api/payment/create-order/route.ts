@@ -6,9 +6,11 @@ import Razorpay from "razorpay";
 
 const TOKEN_PACKAGES = [
     { id: "starter", tokens: 100, price: 99 },
+    { id: "plus", tokens: 200, price: 179 },
     { id: "growth", tokens: 300, price: 249 },
     { id: "pro", tokens: 500, price: 399 },
     { id: "scale", tokens: 1000, price: 699 },
+    { id: "enterprise", tokens: 1500, price: 999 },
 ];
 
 const getPackage = (id: string) => TOKEN_PACKAGES.find((pkg) => pkg.id === id);

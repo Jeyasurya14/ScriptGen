@@ -4,10 +4,10 @@ const siteUrl = process.env.NEXTAUTH_URL || "https://scriptgen.learn-made.in";
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: {
-      userAgent: "*",
-      allow: "/",
-    },
+    rules: [
+      { userAgent: "*", allow: "/", disallow: ["/api/"] },
+      { userAgent: "Googlebot", allow: "/", disallow: ["/api/"] },
+    ],
     sitemap: `${siteUrl}/sitemap.xml`,
   };
 }

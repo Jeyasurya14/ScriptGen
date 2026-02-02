@@ -1,35 +1,33 @@
-import Link from 'next/link';
+import Link from "next/link";
 
 export default function Footer() {
     return (
-        <footer className="bg-gray-100 border-t mt-12 py-8 dark:bg-zinc-900 dark:border-zinc-800">
+        <footer className="mt-auto border-t border-slate-200 bg-slate-100 py-6 sm:py-8">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex flex-col md:flex-row justify-between items-center">
-                    <div className="mb-4 md:mb-0">
-                        <p className="text-gray-500 dark:text-gray-400 text-sm">
-                            © {new Date().getFullYear()} Thunglish Script Generator. All rights reserved.
-                        </p>
-                    </div>
-                    <div className="flex space-x-6">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+                    <p className="text-slate-600 text-sm order-2 sm:order-1">
+                        © {new Date().getFullYear()} ScriptGen. All rights reserved.
+                    </p>
+                    <nav className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-sm order-1 sm:order-2" aria-label="Footer">
                         <Link
                             href="/privacy-policy"
-                            className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white text-sm"
+                            className="text-slate-600 hover:text-slate-900 transition-colors"
                         >
                             Privacy Policy
                         </Link>
                         <Link
                             href="/terms-conditions"
-                            className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white text-sm"
+                            className="text-slate-600 hover:text-slate-900 transition-colors"
                         >
                             Terms & Conditions
                         </Link>
                         <Link
                             href="/refund-policy"
-                            className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white text-sm"
+                            className="text-slate-600 hover:text-slate-900 transition-colors"
                         >
                             Refund Policy
                         </Link>
-                    </div>
+                    </nav>
                 </div>
             </div>
         </footer>

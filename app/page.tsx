@@ -48,6 +48,7 @@ const stats = [
   { label: "Retention-focused structure", value: "3-step" },
   { label: "Teams scaling weekly output", value: "2.4x" },
 ];
+const logos = ["NovaLabs", "CreatorPro", "ShopVerse", "Launchpad", "Growthly"];
 
 const steps = [
   {
@@ -87,9 +88,19 @@ const testimonials = [
 
 const pricing = [
   { name: "Starter", tokens: 100, price: 99, highlight: false },
+  { name: "Plus", tokens: 200, price: 179, highlight: false },
   { name: "Growth", tokens: 300, price: 249, highlight: true },
   { name: "Pro", tokens: 500, price: 399, highlight: false },
   { name: "Scale", tokens: 1000, price: 699, highlight: false },
+  { name: "Enterprise", tokens: 1500, price: 999, highlight: false },
+];
+const pricingBreakdown = [
+  { label: "Core script", tokens: 10 },
+  { label: "SEO pack", tokens: 10 },
+  { label: "Image prompts", tokens: 10 },
+  { label: "Chapters", tokens: 10 },
+  { label: "B-roll", tokens: 10 },
+  { label: "Shorts", tokens: 10 },
 ];
 
 const faqs = [
@@ -106,31 +117,45 @@ const faqs = [
   {
     question: "How do tokens work?",
     answer:
-      "Each script generation uses 10 tokens. New users start with 50 tokens, and you can top up anytime.",
+      "Script costs 10 tokens, and each selected feature costs 10 tokens extra. New users start with 50 tokens, and you can top up anytime.",
   },
   {
     question: "Can I edit after generating?",
     answer:
       "Absolutely. You can tweak any output, regenerate sections, or create variants.",
   },
+  {
+    question: "Is payment secure?",
+    answer:
+      "Yes. We use Razorpay for payments. Your card details are never stored on our servers, and checkout is PCI DSS compliant.",
+  },
+  {
+    question: "What if I'm not satisfied?",
+    answer:
+      "We offer a refund policy. See our Refund Policy page for eligibility and how to request a refund.",
+  },
 ];
 
+const siteUrl = process.env.NEXTAUTH_URL || "https://scriptgen.learn-made.in";
+
 export const metadata: Metadata = {
-  title: "AI YouTube Script Generator",
+  title: "YouTube Script Generator",
   description:
-    "Create high-converting YouTube scripts with AI in minutes. ScriptGen supports Tamil, Hindi, English, and Thunglish with SEO, chapters, B-roll, and shorts.",
+    "Create high-converting YouTube scripts with AI in minutes. Tamil, Hindi, English, Thunglish. SEO, chapters, B-roll, shorts. 50 free tokens. Start free.",
+  alternates: { canonical: siteUrl },
   openGraph: {
-    title: "AI YouTube Script Generator",
+    title: "YouTube Script Generator | ScriptGen",
     description:
-      "Create high-converting YouTube scripts with AI in minutes. ScriptGen supports Tamil, Hindi, English, and Thunglish.",
-    images: ["/hero-illustration.png"],
+      "Create high-converting YouTube scripts with AI in minutes. Tamil, Hindi, English, Thunglish. SEO, chapters, B-roll, shorts.",
+    url: siteUrl,
+    images: ["/og-scriptgen.png"],
   },
   twitter: {
     card: "summary_large_image",
-    title: "AI YouTube Script Generator",
+    title: "YouTube Script Generator | ScriptGen",
     description:
-      "Create high-converting YouTube scripts with AI in minutes. ScriptGen supports Tamil, Hindi, English, and Thunglish.",
-    images: ["/hero-illustration.png"],
+      "Create high-converting YouTube scripts with AI in minutes. Tamil, Hindi, English, Thunglish.",
+    images: ["/og-scriptgen.png"],
   },
 };
 
@@ -152,19 +177,31 @@ export default function Home() {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: "ScriptGen",
-    url: "https://scriptgen.learn-made.in",
+    url: siteUrl,
   };
 
   const websiteSchema = {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: "ScriptGen",
-    url: "https://scriptgen.learn-made.in",
+    url: siteUrl,
+    description: "Generate high-converting YouTube scripts with AI. Tamil, Hindi, English, Thunglish. SEO, chapters, B-roll, shorts.",
     potentialAction: {
       "@type": "SearchAction",
-      target: "https://scriptgen.learn-made.in/?q={search_term_string}",
+      target: `${siteUrl}/?q={search_term_string}`,
       "query-input": "required name=search_term_string",
     },
+  };
+
+  const softwareSchema = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: "ScriptGen",
+    applicationCategory: "DeveloperApplication",
+    operatingSystem: "Web",
+    url: siteUrl,
+    description: "AI-powered YouTube script generator. Create scripts in Tamil, Hindi, English, Thunglish with SEO, chapters, B-roll, and shorts.",
+    offers: { "@type": "Offer", price: "0", priceCurrency: "INR" },
   };
 
   return (
@@ -181,19 +218,23 @@ export default function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
-      <section className="border-b border-slate-200 bg-gradient-to-b from-slate-50 to-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareSchema) }}
+      />
+      <section className="border-b border-slate-200/80 bg-white">
         <div className="max-w-6xl mx-auto px-6 py-16 sm:py-20">
           <div className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] items-center">
-            <div className="max-w-3xl space-y-6">
-              <p className="text-xs uppercase tracking-[0.4em] text-blue-700 font-semibold">
-                ScriptGen
-              </p>
-              <h1 className="text-4xl sm:text-5xl font-bold leading-tight">
-                Scripts that convert, created in minutes
+            <div className="max-w-3xl space-y-5">
+              <span className="inline-block text-xs font-medium uppercase tracking-wider text-slate-500">
+                YouTube Script Generator
+              </span>
+              <h1 className="text-3xl sm:text-4xl font-semibold leading-tight text-slate-900 tracking-tight">
+                Scripts that convert,
+                <span className="text-blue-600"> in minutes</span>
               </h1>
-              <p className="text-lg text-slate-600">
-                ScriptGen helps teams craft high-performing video scripts with
-                clear hooks, strong structure, and a consistent brand voice.
+              <p className="text-slate-600 text-base leading-relaxed">
+                Create high-performing video scripts with clear hooks, strong structure, and a consistent voice. Tamil, Hindi, English, Thunglish.
               </p>
               <div className="flex flex-wrap gap-3">
                 <HomeCta
@@ -203,7 +244,7 @@ export default function Home() {
                 </HomeCta>
                 <a
                   href="#faq"
-                  className="px-5 py-2.5 rounded-lg border border-slate-300 text-slate-700 font-semibold hover:border-slate-400 transition"
+                  className="px-5 py-2.5 rounded-lg border border-slate-300 text-slate-700 font-semibold hover:border-slate-400 transition bg-white"
                 >
                   Read FAQ
                 </a>
@@ -213,11 +254,14 @@ export default function Home() {
                   <span className="h-2 w-2 rounded-full bg-green-500" />
                   50 free tokens on signup
                 </span>
-                <span>10 tokens per generation</span>
+                <span>Script costs 10 tokens + 10 per feature</span>
+                <a href="/refund-policy" className="text-blue-600 hover:text-blue-700 font-medium">
+                  Refund policy
+                </a>
               </div>
             </div>
             <div className="relative w-full max-w-xl justify-self-center">
-              <div className="absolute -inset-4 rounded-3xl bg-blue-100/50 blur-2xl" />
+              <div className="absolute -inset-6 rounded-3xl bg-blue-100/60 blur-3xl" />
               <div className="relative rounded-3xl border border-slate-200 bg-white p-4 shadow-xl">
                 <Image
                   src="/hero-illustration.png"
@@ -238,51 +282,84 @@ export default function Home() {
           {stats.map((stat) => (
             <div
               key={stat.label}
-              className="rounded-2xl border border-slate-200 bg-white p-5 text-center shadow-sm"
+              className="rounded-xl border border-slate-200/80 bg-white p-5 text-center shadow-sm"
             >
-              <p className="text-2xl font-semibold text-slate-900">{stat.value}</p>
+              <p className="text-xl font-semibold text-slate-900 tracking-tight">{stat.value}</p>
               <p className="text-sm text-slate-500 mt-1">{stat.label}</p>
             </div>
           ))}
         </div>
       </section>
 
+      <section className="max-w-6xl mx-auto px-6 pb-10">
+        <div className="rounded-xl border border-slate-200/80 bg-white px-6 py-5">
+          <p className="text-xs font-medium uppercase tracking-wider text-slate-400 text-center">
+            Trusted by teams
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-6 mt-3 text-sm font-medium text-slate-500">
+            {logos.map((logo) => (
+              <span key={logo} className="tracking-wide">
+                {logo}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="max-w-6xl mx-auto px-6 py-14 sm:py-20">
         <div className="grid gap-8 lg:grid-cols-[1.1fr_1fr] items-start">
-          <div className="space-y-4">
-            <h2 className="text-3xl font-semibold">Why teams choose ScriptGen</h2>
-            <p className="text-slate-600">
-              Move faster from concept to publish-ready scripts while keeping
-              quality high and collaboration smooth.
+          <div className="space-y-3">
+            <p className="text-xs font-medium uppercase tracking-wider text-blue-600">
+              Advantages
+            </p>
+            <h2 className="text-2xl font-semibold text-slate-900 tracking-tight">Why teams choose ScriptGen</h2>
+            <p className="text-slate-600 text-sm leading-relaxed">
+              Move faster from concept to publish-ready scripts while keeping quality high.
             </p>
           </div>
           <div className="grid gap-4">
-            {advantages.map((item) => (
+            {advantages.map((item, index) => (
               <div
                 key={item.title}
-                className="rounded-xl border border-slate-200 p-5 shadow-sm bg-white"
+                className="rounded-xl border border-slate-200/80 p-5 bg-white shadow-sm"
               >
-                <h3 className="font-semibold text-lg">{item.title}</h3>
-                <p className="text-slate-600 mt-2">{item.description}</p>
+                <div className="flex items-center gap-3">
+                  <span className="h-8 w-8 rounded-full bg-blue-100 text-blue-700 text-sm font-semibold flex items-center justify-center">
+                    {index + 1}
+                  </span>
+                  <h3 className="font-semibold text-lg">{item.title}</h3>
+                </div>
+                <p className="text-slate-600 mt-3">{item.description}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="border-y border-slate-200 bg-white">
+      <section className="border-y border-slate-200/80 bg-white">
         <div className="max-w-6xl mx-auto px-6 py-14 sm:py-20">
-          <div className="grid gap-8 lg:grid-cols-3">
+          <div className="text-center max-w-2xl mx-auto space-y-2 mb-10">
+            <p className="text-xs font-medium uppercase tracking-wider text-blue-600">
+              How it works
+            </p>
+            <h2 className="text-2xl font-semibold text-slate-900 tracking-tight">From idea to publish-ready</h2>
+            <p className="text-slate-600 text-sm">
+              A streamlined workflow for speed and quality.
+            </p>
+          </div>
+          <div className="grid gap-5 lg:grid-cols-3">
             {steps.map((step, index) => (
               <div
                 key={step.title}
-                className="rounded-2xl border border-slate-200 bg-slate-50 p-6"
+                className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm"
               >
-                <p className="text-xs font-semibold text-blue-700 uppercase tracking-[0.3em]">
-                  Step {index + 1}
-                </p>
-                <h3 className="text-xl font-semibold mt-3">{step.title}</h3>
-                <p className="text-slate-600 mt-2">{step.description}</p>
+                <div className="flex items-center gap-3">
+                  <span className="h-10 w-10 rounded-full bg-blue-600 text-white text-sm font-semibold flex items-center justify-center">
+                    {index + 1}
+                  </span>
+                  <h3 className="text-xl font-semibold">{step.title}</h3>
+                </div>
+                <p className="text-slate-600 mt-3">{step.description}</p>
               </div>
             ))}
           </div>
@@ -291,20 +368,22 @@ export default function Home() {
 
       <section
         id="features"
-        className="border-y border-slate-200 bg-slate-50"
+        className="border-y border-slate-200/80 bg-slate-50/50"
       >
         <div className="max-w-6xl mx-auto px-6 py-14 sm:py-20">
-          <div className="space-y-4">
-            <h2 className="text-3xl font-semibold">Features built for growth</h2>
-            <p className="text-slate-600 max-w-2xl">
-              Everything you need to craft clear, persuasive scripts that align
-              with your marketing goals.
+          <div className="space-y-2">
+            <p className="text-xs font-medium uppercase tracking-wider text-blue-600">
+              Features
+            </p>
+            <h2 className="text-2xl font-semibold text-slate-900 tracking-tight">Built for growth</h2>
+            <p className="text-slate-600 text-sm max-w-2xl">
+              Clear, persuasive scripts that align with your goals.
             </p>
           </div>
           <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr] items-center mt-8">
             <div className="relative">
-              <div className="absolute -inset-6 rounded-3xl bg-blue-50 blur-2xl" />
-              <div className="relative rounded-3xl border border-slate-200 bg-white p-4 shadow-lg">
+              <div className="absolute -inset-4 rounded-2xl bg-slate-100/80 blur-2xl" />
+              <div className="relative rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
                 <Image
                   src="/features-illustration.png"
                   alt="Feature illustration with cards"
@@ -318,10 +397,10 @@ export default function Home() {
               {features.map((feature) => (
                 <div
                   key={feature.title}
-                  className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+                  className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm"
                 >
-                  <h3 className="font-semibold">{feature.title}</h3>
-                  <p className="text-slate-600 mt-2">{feature.description}</p>
+                  <h3 className="font-semibold text-slate-900">{feature.title}</h3>
+                  <p className="text-slate-600 text-sm mt-1.5">{feature.description}</p>
                 </div>
               ))}
             </div>
@@ -330,21 +409,27 @@ export default function Home() {
       </section>
 
       <section className="max-w-6xl mx-auto px-6 py-14 sm:py-20">
-        <div className="text-center max-w-2xl mx-auto space-y-4">
-          <h2 className="text-3xl font-semibold">Trusted by growth teams</h2>
-          <p className="text-slate-600">
-            Teams use ScriptGen to scale production without sacrificing quality.
+        <div className="text-center max-w-2xl mx-auto space-y-2">
+          <p className="text-xs font-medium uppercase tracking-wider text-blue-600">
+            Testimonials
+          </p>
+          <h2 className="text-2xl font-semibold text-slate-900 tracking-tight">Trusted by teams</h2>
+          <p className="text-slate-600 text-sm">
+            Scale production without sacrificing quality.
           </p>
         </div>
-        <div className="grid gap-4 sm:grid-cols-3 mt-10">
+        <div className="grid gap-4 sm:grid-cols-3 mt-8">
           {testimonials.map((item) => (
             <div
               key={item.name}
-              className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+              className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm"
             >
-              <p className="text-slate-700">“{item.quote}”</p>
-              <div className="mt-4">
-                <p className="text-sm font-semibold text-slate-900">{item.name}</p>
+              <p className="text-amber-500 text-sm font-medium">
+                ★★★★★
+              </p>
+              <p className="text-slate-700 text-sm mt-2 leading-relaxed">“{item.quote}”</p>
+              <div className="mt-3">
+                <p className="text-sm font-medium text-slate-900">{item.name}</p>
                 <p className="text-xs text-slate-500">{item.role}</p>
               </div>
             </div>
@@ -352,85 +437,121 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="border-y border-slate-200 bg-slate-50">
+      <section id="pricing" className="border-y border-slate-200/80 bg-slate-50/50 scroll-mt-20">
         <div className="max-w-6xl mx-auto px-6 py-14 sm:py-20">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <h2 className="text-3xl font-semibold">Simple token pricing</h2>
-              <p className="text-slate-600 mt-2">
-                10 tokens per generation. Includes script, SEO, images, chapters,
-                B-roll, and shorts.
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-2xl space-y-2">
+              <p className="text-xs font-medium uppercase tracking-wider text-blue-600">
+                Pricing
+              </p>
+              <h2 className="text-2xl font-semibold text-slate-900 tracking-tight">Simple token pricing</h2>
+              <p className="text-slate-600 text-sm">
+                Script: 10 tokens. Each feature: +10 tokens. Top up anytime.
               </p>
             </div>
             <HomeCta className="px-5 py-2.5 rounded-lg bg-blue-700 text-white font-semibold shadow-md shadow-blue-700/20 hover:bg-blue-800 transition">
               Start free
             </HomeCta>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mt-8">
+          <div className="mt-6 flex items-center gap-3 p-4 rounded-xl bg-green-50 border border-green-100 text-green-800 text-sm font-medium">
+            <span className="h-8 w-8 rounded-full bg-green-200 flex items-center justify-center text-green-700 font-bold" aria-hidden>✓</span>
+            <span>
+              Secure payment via Razorpay. Your card details are never stored. PCI DSS compliant • Instant token delivery.
+            </span>
+          </div>
+          <div className="mt-6 rounded-xl border border-slate-200/80 bg-white p-5">
+            <p className="text-sm font-medium text-slate-900 mb-3">
+              Feature cost
+            </p>
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 text-sm text-slate-600">
+              {pricingBreakdown.map((item) => (
+                <div key={item.label} className="flex items-center justify-between">
+                  <span>{item.label}</span>
+                  <span className="font-semibold text-slate-800">{item.tokens} tokens</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mt-8">
             {pricing.map((plan) => (
               <div
                 key={plan.name}
-                className={`rounded-2xl border p-6 ${
+                className={`relative overflow-hidden rounded-xl border p-5 ${
                   plan.highlight
-                    ? "border-blue-600 bg-white shadow-lg"
-                    : "border-slate-200 bg-white"
+                    ? "border-blue-500 bg-white shadow-md ring-1 ring-blue-500/20"
+                    : "border-slate-200/80 bg-white shadow-sm"
                 }`}
               >
-                <p className="text-sm font-semibold text-slate-900">{plan.name}</p>
-                <p className="text-3xl font-semibold mt-3">₹{plan.price}</p>
-                <p className="text-sm text-slate-500 mt-2">
-                  {plan.tokens} tokens • {Math.floor(plan.tokens / 10)} generations
-                </p>
-                <div className="mt-6">
+                {plan.highlight && (
+                  <span className="absolute right-3 top-3 text-[10px] font-medium uppercase tracking-wider text-blue-600">
+                    Popular
+                  </span>
+                )}
+                <p className="text-sm font-medium text-slate-900">{plan.name}</p>
+                <div className="mt-3 flex items-baseline gap-1.5">
+                  <p className="text-2xl font-semibold text-slate-900 tracking-tight">₹{plan.price}</p>
+                  <p className="text-xs text-slate-500">/ {Math.floor(plan.tokens / 10)} outputs</p>
+                </div>
+                <p className="text-xs text-slate-500 mt-1">{plan.tokens} tokens</p>
+                <div className="mt-5">
                   <HomeCta
-                    className={`w-full px-4 py-2.5 rounded-lg font-semibold transition ${
+                    className={`w-full px-4 py-2.5 rounded-lg text-sm font-medium transition ${
                       plan.highlight
-                        ? "bg-blue-700 text-white hover:bg-blue-800"
-                        : "border border-slate-300 text-slate-700 hover:border-slate-400"
+                        ? "bg-blue-600 text-white hover:bg-blue-700"
+                        : "border border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50"
                     }`}
                   >
                     Get {plan.name}
                   </HomeCta>
                 </div>
+                <p className="mt-3 text-xs text-slate-500">All pro features included</p>
               </div>
             ))}
           </div>
+          <p className="mt-6 text-center text-sm text-slate-500">
+            50 free tokens to start • No subscription • Refund policy available
+          </p>
         </div>
       </section>
 
       <section id="faq" className="max-w-6xl mx-auto px-6 py-14 sm:py-20">
         <div className="grid gap-10 lg:grid-cols-[1fr_1.2fr]">
-          <div className="space-y-4">
-            <h2 className="text-3xl font-semibold">Frequently asked questions</h2>
-            <p className="text-slate-600">
-              If you have a question we do not cover, reach out and we will help.
+          <div className="space-y-2">
+            <p className="text-xs font-medium uppercase tracking-wider text-blue-600">
+              FAQ
+            </p>
+            <h2 className="text-2xl font-semibold text-slate-900 tracking-tight">Frequently asked questions</h2>
+            <p className="text-slate-600 text-sm">
+              Questions? Reach out and we’ll help.
             </p>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {faqs.map((faq) => (
               <div
                 key={faq.question}
-                className="rounded-xl border border-slate-200 p-5 bg-white"
+                className="rounded-xl border border-slate-200/80 p-5 bg-white shadow-sm"
               >
-                <h3 className="font-semibold">{faq.question}</h3>
-                <p className="text-slate-600 mt-2">{faq.answer}</p>
+                <h3 className="font-medium text-slate-900">{faq.question}</h3>
+                <p className="text-slate-600 text-sm mt-1.5">{faq.answer}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="border-t border-slate-200 bg-white">
+      <section className="border-t border-slate-200/80 bg-white">
         <div className="max-w-6xl mx-auto px-6 py-12 sm:py-16">
-          <div className="rounded-2xl bg-blue-900 text-white p-8 sm:p-10 flex flex-col gap-4 sm:items-center sm:text-center">
-            <h2 className="text-3xl font-semibold">
-              Ready to ship better scripts?
-            </h2>
-            <p className="text-blue-100 max-w-2xl">
-              Start creating high-performing scripts today and keep your pipeline
-              full.
+          <div className="rounded-2xl bg-slate-900 text-white p-8 sm:p-10 flex flex-col gap-3 sm:items-center sm:text-center">
+            <p className="text-xs font-medium uppercase tracking-wider text-slate-400">
+              Get started
             </p>
-            <HomeCta className="px-6 py-3 rounded-lg bg-white text-blue-900 font-semibold hover:bg-blue-50 transition">
+            <h2 className="text-2xl font-semibold text-white tracking-tight">
+              Ready to create better scripts?
+            </h2>
+            <p className="text-slate-300 text-sm max-w-xl">
+              Sign in with Google. 50 free tokens — no card required.
+            </p>
+            <HomeCta className="mt-2 px-5 py-2.5 rounded-lg bg-white text-slate-900 font-medium text-sm hover:bg-slate-100 transition">
               Get started
             </HomeCta>
           </div>

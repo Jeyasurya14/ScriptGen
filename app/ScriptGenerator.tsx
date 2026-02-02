@@ -26,6 +26,8 @@ import {
     Trash2,
     Clock,
     Settings2,
+    ShieldCheck,
+    Lock,
 } from "lucide-react";
 
 // Types
@@ -215,12 +217,23 @@ export default function ScriptGenerator() {
     const [showPaymentModal, setShowPaymentModal] = useState<boolean>(false);
     const [processingPayment, setProcessingPayment] = useState<boolean>(false);
     const [selectedPackageId, setSelectedPackageId] = useState<string>("pro");
+    const [toastMessage, setToastMessage] = useState<string | null>(null);
 
     const tokenPackages = [
         { id: "starter", name: "Starter", tokens: 100, price: 99 },
+        { id: "plus", name: "Plus", tokens: 200, price: 179 },
         { id: "growth", name: "Growth", tokens: 300, price: 249 },
         { id: "pro", name: "Pro", tokens: 500, price: 399 },
         { id: "scale", name: "Scale", tokens: 1000, price: 699 },
+        { id: "enterprise", name: "Enterprise", tokens: 1500, price: 999 },
+    ];
+    const tokenBreakdown = [
+        { label: "Core script", tokens: 10 },
+        { label: "SEO pack", tokens: 10 },
+        { label: "Image prompts", tokens: 10 },
+        { label: "Chapters", tokens: 10 },
+        { label: "B-roll", tokens: 10 },
+        { label: "Shorts", tokens: 10 },
     ];
 
     // Translation state
@@ -417,7 +430,14 @@ export default function ScriptGenerator() {
     };
 
     // Calculate required tokens
-    const calculateRequiredTokens = () => 10;
+    const calculateRequiredTokens = () => {
+        let cost = 10; // Base script
+        if (formData.generateImages) cost += 10;
+        if (formData.includeChapters) cost += 10;
+        if (formData.includeBRoll) cost += 10;
+        if (formData.includeShorts) cost += 10;
+        return cost;
+    };
 
     // Handle payment
     const handlePayment = async () => {
@@ -447,12 +467,13 @@ export default function ScriptGenerator() {
                         body: JSON.stringify(response),
                     });
                     if (verifyRes.ok) {
-                        // Refresh credits
                         const creditsRes = await fetch("/api/credits");
                         if (creditsRes.ok) {
                             setCredits(await creditsRes.json());
                         }
                         setShowPaymentModal(false);
+                        setToastMessage("Tokens added!");
+                        setTimeout(() => setToastMessage(null), 2500);
                     }
                 },
                 prefill: {
@@ -969,7 +990,8 @@ Aspect Ratio: ${prompt.aspectRatio}`;
         try {
             await navigator.clipboard.writeText(fullPrompt);
             setCopiedImageId(prompt.id);
-            setTimeout(() => setCopiedImageId(null), 2000);
+            setToastMessage("Copied!");
+            setTimeout(() => { setCopiedImageId(null); setToastMessage(null); }, 2000);
         } catch {
             setError("Failed to copy to clipboard");
         }
@@ -980,7 +1002,8 @@ Aspect Ratio: ${prompt.aspectRatio}`;
         try {
             await navigator.clipboard.writeText(text);
             setCopiedItem(itemId);
-            setTimeout(() => setCopiedItem(null), 2000);
+            setToastMessage("Copied!");
+            setTimeout(() => { setCopiedItem(null); setToastMessage(null); }, 2000);
         } catch {
             setError("Failed to copy to clipboard");
         }
@@ -994,7 +1017,8 @@ Aspect Ratio: ${prompt.aspectRatio}`;
         try {
             await navigator.clipboard.writeText(script);
             setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
+            setToastMessage("Copied!");
+            setTimeout(() => { setCopied(false); setToastMessage(null); }, 2000);
         } catch {
             setError("Failed to copy to clipboard");
         }
@@ -1148,26 +1172,54 @@ Aspect Ratio: ${prompt.aspectRatio}`;
     ];
 
     return (
-        <div className="min-h-screen bg-slate-50 relative overflow-hidden">
-            <div className="absolute inset-x-0 top-0 h-72 bg-gradient-to-br from-blue-50 via-white to-amber-50 pointer-events-none" />
+        <div className="min-h-screen bg-slate-50/80 relative overflow-hidden">
+            <div className="absolute inset-x-0 top-0 h-80 bg-gradient-to-br from-blue-50/90 via-slate-50/50 to-violet-50/70 pointer-events-none" />
             {/* Razorpay Script */}
             <script src="https://checkout.razorpay.com/v1/checkout.js" async />
+
+            {/* Toast */}
+            {toastMessage && (
+                <div
+                    role="status"
+                    aria-live="polite"
+                    className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] px-4 py-2.5 rounded-lg bg-slate-800 text-white text-sm font-medium shadow-lg animate-fade-in"
+                >
+                    <span className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-400" />
+                        {toastMessage}
+                    </span>
+                </div>
+            )}
 
             {/* Payment Modal */}
             {showPaymentModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-2xl">
+                    <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl border border-slate-200">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-semibold text-slate-900">Recharge Tokens</h3>
                             <button onClick={() => setShowPaymentModal(false)} className="text-slate-400 hover:text-slate-600">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
-                        <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-4">
-                            <p className="text-sm text-slate-700">
-                                Each generation costs <span className="font-semibold">10 tokens</span> and includes script, SEO, images,
-                                chapters, B-roll, and shorts.
+                        <div className="flex items-center gap-2 mb-4 p-3 rounded-lg bg-green-50 border border-green-100">
+                            <ShieldCheck className="w-5 h-5 text-green-600 flex-shrink-0" />
+                            <p className="text-sm text-green-800 font-medium">
+                                Secure payment via Razorpay. Your card details are never stored.
                             </p>
+                        </div>
+                        <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-4 space-y-3">
+                            <p className="text-sm text-slate-700">
+                                Script costs <span className="font-semibold">10 tokens</span>. Each selected feature costs{" "}
+                                <span className="font-semibold">10 tokens</span> extra.
+                            </p>
+                            <div className="grid gap-2 text-xs text-slate-600">
+                                {tokenBreakdown.map((item) => (
+                                    <div key={item.label} className="flex items-center justify-between">
+                                        <span>{item.label}</span>
+                                        <span className="font-semibold text-slate-800">{item.tokens} tokens</span>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                         <div className="grid gap-3 mb-4">
                             {tokenPackages.map((pkg) => (
@@ -1199,6 +1251,21 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                         >
                             {processingPayment ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Buy tokens with Razorpay"}
                         </button>
+                        <div className="mt-4 flex flex-col items-center gap-2 text-xs text-slate-500 text-center">
+                            <div className="flex items-center gap-2">
+                                <Lock className="w-3.5 h-3.5" />
+                                <span>PCI DSS compliant • Instant token delivery</span>
+                            </div>
+                            <span>No subscription • Pay once, use your tokens anytime</span>
+                            <a
+                                href="/refund-policy"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-700 font-medium underline underline-offset-2"
+                            >
+                                Not satisfied? See our Refund Policy
+                            </a>
+                        </div>
                     </div>
                 </div>
             )}
@@ -1269,22 +1336,28 @@ Aspect Ratio: ${prompt.aspectRatio}`;
             )}
 
             {/* Header */}
-            <header className="sticky top-0 z-50 transition-all duration-300 border-b border-slate-200 bg-white/95 backdrop-blur shadow-sm">
-                <div className="h-1 w-full brand-gradient" />
+            <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/95 backdrop-blur-md">
+                <div className="h-0.5 w-full bg-gradient-to-r from-blue-600 via-blue-500 to-amber-400" />
                 <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div className="flex items-center gap-4">
                             <div>
-                                <div className="flex items-center gap-2">
-                                    <h1 className="text-xl font-bold text-slate-900 tracking-tight">
-                                        SCRIPT<span className="text-blue-700">GEN</span>
-                                    </h1>
-                                    <span className="hidden sm:inline-flex text-[10px] uppercase tracking-[0.2em] px-2 py-0.5 rounded-full border border-amber-200 bg-amber-50 text-amber-900 font-semibold">
-                                        Enterprise
-                                    </span>
+                                <div className="flex items-center gap-3">
+                                    <a
+                                        href="/"
+                                        className="text-lg font-semibold text-slate-900 tracking-tight hover:text-slate-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded"
+                                    >
+                                        Script<span className="text-blue-600">Gen</span>
+                                    </a>
+                                    <a
+                                        href="/"
+                                        className="text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors hidden sm:inline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded px-2 py-1"
+                                    >
+                                        Home
+                                    </a>
                                 </div>
-                                <p className="text-xs text-slate-500 font-medium">
-                                    Corporate-grade script generation for <span className="text-blue-700">national reach</span>
+                                <p className="text-xs text-slate-500 mt-0.5 hidden sm:block">
+                                    YouTube script generator
                                 </p>
                             </div>
                         </div>
@@ -1305,11 +1378,21 @@ Aspect Ratio: ${prompt.aspectRatio}`;
 
                                     {/* Tokens Display */}
                                     {credits && (
-                                        <div className="hidden sm:flex items-center gap-2 px-4 py-1.5 brand-pill rounded-full shadow-inner">
-                                            <CreditCard className="w-4 h-4 text-amber-600" />
-                                            <span className="text-sm font-semibold text-amber-900">
-                                                {totalTokens} tokens
-                                            </span>
+                                        <div className="hidden sm:flex items-center gap-2">
+                                            {totalTokens < 20 && (
+                                                <button
+                                                    onClick={() => setShowPaymentModal(true)}
+                                                    className="text-xs font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-md px-2 py-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-1"
+                                                >
+                                                    Low balance — Recharge
+                                                </button>
+                                            )}
+                                            <div className="flex items-center gap-2 px-4 py-1.5 brand-pill rounded-full shadow-inner">
+                                                <CreditCard className="w-4 h-4 text-amber-600" />
+                                                <span className="text-sm font-semibold text-amber-900">
+                                                    {totalTokens} tokens
+                                                </span>
+                                            </div>
                                         </div>
                                     )}
 
@@ -1354,27 +1437,21 @@ Aspect Ratio: ${prompt.aspectRatio}`;
             </header>
 
             <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 relative z-10">
-                <div className="mb-6 text-center relative z-10">
-                    <p className="text-xs uppercase tracking-[0.3em] text-slate-400 font-semibold">Corporate Studio</p>
-                    <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900 mt-2">
-                        Enterprise Script Generation Suite
+                <div className="mb-6 text-center">
+                    <h2 className="text-2xl font-semibold text-slate-900 tracking-tight">
+                        Create YouTube scripts with AI
                     </h2>
-                    <p className="text-sm text-slate-500 mt-2">
-                        Professional-grade outputs designed for consistency, scale, and trust.
+                    <p className="text-sm text-slate-500 mt-1.5 max-w-xl mx-auto">
+                        Configure your video, then generate script, SEO, chapters, and more. Secure payment via Razorpay.
                     </p>
                 </div>
-                <div className="mb-6 brand-card rounded-2xl px-5 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                        <p className="text-xs uppercase tracking-[0.2em] text-slate-400 font-semibold">National Creator Platform</p>
-                        <h2 className="text-lg font-semibold text-slate-900">
-                            Design & Branding aligned for professional studios
-                        </h2>
+                <div className="mb-6 flex items-center gap-3 px-4 py-3 rounded-xl bg-white/80 backdrop-blur-sm border border-slate-200/80 text-slate-600 text-sm shadow-sm">
+                    <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                        <ShieldCheck className="w-5 h-5 text-emerald-600" />
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                        <span className="text-xs px-3 py-1 rounded-full border border-blue-200 text-blue-700 bg-blue-50 font-semibold">Secure Access</span>
-                        <span className="text-xs px-3 py-1 rounded-full border border-amber-200 text-amber-900 bg-amber-50 font-semibold">Premium Output</span>
-                        <span className="text-xs px-3 py-1 rounded-full border border-slate-200 text-slate-600 bg-white font-semibold">Reliable Scale</span>
-                    </div>
+                    <span>
+                        Your card details are never stored. PCI DSS compliant • Instant token delivery.
+                    </span>
                 </div>
                 <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
                     {/* Left Panel - Configuration (Protected) */}
@@ -1382,54 +1459,36 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                         <div className="brand-card rounded-2xl p-6 sm:p-8 lg:sticky lg:top-28">
                             {!session ? (
                                 /* Login Required Panel */
-                                <div className="text-center py-12 brand-card rounded-2xl max-w-md mx-auto">
-                                    <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6 ring-4 ring-blue-50/50">
-                                        <Sparkles className="w-10 h-10 text-blue-600" />
+                                <div className="relative text-center py-10 sm:py-12 max-w-sm mx-auto px-6 rounded-2xl bg-white/90 backdrop-blur-sm border border-slate-200/80 shadow-xl shadow-slate-200/50 overflow-hidden">
+                                    <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500 via-violet-500 to-blue-600" />
+                                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500/10 to-violet-500/10 flex items-center justify-center mx-auto mb-5 ring-4 ring-blue-500/5">
+                                        <Sparkles className="w-7 h-7 text-blue-600" />
                                     </div>
-                                    <h3 className="text-2xl font-bold text-slate-900 mb-3">Join the Creator Studio</h3>
-                                    <p className="text-slate-500 mb-8 max-w-xs mx-auto text-sm leading-relaxed">
-                                        Unlock professional AI script generation, multi-language support, and viral features.
+                                    <h3 className="text-xl font-semibold text-slate-900 mb-2 tracking-tight">Get started</h3>
+                                    <p className="text-slate-500 text-sm leading-relaxed mb-6 max-w-[260px] mx-auto">
+                                        Sign in with Google. 50 free tokens, no card required.
                                     </p>
-                                    <div className="flex flex-col gap-3 mt-4 text-left px-8">
-                                        <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
-                                            <div className="p-1 bg-green-100 rounded-full">
-                                                <Check className="w-3 h-3 text-green-600" />
+                                    <div className="flex flex-col gap-3 text-left max-w-[260px] mx-auto">
+                                        <div className="flex items-center gap-3 px-3 py-2 rounded-xl bg-slate-50/80 border border-slate-100 text-slate-700 text-sm">
+                                            <div className="w-7 h-7 rounded-lg bg-green-500/10 flex items-center justify-center flex-shrink-0">
+                                                <Check className="w-4 h-4 text-green-600" />
                                             </div>
-                                            <span className="text-sm font-medium text-slate-700">2 Free High-Quality Scripts</span>
+                                            <span>Script + SEO + chapters</span>
                                         </div>
-                                        <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
-                                            <div className="p-1 bg-green-100 rounded-full">
-                                                <Check className="w-3 h-3 text-green-600" />
+                                        <div className="flex items-center gap-3 px-3 py-2 rounded-xl bg-slate-50/80 border border-slate-100 text-slate-700 text-sm">
+                                            <div className="w-7 h-7 rounded-lg bg-green-500/10 flex items-center justify-center flex-shrink-0">
+                                                <Check className="w-4 h-4 text-green-600" />
                                             </div>
-                                            <span className="text-sm font-medium text-slate-700">Full SEO Metadata (Title, Tags, Desc)</span>
-                                        </div>
-                                        <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
-                                            <div className="p-1 bg-green-100 rounded-full">
-                                                <Check className="w-3 h-3 text-green-600" />
-                                            </div>
-                                            <span className="text-sm font-medium text-slate-700">AI Image Prompts for Thumbnails</span>
+                                            <span>Image prompts, B-roll, shorts</span>
                                         </div>
                                     </div>
-
-                                    <div className="px-8">
-                                        <button
-                                            onClick={() => signIn("google", { callbackUrl: "/app" })}
-                                            className="w-full mt-8 py-3.5 px-4 text-slate-900 font-bold rounded-xl bg-amber-400 brand-glow hover:bg-amber-500 transition-all duration-200 flex items-center justify-center gap-3"
-                                        >
-                                            <LogIn className="w-5 h-5" />
-                                            Get Started with Google
-                                        </button>
-                                    </div>
-
-                                    <div className="flex items-center justify-center gap-2 mt-6">
-                                        <span className="flex h-2 w-2 relative">
-                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                                            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                                        </span>
-                                        <p className="text-xs font-medium text-slate-400">
-                                            No card required for 50 free tokens
-                                        </p>
-                                    </div>
+                                    <button
+                                        onClick={() => signIn("google", { callbackUrl: "/app" })}
+                                        className="w-full mt-6 py-3 px-4 text-white text-sm font-semibold rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg shadow-blue-500/25 transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-xl hover:shadow-blue-500/30"
+                                    >
+                                        <LogIn className="w-4 h-4" />
+                                        Sign in with Google
+                                    </button>
                                 </div>
                             ) : (
                                 /* Authenticated - Show Configuration */
@@ -1730,9 +1789,20 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                                 Cancel Generation
                                             </button>
                                         )}
-                                        <p className="text-center text-xs text-slate-400 mt-2">
-                                            Consumes {requiredTokens} tokens (free or paid)
-                                        </p>
+                                        <div className="mt-2 text-center text-xs text-slate-400 space-y-1">
+                                            {totalTokens < requiredTokens && (
+                                                <p>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowPaymentModal(true)}
+                                                        className="text-amber-600 hover:text-amber-700 font-medium underline underline-offset-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-1 rounded"
+                                                    >
+                                                        Not enough tokens — recharge
+                                                    </button>
+                                                </p>
+                                            )}
+                                            <p>Script costs 10 tokens + 10 per selected feature</p>
+                                        </div>
                                         {hasSavedState && (
                                             <button
                                                 onClick={clearSavedState}
@@ -1759,24 +1829,24 @@ Aspect Ratio: ${prompt.aspectRatio}`;
 
                     {/* Right Panel - Output */}
                     <div className="w-full lg:w-3/5">
-                        <div className="brand-card rounded-2xl min-h-[600px] flex flex-col relative overflow-hidden">
+                        <div className="rounded-2xl min-h-[600px] flex flex-col relative overflow-hidden bg-white/95 backdrop-blur-sm border border-slate-200/80 shadow-xl shadow-slate-200/30">
                             {/* Accent Top Border */}
-                            <div className="absolute top-0 left-0 right-0 h-1 brand-gradient"></div>
+                            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-violet-500 to-blue-600"></div>
 
                             {/* Tabs Header */}
-                            <div className="flex items-center justify-between px-2 pt-2 border-b border-slate-200 bg-white/80">
-                                <div className="flex items-center gap-2 overflow-x-auto w-full no-scrollbar pb-0">
+                            <div className="flex items-center justify-between px-2 pt-2 border-b border-slate-200/80 bg-slate-50/50">
+                                <div className="flex items-center gap-1 overflow-x-auto w-full no-scrollbar pb-0">
                                     {tabs.map((tab) => (
                                         <button
                                             key={tab.id}
                                             onClick={() => setActiveTab(tab.id)}
-                                            className={`relative flex-shrink-0 px-6 py-3 text-sm font-semibold transition-all rounded-t-lg z-10 ${activeTab === tab.id
-                                                ? "bg-white text-blue-700 border-t border-l border-r border-slate-200 shadow-[0_-2px_6px_rgba(0,0,0,0.02)]"
-                                                : "text-slate-500 hover:text-slate-800 hover:bg-slate-100 border-transparent"
+                                            className={`relative flex-shrink-0 px-5 py-3 text-sm font-medium transition-all rounded-t-lg z-10 ${activeTab === tab.id
+                                                ? "bg-white text-blue-600 border border-slate-200/80 border-b-0 shadow-sm -mb-px"
+                                                : "text-slate-500 hover:text-slate-700 hover:bg-white/60 border border-transparent"
                                                 }`}
                                         >
                                             {activeTab === tab.id && (
-                                                <div className="absolute top-0 left-0 right-0 h-[3px] bg-amber-500 rounded-t-lg"></div>
+                                                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-500 to-violet-500 rounded-t"></div>
                                             )}
                                             {tab.label}
                                         </button>
@@ -1785,7 +1855,7 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                             </div>
 
                             {/* Content */}
-                            <div className="p-3 sm:p-4 md:p-6">
+                            <div className="p-4 sm:p-5 md:p-6 bg-white/50 min-h-[400px]">
                                 {activeTab === "script" ? (
                                     script ? (
                                         <>
@@ -1892,10 +1962,12 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                             </div>
                                         </>
                                     ) : (
-                                        <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-                                            <FileText className="w-16 h-16 mb-4 opacity-50" />
-                                            <p className="text-lg font-medium">No script generated yet</p>
-                                            <p className="text-sm mt-1">Configure your video settings and click Generate</p>
+                                        <div className="empty-state">
+                                            <div className="empty-state-icon">
+                                                <FileText className="w-8 h-8" />
+                                            </div>
+                                            <p className="text-base font-medium text-slate-600">No script generated yet</p>
+                                            <p className="text-sm mt-1 text-slate-500">Configure your video settings and click Generate</p>
                                         </div>
                                     )
                                 ) : activeTab === "seo" ? (
@@ -1960,10 +2032,12 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-                                            <Search className="w-16 h-16 mb-4 opacity-50" />
-                                            <p className="text-lg font-medium">No SEO data generated yet</p>
-                                            <p className="text-sm mt-1">SEO data will be generated after the script</p>
+                                        <div className="empty-state">
+                                            <div className="empty-state-icon">
+                                                <Search className="w-8 h-8" />
+                                            </div>
+                                            <p className="text-base font-medium text-slate-600">No SEO data generated yet</p>
+                                            <p className="text-sm mt-1 text-slate-500">SEO data will be generated after the script</p>
                                         </div>
                                     )
                                 ) : activeTab === "images" ? (
@@ -2045,10 +2119,12 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-                                            <ImageIcon className="w-16 h-16 mb-4 opacity-50" />
-                                            <p className="text-lg font-medium">No image prompts generated yet</p>
-                                            <p className="text-sm mt-1">Image prompts will be generated after the script</p>
+                                        <div className="empty-state">
+                                            <div className="empty-state-icon">
+                                                <ImageIcon className="w-8 h-8" />
+                                            </div>
+                                            <p className="text-base font-medium text-slate-600">No image prompts generated yet</p>
+                                            <p className="text-sm mt-1 text-slate-500">Image prompts will be generated after the script</p>
                                         </div>
                                     )
                                 ) : activeTab === "chapters" ? (
@@ -2095,10 +2171,12 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-                                            <List className="w-16 h-16 mb-4 opacity-50" />
-                                            <p className="text-lg font-medium">No chapters generated yet</p>
-                                            <p className="text-sm mt-1">Chapters will be generated after the script</p>
+                                        <div className="empty-state">
+                                            <div className="empty-state-icon">
+                                                <List className="w-8 h-8" />
+                                            </div>
+                                            <p className="text-base font-medium text-slate-600">No chapters generated yet</p>
+                                            <p className="text-sm mt-1 text-slate-500">Chapters will be generated after the script</p>
                                         </div>
                                     )
                                 ) : activeTab === "broll" ? (
@@ -2141,10 +2219,12 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-                                            <Film className="w-16 h-16 mb-4 opacity-50" />
-                                            <p className="text-lg font-medium">No B-Roll suggestions yet</p>
-                                            <p className="text-sm mt-1">B-Roll will be generated after the script</p>
+                                        <div className="empty-state">
+                                            <div className="empty-state-icon">
+                                                <Film className="w-8 h-8" />
+                                            </div>
+                                            <p className="text-base font-medium text-slate-600">No B-Roll suggestions yet</p>
+                                            <p className="text-sm mt-1 text-slate-500">B-Roll will be generated after the script</p>
                                         </div>
                                     )
                                 ) : activeTab === "shorts" ? (
@@ -2207,10 +2287,12 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-                                            <Scissors className="w-16 h-16 mb-4 opacity-50" />
-                                            <p className="text-lg font-medium">No Shorts clips generated yet</p>
-                                            <p className="text-sm mt-1">Shorts will be extracted after the script</p>
+                                        <div className="empty-state">
+                                            <div className="empty-state-icon">
+                                                <Scissors className="w-8 h-8" />
+                                            </div>
+                                            <p className="text-base font-medium text-slate-600">No Shorts clips generated yet</p>
+                                            <p className="text-sm mt-1 text-slate-500">Shorts will be extracted after the script</p>
                                         </div>
                                     )
                                 ) : null}
@@ -2219,15 +2301,6 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                     </div>
                 </div >
             </main >
-
-            {/* Footer */}
-            <footer className="mt-12 py-8 border-t border-slate-200 bg-white">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <p className="text-center text-sm text-slate-500">
-                        SCRIPTGEN • Built for Creators Worldwide
-                    </p>
-                </div>
-            </footer>
         </div >
     );
 }

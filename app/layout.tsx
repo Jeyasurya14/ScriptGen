@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import AuthProvider from "@/components/AuthProvider";
 import Footer from "@/components/Footer";
+import Nav from "@/components/Nav";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,9 +17,9 @@ const geistMono = Geist_Mono({
 
 const siteUrl = process.env.NEXTAUTH_URL || "https://scriptgen.learn-made.in";
 const siteName = "ScriptGen";
-const siteTitle = "ScriptGen | AI YouTube Script Generator";
+const siteTitle = "ScriptGen | YouTube Script Generator – AI Scripts in Minutes";
 const siteDescription =
-  "Generate high-converting YouTube scripts in minutes with AI. Supports Tamil, Hindi, English, and Thunglish with SEO, chapters, B-roll, and shorts.";
+  "Generate high-converting YouTube scripts with AI in minutes. Tamil, Hindi, English, Thunglish. SEO, chapters, B-roll, shorts. 50 free tokens. Start free.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -29,15 +30,20 @@ export const metadata: Metadata = {
   description: siteDescription,
   applicationName: siteName,
   keywords: [
-    "YouTube Script Generator",
-    "AI Script Writer",
-    "Video Script",
-    "Tamil YouTube Script",
-    "Hindi YouTube Script",
-    "Thunglish Script",
-    "Content Marketing",
+    "YouTube script generator",
+    "AI script writer",
+    "video script generator",
+    "Tamil YouTube script",
+    "Hindi YouTube script",
+    "Thunglish script",
     "YouTube SEO",
+    "content marketing",
+    "video script",
+    "script writer AI",
+    "free script generator",
   ],
+  authors: [{ name: siteName, url: siteUrl }],
+  creator: siteName,
   alternates: {
     canonical: siteUrl,
   },
@@ -58,11 +64,16 @@ export const metadata: Metadata = {
     title: siteTitle,
     description: siteDescription,
     siteName,
+    locale: "en_IN",
+    images: [
+      { url: "/og-scriptgen.png", width: 1200, height: 630, alt: "ScriptGen – YouTube Script Generator" },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: siteTitle,
     description: siteDescription,
+    images: ["/og-scriptgen.png"],
   },
 };
 
@@ -77,8 +88,11 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthProvider>
-          {children}
-          <Footer />
+          <div className="flex min-h-screen flex-col">
+            <Nav />
+            <div className="flex-1">{children}</div>
+            <Footer />
+          </div>
         </AuthProvider>
       </body>
     </html>

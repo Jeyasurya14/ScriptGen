@@ -34,9 +34,22 @@
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: "rlig" 1, "calt" 1;
+  letter-spacing: -0.011em;
   overflow-x: hidden;
   min-height: 100vh;
+}
+
+/* Focus states for accessibility */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--primary);
 }
 
 /* Theme Utilities */
@@ -61,13 +74,14 @@ body {
 }
 
 .brand-glow {
-  box-shadow: 0 12px 30px -18px rgba(29, 78, 216, 0.55);
+  box-shadow: 0 4px 14px -2px rgba(37, 99, 235, 0.25), 0 8px 24px -4px rgba(37, 99, 235, 0.15);
 }
 
 .brand-card {
   background: #ffffff;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  box-shadow: 0 20px 40px -32px rgba(15, 23, 42, 0.4);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 6px 16px -4px rgba(15, 23, 42, 0.08);
 }
 
 .brand-pill {
@@ -135,4 +149,29 @@ input[type="range"]::-webkit-slider-thumb:hover {
 
 .animate-fade-in {
   animation: fadeIn 0.5s ease-out forwards;
+}
+
+/* Empty state block */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  text-align: center;
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.6) 0%, rgba(241, 245, 249, 0.4) 100%);
+  border-radius: 1rem;
+  border: 1px dashed rgba(148, 163, 184, 0.4);
+}
+
+.empty-state-icon {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(147, 51, 234, 0.06) 100%);
+  color: #64748b;
 }
