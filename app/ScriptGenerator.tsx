@@ -28,6 +28,7 @@ import {
     Settings2,
     ShieldCheck,
     Lock,
+    Tag,
 } from "lucide-react";
 
 // Types
@@ -218,6 +219,9 @@ export default function ScriptGenerator() {
     const [processingPayment, setProcessingPayment] = useState<boolean>(false);
     const [selectedPackageId, setSelectedPackageId] = useState<string>("pro");
     const [toastMessage, setToastMessage] = useState<string | null>(null);
+    const [promoCode, setPromoCode] = useState<string>("");
+    const [promoLoading, setPromoLoading] = useState<boolean>(false);
+    const [promoMessage, setPromoMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
     const tokenPackages = [
         { id: "starter", name: "Starter", tokens: 100, price: 99 },
@@ -440,6 +444,50 @@ export default function ScriptGenerator() {
     };
 
     // Handle payment
+    const handlePromoCode = async () => {
+        if (!promoCode.trim()) {
+            setPromoMessage({ type: "error", text: "Please enter a promo code" });
+            return;
+        }
+
+        setPromoLoading(true);
+        setPromoMessage(null);
+
+        try {
+            const res = await fetch("/api/promo", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ code: promoCode.trim() }),
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                setPromoMessage({ type: "success", text: `Success! ${data.tokensAdded} tokens added 🎉` });
+                setPromoCode("");
+                
+                // Refresh credits
+                const creditsRes = await fetch("/api/credits");
+                if (creditsRes.ok) {
+                    setCredits(await creditsRes.json());
+                }
+                
+                // Close modal after 2 seconds
+                setTimeout(() => {
+                    setShowPaymentModal(false);
+                    setPromoMessage(null);
+                }, 2000);
+            } else {
+                setPromoMessage({ type: "error", text: data.error || "Invalid promo code" });
+            }
+        } catch (err) {
+            console.error("Promo code error:", err);
+            setPromoMessage({ type: "error", text: "Failed to redeem promo code" });
+        } finally {
+            setPromoLoading(false);
+        }
+    };
+
     const handlePayment = async () => {
         setProcessingPayment(true);
         const selected = tokenPackages.find((pkg) => pkg.id === selectedPackageId) || tokenPackages[2];
@@ -1251,6 +1299,40 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                         >
                             {processingPayment ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Buy tokens with Razorpay"}
                         </button>
+                        
+                        <div className="mt-4 pt-4 border-t border-slate-200">
+                            <p className="text-xs font-medium text-slate-600 mb-2 flex items-center gap-1">
+                                <Tag className="w-3.5 h-3.5" />
+                                Have a promo code?
+                            </p>
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    value={promoCode}
+                                    onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                                    onKeyDown={(e) => e.key === "Enter" && handlePromoCode()}
+                                    placeholder="Enter code"
+                                    className="flex-1 px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                                <button
+                                    onClick={handlePromoCode}
+                                    disabled={promoLoading || !promoCode.trim()}
+                                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    {promoLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
+                                </button>
+                            </div>
+                            {promoMessage && (
+                                <div className={`mt-2 p-2 rounded-lg text-xs font-medium ${
+                                    promoMessage.type === "success" 
+                                        ? "bg-green-50 text-green-700 border border-green-200" 
+                                        : "bg-red-50 text-red-700 border border-red-200"
+                                }`}>
+                                    {promoMessage.text}
+                                </div>
+                            )}
+                        </div>
+                        
                         <div className="mt-4 flex flex-col items-center gap-2 text-xs text-slate-500 text-center">
                             <div className="flex items-center gap-2">
                                 <Lock className="w-3.5 h-3.5" />
