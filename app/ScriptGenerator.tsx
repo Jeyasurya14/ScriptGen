@@ -1425,10 +1425,9 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                 <div className="flex items-center gap-3">
                                     <a
                                         href="/"
-                                        className="flex items-center gap-2 text-slate-900 hover:text-slate-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded"
+                                        className="text-base font-semibold text-slate-900 hover:text-slate-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded px-1"
                                     >
-                                        <Image src="/logo-sg.svg" alt="" width={28} height={28} className="rounded" />
-                                        <span className="text-lg font-bold tracking-tight">SG</span>
+                                        Script<span className="text-blue-600">Gen</span>
                                     </a>
                                     <a
                                         href="/"
