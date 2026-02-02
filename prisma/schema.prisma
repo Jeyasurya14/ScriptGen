@@ -8,14 +8,15 @@ datasource db {
 }
 
 model User {
-  id           String        @id @default(uuid())
-  email        String        @unique
-  name         String?
-  image        String?
-  createdAt    DateTime      @default(now()) @map("created_at")
-  scripts      Script[]
-  transactions Transaction[]
-  credits      UserCredits?
+  id               String            @id @default(uuid())
+  email            String            @unique
+  name             String?
+  image            String?
+  createdAt        DateTime          @default(now()) @map("created_at")
+  scripts          Script[]
+  transactions     Transaction[]
+  credits          UserCredits?
+  promoRedemptions PromoRedemption[]
 
   @@map("users")
 }
@@ -68,4 +69,16 @@ model Script {
   @@index([userId])
   @@index([createdAt(sort: Desc)])
   @@map("scripts")
+}
+
+model PromoRedemption {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  code      String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, code], name: "userId_code")
+  @@index([userId])
+  @@map("promo_redemptions")
 }
