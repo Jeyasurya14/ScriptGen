@@ -1470,8 +1470,8 @@ Aspect Ratio: ${prompt.aspectRatio}`;
             )}
 
             {showPaymentModal && (
-                <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-[60] p-0 sm:p-4">
-                    <div className="bg-white w-full max-w-md max-h-[92vh] sm:max-h-[90vh] border border-gray-200 flex flex-col overflow-hidden sm:rounded-xl shadow-xl">
+                <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-[var(--z-modal)] p-0 sm:p-4" style={{ paddingTop: "4rem" }}>
+                    <div className="bg-white w-full max-w-md max-h-[85vh] sm:max-h-[90vh] border border-gray-200 flex flex-col overflow-hidden sm:rounded-xl shadow-xl">
                         <div className="flex items-center justify-between p-4 border-b border-gray-200">
                             <h3 className="text-base font-semibold text-gray-900">Recharge Tokens</h3>
                             <button
