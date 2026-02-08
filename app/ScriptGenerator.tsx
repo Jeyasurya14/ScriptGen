@@ -266,6 +266,24 @@ export default function ScriptGenerator() {
         { label: "Shorts", tokens: 10 },
     ];
 
+    // Clean script: remove bullet symbols and unwanted characters for display and export
+    const sanitizeScriptText = (text: string): string => {
+        if (!text || typeof text !== "string") return text;
+        return text
+            .replace(/\r\n/g, "\n")
+            .replace(/\r/g, "\n")
+            .replace(/[\u200B-\u200D\uFEFF]/g, "") // zero-width chars
+            .split("\n")
+            .map((line) => {
+                const trimmed = line.trimEnd();
+                // Remove only leading bullet symbols (• * ◆ ▪ ▸ ► ◦) and dash bullet
+                return trimmed.replace(/^[\s]*[•*◆▪▸►◦]\s*/, "").replace(/^[\s]*-\s+/, "");
+            })
+            .join("\n")
+            .replace(/\n{3,}/g, "\n\n")
+            .trim();
+    };
+
     // Translation state
     const [isTranslating, setIsTranslating] = useState<boolean>(false);
     const [showTranslateDropdown, setShowTranslateDropdown] = useState<boolean>(false);
@@ -332,7 +350,7 @@ export default function ScriptGenerator() {
                     };
                     setFormData((prev) => ({ ...prev, ...normalizedFormData }));
                 }
-                if (typeof parsed?.script === "string") setScript(parsed.script);
+                if (typeof parsed?.script === "string") setScript(sanitizeScriptText(parsed.script));
                 if (parsed?.seoData) setSeoData(parsed.seoData);
                 if (parsed?.imagesData) setImagesData(parsed.imagesData);
                 if (parsed?.chaptersData) setChaptersData(parsed.chaptersData);
@@ -432,7 +450,7 @@ export default function ScriptGenerator() {
                     duration: s.duration || 10,
                     contentType: normalizeContentType(s.content_type) || "Tutorial",
                 });
-                setScript(s.script_content || "");
+                setScript(sanitizeScriptText(s.script_content || ""));
                 setHookSection("");
                 setMainSection("");
                 setDemoSection("");
@@ -741,19 +759,20 @@ export default function ScriptGenerator() {
             if (stage === "demo_outro") previousContent = hookSection + (mainSection ? "\n\n" + mainSection : "");
 
             const newContent = await generateSection(stage, timestamps, previousContent);
+            const cleaned = sanitizeScriptText(newContent);
 
-            if (stage === "hook_intro") setHookSection(newContent);
-            if (stage === "main_content") setMainSection(newContent);
-            if (stage === "demo_outro") setDemoSection(newContent);
+            if (stage === "hook_intro") setHookSection(cleaned);
+            if (stage === "main_content") setMainSection(cleaned);
+            if (stage === "demo_outro") setDemoSection(cleaned);
 
             const notesPart = productionNotesSection ? "\n\n" + productionNotesSection : "";
             const full =
                 stage === "hook_intro"
-                    ? newContent + (mainSection ? "\n\n" + mainSection : "") + (demoSection ? "\n\n" + demoSection : "") + notesPart
+                    ? cleaned + (mainSection ? "\n\n" + mainSection : "") + (demoSection ? "\n\n" + demoSection : "") + notesPart
                     : stage === "main_content"
-                        ? hookSection + "\n\n" + newContent + (demoSection ? "\n\n" + demoSection : "") + notesPart
-                        : hookSection + (mainSection ? "\n\n" + mainSection : "") + "\n\n" + newContent + notesPart;
-            setScript(full);
+                        ? hookSection + "\n\n" + cleaned + (demoSection ? "\n\n" + demoSection : "") + notesPart
+                        : hookSection + (mainSection ? "\n\n" + mainSection : "") + "\n\n" + cleaned + notesPart;
+            setScript(sanitizeScriptText(full));
 
             await fetch("/api/credits", {
                 method: "POST",
@@ -815,28 +834,28 @@ export default function ScriptGenerator() {
             let fullScript = "";
 
             // Stage 1: Hook & Intro
-            const hookIntro = await generateSection("hook_intro", timestamps, "", controller.signal);
+            const hookIntro = sanitizeScriptText(await generateSection("hook_intro", timestamps, "", controller.signal));
             setHookSection(hookIntro);
             fullScript = hookIntro;
             setScript(fullScript);
             setProgress("Stage 2/6: Generating Main Content...");
 
             // Stage 2: Main Content
-            const mainContent = await generateSection("main_content", timestamps, fullScript, controller.signal);
+            const mainContent = sanitizeScriptText(await generateSection("main_content", timestamps, fullScript, controller.signal));
             setMainSection(mainContent);
             fullScript += "\n\n" + mainContent;
             setScript(fullScript);
             setProgress("Stage 3/6: Generating Demo & Outro...");
 
             // Stage 3: Demo & Outro
-            const demoOutro = await generateSection("demo_outro", timestamps, fullScript, controller.signal);
+            const demoOutro = sanitizeScriptText(await generateSection("demo_outro", timestamps, fullScript, controller.signal));
             setDemoSection(demoOutro);
             fullScript += "\n\n" + demoOutro;
             setScript(fullScript);
             setProgress("Stage 4/6: Generating Production Notes...");
 
             // Stage 4: Production Notes
-            const productionNotes = await generateProductionNotes(fullScript, controller.signal);
+            const productionNotes = sanitizeScriptText(await generateProductionNotes(fullScript, controller.signal));
             setProductionNotesSection(productionNotes);
             fullScript += "\n\n" + productionNotes;
             setScript(fullScript);
@@ -1167,7 +1186,10 @@ export default function ScriptGenerator() {
         const data = await response.json();
         const text = data.content || "";
         try {
-            return JSON.parse(text.replace(/```json\n?|\n?```/g, "").trim());
+            const parsed = JSON.parse(text.replace(/```json\n?|\n?```/g, "").trim());
+            if (Array.isArray(parsed)) return parsed;
+            const arr = parsed?.items ?? parsed?.broll ?? parsed?.suggestions;
+            return Array.isArray(arr) ? arr : [];
         } catch {
             return [];
         }
@@ -1194,7 +1216,10 @@ export default function ScriptGenerator() {
         const data = await response.json();
         const text = data.content || "";
         try {
-            return JSON.parse(text.replace(/```json\n?|\n?```/g, "").trim());
+            const parsed = JSON.parse(text.replace(/```json\n?|\n?```/g, "").trim());
+            if (Array.isArray(parsed)) return parsed;
+            const arr = parsed?.items ?? parsed?.shorts ?? parsed?.clips;
+            return Array.isArray(arr) ? arr : [];
         } catch {
             return [];
         }
@@ -1403,7 +1428,7 @@ Aspect Ratio: ${prompt.aspectRatio}`;
             const data = await response.json();
             const translatedScript = data.content || "";
 
-            setScript(translatedScript);
+            setScript(sanitizeScriptText(translatedScript));
 
             // Auto-update language setting visually (optional, but good for UX)
             // setFormData({...formData, language: targetLanguage}); 
@@ -1904,9 +1929,12 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                             </div>
 
                                             <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 sm:p-6 overflow-auto">
-                                                <pre className="text-gray-800 text-[15px] leading-[1.7] whitespace-pre-wrap">
+                                                <div
+                                                    className="text-gray-800 text-[15px] leading-[1.75] tracking-tight whitespace-pre-wrap"
+                                                    style={{ fontFamily: "var(--font-inter), ui-sans-serif, sans-serif" }}
+                                                >
                                                     {script}
-                                                </pre>
+                                                </div>
                                             </div>
                                         </div>
                                     ) : (

@@ -59,8 +59,8 @@ export const constructSectionPrompt = (
     };
     const langInst = langMap[language] || "Thanglish (Tamil+English mix).";
 
-    // Ultra-compact system prompt
-    const systemPrompt = `YouTube script writer. ${langInst} No filler. Output script only.`;
+    // Professional script: clean prose only, no bullets or decorative symbols
+    const systemPrompt = `Professional YouTube script writer. ${langInst} Output clean script only: plain prose, no bullet points (no • * - ◆), no markdown, no extra symbols. Use [time] labels and clear paragraphs. High quality, natural flow.`;
 
     let userPrompt = "";
     const prev = previousContent ? `Prev:${truncateText(previousContent, 300)}\n` : "";
@@ -68,16 +68,16 @@ export const constructSectionPrompt = (
     if (stage === "hook_intro") {
         userPrompt = `Hook+Intro for "${title}"${channelName ? ` [${channelName}]` : ""} (${difficulty})
 Hook:${timeRange(timestamps.hookStart, timestamps.hookEnd)} Intro:${timeRange(timestamps.introStart, timestamps.introEnd)}
-Format:[time]SECTION\\nVisual:...\\nScript...
-Require:3s attention grab,value promise,curiosity loop.`;
+Format: [time]SECTION then Visual: then Script as clean paragraphs (no bullets, no • or *).
+Require: 3s attention grab, value promise, curiosity loop.`;
 
     } else if (stage === "main_content") {
-        userPrompt = `${prev}Main content. 3-5 subsections,punchy,clear steps,1 analogy each.${includeCode ? " Code first,explain briefly." : ""}
-Format:[time]SUBSECTION\\nScript...`;
+        userPrompt = `${prev}Main content. 3-5 subsections, punchy, clear steps, 1 analogy each.${includeCode ? " Code first, explain briefly." : ""}
+Format: [time]SUBSECTION then Script as clean paragraphs only (no bullet symbols, no • * -).`;
 
     } else if (stage === "demo_outro") {
-        userPrompt = `${prev}Demo+Outro. Step-by-step demo,3 takeaways,short CTA.
-Format:[time]DEMO\\n...[time]OUTRO\\n...`;
+        userPrompt = `${prev}Demo+Outro. Step-by-step demo, 3 takeaways, short CTA.
+Format: [time]DEMO then [time]OUTRO. Clean paragraphs only, no bullets or decorative symbols.`;
     }
 
     // Reduced max_tokens: 1400 → 1100
@@ -87,8 +87,7 @@ Format:[time]DEMO\\n...[time]OUTRO\\n...`;
 export const constructProductionNotesPrompt = (formData: FormData, fullScript: string) => {
     const { title, includeCode } = formData;
 
-    // Compact system prompt
-    const systemPrompt = `YouTube producer. Concise production notes.`;
+    const systemPrompt = `YouTube producer. Concise production notes. Keep script references clean (no stray bullets or symbols).`;
 
     // Reduced script context: 1200 → 800
     const userPrompt = `Production notes for "${title}"
@@ -188,11 +187,11 @@ export const constructBRollPrompt = (
 Timeline:H-${formatTime(timestamps.hookEnd)}|I-${formatTime(timestamps.introEnd)}|M-${formatTime(timestamps.mainEnd)}|D-${formatTime(timestamps.demoEnd)}|O-${formatTime(timestamps.outroEnd)}
 Script:${truncateText(fullScript, 250)}
 
-10-12 suggestions, JSON:[{"id":1,"timestamp":"0:00-0:24","scene":"Hook","suggestion":"desc","source":"stock|screen|animation|self-record","searchTerms":["t1","t2","t3"]}]
+Return a single JSON object with key "items" containing 10-12 B-Roll suggestions. Each item: {"id":1,"timestamp":"0:00-0:24","scene":"Hook","suggestion":"desc","source":"stock|screen|animation|self-record","searchTerms":["t1","t2","t3"]}.
 
 Sources:stock=Pexels clips,screen=recordings,animation=motion graphics,self-record=camera.${includeCode ? " Focus:IDE,terminal,code." : ""}`;
 
-    return { systemPrompt: "B-Roll generator.", userPrompt, model: "gpt-4o-mini", max_tokens: 600 };
+    return { systemPrompt: "B-Roll generator. Output valid JSON only.", userPrompt, model: "gpt-4o-mini", max_tokens: 600, expectsJson: true };
 };
 
 export const constructShortsPrompt = (
@@ -205,13 +204,11 @@ export const constructShortsPrompt = (
     const userPrompt = `Extract 4 Shorts from "${title}" (${contentType})
 Script:${truncateText(fullScript, 600)}
 
-JSON:[{"id":1,"title":"catchy","hook":"3s attention grab","content":"20-40s script","cta":"like/follow prompt","originalTimestamp":"2:30-3:15","viralScore":85}]
+Return a single JSON object with key "items" containing 4 Shorts. Each item: {"id":1,"title":"catchy","hook":"3s attention grab","content":"20-40s script","cta":"like/follow prompt","originalTimestamp":"2:30-3:15","viralScore":85}.
 
-Score(1-100):hook(25)+value(25)+shareability(25)+engagement(25)
-Focus:surprising facts,quick tips,relatable moments.`;
+Score(1-100):hook(25)+value(25)+shareability(25)+engagement(25). Focus:surprising facts,quick tips,relatable moments.`;
 
-    // Reduced max_tokens: 1200 → 900
-    return { systemPrompt: "Viral Shorts extractor.", userPrompt, model: "gpt-4.1", max_tokens: 900 };
+    return { systemPrompt: "Viral Shorts extractor. Output valid JSON only.", userPrompt, model: "gpt-4o-mini", max_tokens: 900, expectsJson: true };
 };
 
 export const constructTranslatePrompt = (targetLanguage: string, fullScript: string) => {

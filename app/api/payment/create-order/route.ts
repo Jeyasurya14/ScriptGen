@@ -6,13 +6,14 @@ import { prisma } from "@/lib/prisma";
 import { env } from "@/lib/env";
 import Razorpay from "razorpay";
 
+// Must match tokenPackages in ScriptGenerator.tsx (id, tokens, price in INR)
 const TOKEN_PACKAGES = [
-    { id: "starter", tokens: 100, price: 99 },
-    { id: "plus", tokens: 200, price: 179 },
-    { id: "growth", tokens: 300, price: 249 },
-    { id: "pro", tokens: 500, price: 399 },
-    { id: "scale", tokens: 1000, price: 699 },
-    { id: "enterprise", tokens: 1500, price: 999 },
+    { id: "starter", tokens: 100, price: 149 },
+    { id: "plus", tokens: 250, price: 299 },
+    { id: "growth", tokens: 500, price: 499 },
+    { id: "pro", tokens: 1000, price: 899 },
+    { id: "scale", tokens: 2500, price: 1999 },
+    { id: "enterprise", tokens: 5000, price: 3499 },
 ];
 
 const getPackage = (id: string) => TOKEN_PACKAGES.find((pkg) => pkg.id === id);
