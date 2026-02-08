@@ -52,7 +52,7 @@ const steps = [
     title: "3. Tags (Relevant, Not Spammy)",
     intro: "Tags help YouTube understand your video. Use:",
     items: [
-      "One broad tag (e.g. "YouTube tips"), one exact phrase (e.g. "how to write YouTube scripts")",
+      "One broad tag (e.g. \"YouTube tips\"), one exact phrase (e.g. \"how to write YouTube scripts\")",
       "5–15 tags total — mix of short and long-tail",
       "Variations of your main keyword and related topics",
       "Channel name if you want to surface in brand search",
