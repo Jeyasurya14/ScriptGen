@@ -46,12 +46,12 @@ export async function POST(req: Request) {
         const { type, formData, timestamps, previousContent, fullScript, stage, targetLanguage } = parseResult.data;
 
 
-        // Use server-side API key
-        const apiKey = process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+        // Server-side API key only (never use client-exposed key)
+        const apiKey = process.env.OPENAI_API_KEY;
         if (!apiKey) {
             return NextResponse.json(
                 { error: "Server API configuration missing (set OPENAI_API_KEY)" },
-                { status: 500 }
+                { status: 503 }
             );
         }
 
@@ -96,38 +96,57 @@ export async function POST(req: Request) {
                 return NextResponse.json({ error: "Invalid generation type" }, { status: 400 });
         }
 
+        const OPENAI_TIMEOUT_MS = 90_000; // 90s for long script/chunk requests
+
         const callOpenAI = async (
             systemPrompt: string,
             userPrompt: string,
             maxTokens: number,
             temperature: number,
-            expectsJson?: boolean
+            expectsJson?: boolean,
+            requestSignal?: AbortSignal | null
         ) => {
-            const response = await fetch("https://api.openai.com/v1/chat/completions", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${apiKey}`,
-                },
-                body: JSON.stringify({
-                    model: promptConfig.model,
-                    max_tokens: maxTokens,
-                    temperature,
-                    ...(expectsJson ? { response_format: { type: "json_object" } } : {}),
-                    messages: [
-                        { role: "system", content: systemPrompt },
-                        { role: "user", content: userPrompt },
-                    ],
-                }),
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error?.message || "OpenAI API call failed");
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), OPENAI_TIMEOUT_MS);
+            if (requestSignal?.addEventListener) {
+                requestSignal.addEventListener("abort", () => controller.abort());
             }
 
-            const data = await response.json();
-            return data.choices[0].message.content as string;
+            try {
+                const response = await fetch("https://api.openai.com/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${apiKey}`,
+                    },
+                    body: JSON.stringify({
+                        model: promptConfig.model,
+                        max_tokens: maxTokens,
+                        temperature,
+                        ...(expectsJson ? { response_format: { type: "json_object" } } : {}),
+                        messages: [
+                            { role: "system", content: systemPrompt },
+                            { role: "user", content: userPrompt },
+                        ],
+                    }),
+                    signal: controller.signal,
+                });
+                clearTimeout(timeoutId);
+
+                if (!response.ok) {
+                    const errBody = await response.json().catch(() => ({}));
+                    throw new Error((errBody as { error?: { message?: string } })?.error?.message || "OpenAI API call failed");
+                }
+
+                const data = await response.json();
+                return (data as { choices?: { message?: { content?: string } }[] }).choices?.[0]?.message?.content ?? "";
+            } catch (e) {
+                clearTimeout(timeoutId);
+                if (e instanceof Error && e.name === "AbortError") {
+                    throw new Error("Request timed out. Please try again.");
+                }
+                throw e;
+            }
         };
 
         if (type === "translate") {
@@ -158,7 +177,8 @@ export async function POST(req: Request) {
                     chunkPrompt.userPrompt,
                     chunkPrompt.max_tokens,
                     0.2,
-                    false
+                    false,
+                    req.signal
                 );
                 translatedParts.push(translated.trim());
             }
@@ -171,7 +191,8 @@ export async function POST(req: Request) {
             promptConfig.userPrompt,
             promptConfig.max_tokens,
             0.7,
-            (promptConfig as { expectsJson?: boolean }).expectsJson
+            (promptConfig as { expectsJson?: boolean }).expectsJson,
+            req.signal
         );
 
         return NextResponse.json({ content });

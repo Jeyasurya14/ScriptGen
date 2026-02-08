@@ -14,6 +14,16 @@ export function sanitizeError(error: unknown): string {
 }
 
 /**
+ * User-facing error message - safe for UI and API responses.
+ * In production returns a generic message; in dev returns the actual message.
+ */
+export function getErrorMessage(error: unknown, fallback = "Something went wrong. Please try again."): string {
+    if (isProd) return fallback;
+    if (error instanceof Error) return error.message;
+    return String(error);
+}
+
+/**
  * Consistent API error response
  */
 export function apiError(

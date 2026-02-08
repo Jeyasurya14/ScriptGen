@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sanitizeError } from "@/lib/api-utils";
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // GET - Fetch a specific script
 export async function GET(
@@ -9,6 +12,10 @@ export async function GET(
     context: { params: Promise<{ id: string }> }
 ) {
     const { id } = await context.params;
+
+    if (!id || !UUID_REGEX.test(id)) {
+        return NextResponse.json({ error: "Invalid script id" }, { status: 400 });
+    }
 
     try {
         const session = await getServerSession(authOptions);
@@ -59,8 +66,8 @@ export async function GET(
 
         return NextResponse.json({ script: formattedScript });
     } catch (error) {
-        console.error("Error fetching script:", error);
-        return NextResponse.json({ error: "Failed to fetch script" }, { status: 500 });
+        console.error("[scripts/:id] GET error:", error);
+        return NextResponse.json({ error: sanitizeError(error) }, { status: 500 });
     }
 }
 
@@ -70,6 +77,10 @@ export async function DELETE(
     context: { params: Promise<{ id: string }> }
 ) {
     const { id } = await context.params;
+
+    if (!id || !UUID_REGEX.test(id)) {
+        return NextResponse.json({ error: "Invalid script id" }, { status: 400 });
+    }
 
     try {
         const session = await getServerSession(authOptions);
@@ -85,9 +96,6 @@ export async function DELETE(
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
-        // Delete script (only if owned by user)
-        // usage of deleteMany to avoid error if not found, or explicit check?
-        // standard pattern:
         const deleteResult = await prisma.script.deleteMany({
             where: {
                 id: id,
@@ -104,7 +112,7 @@ export async function DELETE(
 
         return NextResponse.json({ success: true });
     } catch (error) {
-        console.error("Error deleting script:", error);
-        return NextResponse.json({ error: "Failed to delete script" }, { status: 500 });
+        console.error("[scripts/:id] DELETE error:", error);
+        return NextResponse.json({ error: sanitizeError(error) }, { status: 500 });
     }
 }

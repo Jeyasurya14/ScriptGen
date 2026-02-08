@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertTriangle, RefreshCw } from "lucide-react";
+// Optional: integrate error tracking (e.g. Sentry.captureException(error)) in useEffect
 
 export default function GlobalError({
   error,

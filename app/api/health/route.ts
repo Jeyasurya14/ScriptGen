@@ -17,7 +17,11 @@ export async function GET() {
             { status: 200 }
         );
     } catch (error) {
-        console.error("[health] Database check failed:", error);
+        if (process.env.NODE_ENV !== "production") {
+            console.error("[health] Database check failed:", error);
+        } else {
+            console.error("[health] Database check failed");
+        }
         return NextResponse.json(
             {
                 status: "error",

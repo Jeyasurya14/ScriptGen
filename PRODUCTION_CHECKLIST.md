@@ -2,6 +2,19 @@
 
 Before deploying ScriptGen to production, ensure the following.
 
+## Production-grade implementation (in codebase)
+
+The following are already implemented for production readiness:
+
+- **Env** – `lib/env.ts`: `REQUIRED_ENV_KEYS`, `assertRequiredEnv()`, `getRequiredEnv()` for strict validation.
+- **Generate API** – Server-only `OPENAI_API_KEY` (no client fallback), 90s timeout per OpenAI call, request `AbortSignal` so client disconnect cancels work; input validated with zod and max lengths.
+- **Scripts API** – POST body validated with zod (title/scriptContent length limits); GET/DELETE use `sanitizeError`; script `id` validated as UUID.
+- **Health** – `GET /api/health` returns 200 when DB is reachable, 503 on failure; production logs avoid leaking connection details.
+- **Middleware** – `middleware.ts` adds `X-Request-ID` to responses for tracing and support.
+- **Security headers** – Set in `next.config.ts`: X-Frame-Options, X-Content-Type-Options, Referrer-Policy, HSTS in production, etc.
+- **Error handling** – `lib/api-utils.ts`: `sanitizeError`, `getErrorMessage`, `apiError`; error boundaries log digest and are ready for Sentry integration.
+- **Prisma** – Singleton client; in production only `error` level logging.
+
 ## Environment Variables
 
 | Variable | Required | Description |
