@@ -2,9 +2,12 @@ import { Suspense } from "react";
 import ScriptGenerator from "../ScriptGenerator";
 import type { Metadata } from "next";
 
+const siteUrl = process.env.NEXTAUTH_URL || "https://scriptgen.learn-made.in";
+
 export const metadata: Metadata = {
   title: "Create Scripts",
   description: "Create YouTube scripts with AI. Generate script, SEO, chapters, B-roll, and shorts. English, Tamil, Thanglish, Hindi. Sign in to start.",
+  alternates: { canonical: `${siteUrl}/app` },
   openGraph: { title: "Create Scripts | ScriptGen", description: "Generate YouTube scripts with AI in minutes." },
   robots: { index: true, follow: true },
 };

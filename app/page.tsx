@@ -25,10 +25,13 @@ import {
 } from "lucide-react";
 import HomeCta from "../components/HomeCta";
 
+const siteUrl = process.env.NEXTAUTH_URL || "https://scriptgen.learn-made.in";
+
 export const metadata: Metadata = {
   title: "ScriptGen - AI YouTube Script Generator | English, Tamil, Thanglish, Hindi",
   description:
     "Create professional YouTube scripts instantly with AI. Generate engaging video scripts in English, Tamil, Thanglish, and Hindi. Free script generator with SEO optimization.",
+  alternates: { canonical: siteUrl },
   keywords: [
     "YouTube script generator",
     "AI script writer",
