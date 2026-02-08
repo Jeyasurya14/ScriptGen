@@ -31,7 +31,7 @@ const steps = [
       "Under 60 characters so it doesn't get cut off",
       "Front-loaded with your main keyword (first 3–5 words)",
       "Clear and specific — avoid clickbait that doesn't deliver",
-      "Curiosity-driven when possible: "How to…", "Why…", "The one thing…"",
+      "Curiosity-driven when possible: \"How to…\", \"Why…\", \"The one thing…\"",
     ],
     tip: "Say your primary keyword in the first half of the title. YouTube and Google both use it for ranking.",
   },

@@ -56,7 +56,7 @@ const steps = [
       "Include 1–2 target keywords if you care about SEO",
       "Add any must-have points or examples you want in the script",
     ],
-    tip: "One clear sentence like "5-min explainer for beginners on X, casual tone" often beats a long, vague paragraph.",
+    tip: "One clear sentence like \"5-min explainer for beginners on X, casual tone\" often beats a long, vague paragraph.",
   },
   {
     icon: FileEdit,
