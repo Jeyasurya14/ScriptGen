@@ -57,7 +57,7 @@ export const constructSectionPrompt = (
         Hindi: "Hinglish, tech terms in English.",
         Tamil: "Spoken Tamil, tech terms in English.",
     };
-    const langInst = langMap[language] || "Thunglish (Tamil+English mix).";
+    const langInst = langMap[language] || "Thanglish (Tamil+English mix).";
 
     // Ultra-compact system prompt
     const systemPrompt = `YouTube script writer. ${langInst} No filler. Output script only.`;
@@ -220,7 +220,7 @@ export const constructTranslatePrompt = (targetLanguage: string, fullScript: str
 
     // Compact rules based on language
     let langRule = "";
-    if (targetLanguage === "Thunglish") {
+    if (targetLanguage === "Thanglish") {
         langRule = " Mix Tamil+English(60/40).";
     } else if (targetLanguage === "Hindi") {
         langRule = " Use Hinglish for tech.";

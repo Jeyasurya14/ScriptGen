@@ -24,7 +24,7 @@ const siteUrl = process.env.NEXTAUTH_URL || "https://scriptgen.learn-made.in";
 const siteName = "ScriptGen";
 const siteTitle = "ScriptGen | YouTube Script Generator – AI Scripts in Minutes";
 const siteDescription =
-  "Generate high-converting YouTube scripts with AI in minutes. Tamil, Hindi, English, Thunglish. SEO, chapters, B-roll, shorts. 50 free tokens. Start free.";
+  "Generate high-converting YouTube scripts with AI in minutes. English, Tamil, Thanglish, Hindi. SEO, chapters, B-roll, shorts. 50 free tokens. Start free.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

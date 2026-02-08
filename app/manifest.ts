@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "ScriptGen – YouTube Script Generator",
     short_name: "ScriptGen",
-    description: "Generate high-converting YouTube scripts with AI. Tamil, Hindi, English, Thunglish. SEO, chapters, B-roll, shorts.",
+    description: "Generate high-converting YouTube scripts with AI. English, Tamil, Thanglish, Hindi. SEO, chapters, B-roll, shorts.",
     start_url: "/",
     display: "standalone",
     background_color: "#ffffff",

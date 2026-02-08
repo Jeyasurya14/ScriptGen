@@ -7,7 +7,7 @@ import { sanitizeError } from "@/lib/api-utils";
 import { Prisma } from "@prisma/client";
 
 const REFERRAL_DISABLED = false;
-const REFERRAL_TOKENS = 25;
+const REFERRAL_TOKENS = 15;
 const CODE_LENGTH = 8;
 const CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // Exclude I,O,0,1 to avoid confusion
 const MAX_CODE_GEN_ATTEMPTS = 10;

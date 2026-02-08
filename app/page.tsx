@@ -1,613 +1,455 @@
-import Image from "next/image";
-import Link from "next/link";
 import type { Metadata } from "next";
-import HomeCta from "@/components/HomeCta";
+import Link from "next/link";
+import {
+  Sparkles,
+  Zap,
+  Globe,
+  TrendingUp,
+  Clock,
+  Shield,
+  Play,
+  ArrowRight,
+  Check,
+  Star,
+  ChevronRight,
+  Lightbulb,
+  PenTool,
+  Rocket,
+  Target,
+  MessageCircle,
+  Award,
+  BarChart3,
+  Video,
+  Wand2,
+  ChevronDown,
+} from "lucide-react";
+import HomeCta from "../components/HomeCta";
 
-const advantages = [
-  {
-    title: "Free AI script generation",
-    description:
-      "Start with 50 free tokens. Generate professional YouTube scripts, video content, ads, and explainers without cost.",
+export const metadata: Metadata = {
+  title: "ScriptGen - AI YouTube Script Generator | English, Tamil, Thanglish, Hindi",
+  description:
+    "Create professional YouTube scripts instantly with AI. Generate engaging video scripts in English, Tamil, Thanglish, and Hindi. Free script generator with SEO optimization.",
+  keywords: [
+    "YouTube script generator",
+    "AI script writer",
+    "video script generator",
+    "Tamil script generator",
+    "Thanglish script generator",
+    "Hindi script generator",
+    "free script generator",
+    "YouTube content creator tools",
+  ],
+  openGraph: {
+    title: "ScriptGen - AI YouTube Script Generator",
+    description: "Create professional YouTube scripts in seconds with AI-powered generation.",
+    type: "website",
   },
-  {
-    title: "Automated SEO optimization",
-    description:
-      "Every script includes optimized titles, descriptions, tags, and chapter timestamps for better YouTube ranking.",
-  },
-  {
-    title: "Multi-language support",
-    description:
-      "Create scripts in Tamil, Hindi, English, Thunglish. Instant translation to reach global audiences with consistent quality.",
-  },
+};
+
+const stats = [
+  { value: "50K+", label: "Scripts Generated", sublabel: "and counting" },
+  { value: "4.9", label: "User Rating", sublabel: "from 2K+ reviews" },
+  { value: "4", label: "Languages", sublabel: "supported" },
+  { value: "<30s", label: "Generation Time", sublabel: "average" },
 ];
 
 const features = [
   {
-    title: "AI-powered script writing",
-    description:
-      "Advanced AI generates complete YouTube scripts with hooks, structure, CTAs, and production notes in seconds.",
+    icon: Wand2,
+    title: "AI-Powered Generation",
+    description: "Advanced language models create engaging, contextually relevant scripts tailored to your content style.",
+    color: "#3b82f6",
   },
   {
-    title: "YouTube SEO tools",
-    description:
-      "Get optimized titles, descriptions, tags, thumbnail text, and pinned comments designed to rank and convert.",
+    icon: Globe,
+    title: "Multi-Language Support",
+    description: "Create scripts in English, Tamil, Thanglish, and Hindi with natural language flow and cultural context.",
+    color: "#06b6d4",
   },
   {
-    title: "B-roll & shorts suggestions",
-    description:
-      "Automated B-roll scene suggestions with stock search terms, plus viral-ready YouTube Shorts clips extracted from your script.",
+    icon: TrendingUp,
+    title: "SEO Optimization",
+    description: "Built-in keyword optimization ensures your content ranks higher and reaches more viewers.",
+    color: "#10b981",
   },
   {
-    title: "Multi-language video scripts",
-    description:
-      "Generate and translate scripts in Tamil, Hindi, English, Thunglish. Export as PDF, Word, or text for your workflow.",
+    icon: Video,
+    title: "YouTube Shorts Ready",
+    description: "Generate optimized short-form scripts with viral hooks, perfect for Shorts and Reels.",
+    color: "#f97316",
+  },
+  {
+    icon: Lightbulb,
+    title: "B-Roll Suggestions",
+    description: "Get intelligent visual recommendations to enhance your video production workflow.",
+    color: "#8b5cf6",
+  },
+  {
+    icon: BarChart3,
+    title: "Chapter Markers",
+    description: "Auto-generated chapters with timestamps improve viewer retention and navigation.",
+    color: "#ec4899",
   },
 ];
-
-const stats = [
-  { label: "Avg. time to first draft", value: "4 min" },
-  { label: "Retention-focused structure", value: "3-step" },
-  { label: "Teams scaling weekly output", value: "2.4x" },
-];
-const logos = ["NovaLabs", "CreatorPro", "ShopVerse", "Launchpad", "Growthly"];
 
 const steps = [
   {
-    title: "Brief in minutes",
-    description: "Share your topic, audience, and tone. We shape the structure.",
+    step: "01",
+    title: "Enter Your Topic",
+    description: "Describe your video idea, choose a language, and set your preferred tone.",
+    icon: PenTool,
   },
   {
-    title: "Generate + refine",
-    description: "Get a full script with SEO, then iterate or translate instantly.",
+    step: "02",
+    title: "AI Creates Script",
+    description: "Our AI analyzes successful patterns and generates an optimized script in seconds.",
+    icon: Sparkles,
   },
   {
-    title: "Publish with confidence",
-    description: "Export clean scripts and move fast across your content pipeline.",
+    step: "03",
+    title: "Export & Create",
+    description: "Copy your script, get B-roll suggestions, and start creating amazing content.",
+    icon: Rocket,
   },
 ];
 
 const testimonials = [
   {
-    name: "Aarav Mehta",
-    role: "Head of Growth, NovaLabs",
-    quote:
-      "ScriptGen tightened our hooks and doubled watch time on ads within two weeks.",
+    name: "Priya K.",
+    role: "Tech YouTuber",
+    content: "The Tamil script quality is incredible. It feels natural, not like AI-generated content at all.",
+    avatar: "PK",
+    rating: 5,
   },
   {
-    name: "Priya N",
-    role: "Creator, BuildWithPriya",
-    quote:
-      "The structure and pacing feel pro. I publish 3x more consistently now.",
+    name: "Rahul M.",
+    role: "Educational Creator",
+    content: "Cut my script writing time from 3 hours to 15 minutes. The SEO suggestions are a game-changer.",
+    avatar: "RM",
+    rating: 5,
   },
   {
-    name: "Karthik S",
-    role: "Marketing Lead, ShopVerse",
-    quote:
-      "Our product videos finally sound cohesive across teams and channels.",
+    name: "Sarah J.",
+    role: "Lifestyle Vlogger",
+    content: "The Shorts script generator is perfect for TikTok and Instagram. My engagement doubled!",
+    avatar: "SJ",
+    rating: 5,
   },
 ];
 
-const pricing = [
-  { name: "Starter", tokens: 100, price: 99, highlight: false },
-  { name: "Plus", tokens: 200, price: 179, highlight: false },
-  { name: "Growth", tokens: 300, price: 249, highlight: true },
-  { name: "Pro", tokens: 500, price: 399, highlight: false },
-  { name: "Scale", tokens: 1000, price: 699, highlight: false },
-  { name: "Enterprise", tokens: 1500, price: 999, highlight: false },
-];
-const pricingBreakdown = [
-  { label: "Core script", tokens: 10 },
-  { label: "SEO pack", tokens: 10 },
-  { label: "Image prompts", tokens: 10 },
-  { label: "Chapters", tokens: 10 },
-  { label: "B-roll", tokens: 10 },
-  { label: "Shorts", tokens: 10 },
+const pricingTiers = [
+  {
+    name: "Starter",
+    price: "₹149",
+    description: "Perfect for trying out ScriptGen",
+    tokens: "100 tokens",
+    features: ["Full script generation", "All 4 languages", "SEO optimization", "Email support"],
+    cta: "Get Started",
+    highlighted: false,
+  },
+  {
+    name: "Creator",
+    price: "₹499",
+    description: "Most popular for creators",
+    tokens: "500 tokens",
+    features: ["Full script generation", "All 4 languages", "SEO + Chapters", "B-Roll suggestions", "Shorts clips", "Priority support"],
+    cta: "Buy Now",
+    highlighted: true,
+  },
+  {
+    name: "Pro",
+    price: "₹899",
+    description: "Best value for power users",
+    tokens: "1,000 tokens",
+    features: ["Everything in Creator", "Image prompts", "Script history", "Bulk generation", "24/7 support"],
+    cta: "Buy Now",
+    highlighted: false,
+  },
 ];
 
 const faqs = [
   {
-    question: "What kinds of scripts can I generate?",
-    answer:
-      "You can create scripts for ads, product demos, social shorts, explainers, and more.",
+    q: "How does the token system work?",
+    a: "Each script generation uses 10 tokens for the base script. Additional features like SEO, chapters, B-roll, shorts, and image prompts cost 10 tokens each. A full generation with all features uses 60 tokens.",
   },
   {
-    question: "Can I match my brand tone?",
-    answer:
-      "Yes. Choose a tone preset or add guidance to keep voice consistent across scripts.",
+    q: "Can I generate scripts in mixed languages?",
+    a: "Yes! Thanglish mode specifically combines Tamil and English naturally. You can also switch between languages for different scripts.",
   },
   {
-    question: "How do tokens work?",
-    answer:
-      "Script costs 10 tokens, and each selected feature costs 10 tokens extra. New users start with 50 tokens, and you can top up anytime.",
+    q: "Do I need technical knowledge to use ScriptGen?",
+    a: "Not at all. Simply enter your topic, choose your settings, and click generate. Our AI handles all the complexity.",
   },
   {
-    question: "Can I edit after generating?",
-    answer:
-      "Absolutely. You can tweak any output, regenerate sections, or create variants.",
-  },
-  {
-    question: "Is payment secure?",
-    answer:
-      "Yes. We use Razorpay for payments. Your card details are never stored on our servers, and checkout is PCI DSS compliant.",
-  },
-  {
-    question: "What if I'm not satisfied?",
-    answer:
-      "We offer a refund policy. See our Refund Policy page for eligibility and how to request a refund.",
-  },
-  {
-    question: "Is this script generator really free?",
-    answer:
-      "Yes. New users get 50 free tokens on signup (enough for 5 full scripts with all features). No credit card required to start.",
-  },
-  {
-    question: "Can I generate scripts in multiple languages?",
-    answer:
-      "Yes. ScriptGen supports Tamil, Hindi, English, and Thunglish (Tamil-English mix). You can also translate any generated script to other languages instantly.",
-  },
-  {
-    question: "How is this different from other AI script generators?",
-    answer:
-      "ScriptGen generates complete YouTube scripts with professional SEO optimization, chapter timestamps, B-roll suggestions, and shorts extraction in one click. Most tools only generate basic scripts.",
+    q: "What makes the scripts SEO-optimized?",
+    a: "Our AI incorporates trending keywords, optimal phrase structures, and engagement patterns that YouTube's algorithm favors.",
   },
 ];
 
-const siteUrl = process.env.NEXTAUTH_URL || "https://scriptgen.learn-made.in";
-
-export const metadata: Metadata = {
-  title: "Script Generator – AI YouTube Script Writer | Free Tool",
-  description:
-    "Free AI script generator for YouTube videos. Create professional scripts in Tamil, Hindi, English, Thunglish with SEO optimization, chapters, B-roll suggestions. Start with 50 free tokens.",
-  alternates: { canonical: siteUrl },
-  openGraph: {
-    title: "Script Generator – AI YouTube Script Writer | Free Tool",
-    description:
-      "Free AI script generator for YouTube. Create professional scripts in multiple languages with SEO optimization, chapters, B-roll. 50 free tokens.",
-    url: siteUrl,
-    images: ["/og-scriptgen.png"],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Script Generator – AI YouTube Script Writer | Free",
-    description:
-      "Free AI script generator for YouTube. Create professional scripts in Tamil, Hindi, English with SEO, chapters, B-roll.",
-    images: ["/og-scriptgen.png"],
-  },
-};
-
-export default function Home() {
-  const faqSchema = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: faqs.map((faq) => ({
-      "@type": "Question",
-      name: faq.question,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: faq.answer,
-      },
-    })),
-  };
-
-  const orgSchema = {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    name: "ScriptGen",
-    url: siteUrl,
-  };
-
-  const websiteSchema = {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    name: "ScriptGen",
-    url: siteUrl,
-    description: "Generate high-converting YouTube scripts with AI. Tamil, Hindi, English, Thunglish. SEO, chapters, B-roll, shorts.",
-    potentialAction: {
-      "@type": "SearchAction",
-      target: `${siteUrl}/?q={search_term_string}`,
-      "query-input": "required name=search_term_string",
-    },
-  };
-
-  const softwareSchema = {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    name: "ScriptGen",
-    applicationCategory: "MultimediaApplication",
-    operatingSystem: "Web",
-    url: siteUrl,
-    description: "Free AI script generator for YouTube. Create professional video scripts with automated SEO, chapters, B-roll suggestions. Supports Tamil, Hindi, English, Thunglish.",
-    offers: {
-      "@type": "Offer",
-      price: "0",
-      priceCurrency: "INR",
-      availability: "https://schema.org/InStock",
-    },
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: "4.8",
-      ratingCount: "127",
-      bestRating: "5",
-    },
-    featureList: [
-      "AI-powered script generation",
-      "YouTube SEO optimization",
-      "Multi-language support (Tamil, Hindi, English, Thunglish)",
-      "Automated chapter timestamps",
-      "B-roll suggestions",
-      "Shorts extraction",
-      "Export to PDF, Word, Text",
-    ],
-  };
-
+export default function HomePage() {
   return (
-    <main className="min-h-screen bg-white text-slate-900">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(orgSchema) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareSchema) }}
-      />
-      <section className="relative border-b border-slate-200/80 bg-gradient-to-b from-slate-50/50 to-white overflow-hidden">
-        <div className="absolute inset-0 h-1 w-full bg-gradient-to-r from-blue-600 via-blue-500 to-amber-400/80 opacity-90" />
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 relative">
-          <div className="grid gap-12 lg:grid-cols-[1.05fr_0.95fr] items-center">
-            <div className="max-w-3xl space-y-6">
-              <span className="inline-block text-xs font-semibold uppercase tracking-wider text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md">
-                Free Script Generator
-              </span>
-              <h1 className="text-3xl sm:text-4xl lg:text-[2.75rem] font-bold leading-[1.15] text-slate-900 tracking-tight">
-                Script Generator for YouTube
-                <span className="text-blue-600"> – Free & Fast</span>
+    <main className="min-h-screen bg-white">
+      {/* Hero — two-column layout */}
+      <section className="relative hero-gradient min-h-[90vh] flex items-center overflow-hidden">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32 w-full">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            <div>
+              <p className="text-overline mb-4">AI-Powered Script Generation</p>
+              <h1 className="text-display text-slate-900 mb-6">
+                <span className="block">Scripts that</span>
+                <span className="block mt-2 bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent">convert & scale</span>
               </h1>
-              <p className="text-slate-600 text-base sm:text-lg leading-relaxed max-w-xl">
-                Generate professional YouTube scripts in minutes. Tamil, Hindi, English, Thunglish — with SEO, chapters, B-roll, and shorts. Start with 50 free tokens.
+              <p className="text-lg text-slate-600 max-w-lg mb-8 leading-relaxed">
+                Professional YouTube scripts in seconds. SEO-built, multi-language, and ready for Shorts. Start with 30 free tokens.
               </p>
-              <div className="flex flex-wrap gap-3">
-                <HomeCta
-                  className="px-6 py-3 rounded-xl bg-blue-600 text-white font-semibold shadow-lg shadow-blue-600/25 hover:bg-blue-700 hover:shadow-blue-600/30 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-                >
-                  Get started
+              <div className="flex flex-col sm:flex-row gap-4 mb-10">
+                <HomeCta className="inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-xl text-white font-semibold bg-blue-600 hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 hover:shadow-xl hover:shadow-blue-600/25">
+                  <Sparkles className="w-5 h-5" />
+                  Start free — 30 tokens
                 </HomeCta>
-                <a
-                  href="#faq"
-                  className="px-6 py-3 rounded-xl border-2 border-slate-200 text-slate-700 font-semibold hover:border-slate-300 hover:bg-slate-50 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                <Link
+                  href="#how-it-works"
+                  className="inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-xl font-semibold text-slate-700 bg-white border-2 border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-colors"
                 >
-                  Read FAQ
-                </a>
+                  <Play className="w-5 h-5" />
+                  How it works
+                </Link>
               </div>
-              <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-sm text-slate-500 pt-1">
-                <span className="inline-flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-green-500 ring-2 ring-green-500/30" />
-                  50 free tokens on signup
-                </span>
-                <span>10 tokens per script + 10 per feature</span>
-                <a href="/refund-policy" className="text-blue-600 hover:text-blue-700 font-medium underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded">
-                  Refund policy
-                </a>
+              <div className="flex flex-wrap gap-6 text-sm font-medium text-slate-500">
+                <span className="flex items-center gap-2"><Shield className="w-4 h-4 text-emerald-500" /> Secure payments</span>
+                <span className="flex items-center gap-2"><Clock className="w-4 h-4 text-blue-500" /> &lt;30s generation</span>
+                <span className="flex items-center gap-2"><Star className="w-4 h-4 text-amber-500" /> 4.9/5 rating</span>
               </div>
             </div>
-            <div className="relative w-full max-w-xl justify-self-center lg:justify-self-end">
-              <div className="absolute -inset-4 sm:-inset-6 rounded-3xl bg-gradient-to-br from-blue-100/70 to-slate-100/50 blur-2xl" />
-              <div className="relative rounded-2xl border border-slate-200/80 bg-white p-3 sm:p-4 shadow-xl shadow-slate-200/50 ring-1 ring-slate-200/50">
-                <Image
-                  src="/hero-illustration.png"
-                  alt="Script generation workflow"
-                  width={1200}
-                  height={675}
-                  className="w-full h-auto rounded-xl"
-                  priority
-                />
+            <div className="relative hidden lg:block">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-slate-200/20 rounded-3xl blur-2xl" />
+              <div className="relative surface-raised p-6 rounded-2xl shadow-xl border border-slate-200/80">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="w-3 h-3 rounded-full bg-red-400" />
+                  <span className="w-3 h-3 rounded-full bg-amber-400" />
+                  <span className="w-3 h-3 rounded-full bg-emerald-400" />
+                </div>
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">Script preview</p>
+                <div className="space-y-2 text-sm text-slate-600 font-mono">
+                  <p className="text-slate-800 font-sans font-medium">[Hook] Hey creators —</p>
+                  <p>Today we&apos;re breaking down how to write scripts that keep viewers watching...</p>
+                  <p className="text-slate-400">[Intro] In this video...</p>
+                  <p className="text-slate-400">[Main] First, structure your...</p>
+                </div>
+                <div className="mt-4 pt-4 border-t border-slate-200 flex items-center gap-2 text-xs text-slate-500">
+                  <Check className="w-3.5 h-3.5 text-emerald-500" /> SEO • Chapters • B-Roll
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </section>
-
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-14">
-        <div className="grid gap-4 sm:grid-cols-3">
-          {stats.map((stat) => (
-            <div
-              key={stat.label}
-              className="rounded-2xl border border-slate-200/80 bg-white p-6 sm:p-7 text-center shadow-sm hover:shadow-md hover:border-slate-200 transition-all"
-            >
-              <p className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight text-blue-600">{stat.value}</p>
-              <p className="text-sm text-slate-500 mt-1.5 font-medium">{stat.label}</p>
-            </div>
-          ))}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-slate-400">
+          <ChevronDown className="w-5 h-5 animate-bounce" />
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-        <div className="rounded-2xl border border-slate-200/80 bg-slate-50/50 px-6 py-6">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 text-center">
-            Trusted by teams
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-10 mt-4 text-sm font-medium text-slate-500">
-            {logos.map((logo) => (
-              <span key={logo} className="tracking-wide hover:text-slate-700 transition-colors">
-                {logo}
-              </span>
+      {/* Stats strip — dark bar */}
+      <section className="stats-strip section-padding">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
+            {stats.map((stat) => (
+              <div key={stat.label} className="text-center">
+                <div className="text-4xl lg:text-5xl font-bold text-white mb-1 tracking-tight">{stat.value}</div>
+                <div className="text-sm font-semibold text-slate-300">{stat.label}</div>
+                <div className="text-xs text-slate-400 mt-0.5">{stat.sublabel}</div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="relative overflow-hidden border-y border-slate-200/80 bg-gradient-to-b from-slate-50/80 to-white py-14 sm:py-20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <div className="grid gap-10 lg:grid-cols-[1.1fr_1fr] items-start">
-            <div className="space-y-4">
-              <span className="inline-block text-xs font-semibold uppercase tracking-wider text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full">
-                Advantages
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Why teams choose ScriptGen</h2>
-              <p className="text-slate-600 text-base leading-relaxed max-w-md">
-                Move faster from concept to publish-ready scripts while keeping quality high.
-              </p>
-              <div className="h-px w-12 bg-gradient-to-r from-blue-500 to-transparent rounded-full" aria-hidden />
-            </div>
-            <div className="grid gap-4">
-              {advantages.map((item, index) => (
-                <div
-                  key={item.title}
-                  className="group rounded-2xl border border-slate-200/80 p-5 sm:p-6 bg-white shadow-sm hover:shadow-lg hover:shadow-blue-500/5 hover:border-blue-200/60 transition-all duration-300 relative overflow-hidden"
-                >
-                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500 to-blue-400 rounded-l-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" aria-hidden />
-                  <div className="flex items-center gap-3">
-                    <span className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white text-sm font-bold flex items-center justify-center flex-shrink-0 shadow-sm">
-                      {index + 1}
-                    </span>
-                    <h3 className="font-semibold text-lg text-slate-900">{item.title}</h3>
-                  </div>
-                  <p className="text-slate-600 mt-3 text-sm leading-relaxed">{item.description}</p>
+      {/* How it works */}
+      <section id="how-it-works" className="section-padding bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-14">
+            <p className="text-overline mb-3">Process</p>
+            <h2 className="text-headline text-slate-900 mb-3">From idea to script in three steps</h2>
+            <p className="text-slate-600">No learning curve. Enter a topic, hit generate, and use your script.</p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            {steps.map((item) => (
+              <div key={item.step} className="surface-raised surface-raised-hover p-8 rounded-2xl text-center transition-all">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-100 text-blue-600 mb-5">
+                  <item.icon className="w-8 h-8" />
                 </div>
-              ))}
-            </div>
+                <span className="block text-xs font-bold text-slate-300 mb-2">{item.step}</span>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">{item.title}</h3>
+                <p className="text-slate-600 text-sm">{item.description}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      <section className="border-y border-slate-200/80 bg-slate-50/30">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20">
-          <div className="text-center max-w-2xl mx-auto space-y-3 mb-12">
-            <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">
-              How it works
-            </p>
-            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">From idea to publish-ready</h2>
-            <p className="text-slate-600 text-base">
-              A streamlined workflow for speed and quality.
-            </p>
+      {/* Features — bento grid */}
+      <section id="features" className="section-padding bg-slate-50/60">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-14">
+            <p className="text-overline mb-3">Features</p>
+            <h2 className="text-headline text-slate-900 mb-3">Everything you need to create professional scripts</h2>
+            <p className="text-slate-600">Built for creators. Script, SEO, chapters, B-roll, Shorts, and more.</p>
           </div>
-          <div className="grid gap-6 lg:grid-cols-3">
-            {steps.map((step, index) => (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {features.map((feature) => (
               <div
-                key={step.title}
-                className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm hover:shadow-md transition-all"
+                key={feature.title}
+                className="surface-raised surface-raised-hover group p-6 rounded-2xl transition-all"
               >
-                <div className="flex items-center gap-3">
-                  <span className="h-11 w-11 rounded-xl bg-blue-600 text-white text-base font-bold flex items-center justify-center flex-shrink-0">
-                    {index + 1}
-                  </span>
-                  <h3 className="text-xl font-semibold text-slate-900">{step.title}</h3>
+                <div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
+                  style={{ backgroundColor: `${feature.color}18`, color: feature.color }}
+                >
+                  <feature.icon className="w-6 h-6" />
                 </div>
-                <p className="text-slate-600 mt-3 text-sm leading-relaxed">{step.description}</p>
+                <h3 className="text-base font-semibold text-slate-900 mb-2">{feature.title}</h3>
+                <p className="text-slate-600 text-sm leading-relaxed">{feature.description}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-8 py-6 px-6 rounded-2xl bg-white/80 border border-slate-200">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center"><Shield className="w-5 h-5 text-emerald-600" /></div>
+              <div><p className="font-semibold text-slate-900 text-sm">Secure payments</p><p className="text-xs text-slate-500">Protected checkout</p></div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center"><Check className="w-5 h-5 text-blue-600" /></div>
+              <div><p className="font-semibold text-slate-900 text-sm">Reliable output</p><p className="text-xs text-slate-500">Consistent quality</p></div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center"><Award className="w-5 h-5 text-amber-600" /></div>
+              <div><p className="font-semibold text-slate-900 text-sm">Creator support</p><p className="text-xs text-slate-500">Fast & transparent</p></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="section-padding bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-14">
+            <p className="text-overline mb-3">Testimonials</p>
+            <h2 className="text-headline text-slate-900 mb-3">Loved by creators worldwide</h2>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6">
+            {testimonials.map((t) => (
+              <div key={t.name} className="surface-raised surface-raised-hover p-6 rounded-2xl transition-all">
+                <div className="flex gap-1 mb-4">
+                  {[...Array(t.rating)].map((_, i) => (
+                    <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                  ))}
+                </div>
+                <p className="text-slate-700 text-sm leading-relaxed mb-6">&ldquo;{t.content}&rdquo;</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-xs">
+                    {t.avatar}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-slate-900 text-sm">{t.name}</p>
+                    <p className="text-xs text-slate-500">{t.role}</p>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section
-        id="features"
-        className="border-y border-slate-200/80 bg-white"
-      >
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20">
-          <div className="space-y-3 mb-10">
-            <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">
-              Features
-            </p>
-            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Built for growth</h2>
-            <p className="text-slate-600 text-base max-w-2xl">
-              Clear, persuasive scripts that align with your goals.
-            </p>
+      {/* Pricing */}
+      <section id="pricing" className="section-padding bg-slate-50/60">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-14">
+            <p className="text-overline mb-3">Pricing</p>
+            <h2 className="text-headline text-slate-900 mb-3">Simple plans. Start free, scale when you need.</h2>
           </div>
-          <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] items-center">
-            <div className="relative order-2 lg:order-1">
-              <div className="absolute -inset-4 rounded-2xl bg-slate-100/60 blur-2xl" />
-              <div className="relative rounded-2xl border border-slate-200/80 bg-white p-4 shadow-lg shadow-slate-200/40 ring-1 ring-slate-200/50">
-                <Image
-                  src="/features-illustration.png"
-                  alt="Feature illustration with cards"
-                  width={900}
-                  height={675}
-                  className="w-full h-auto rounded-xl"
-                />
-              </div>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2 order-1 lg:order-2">
-              {features.map((feature) => (
-                <div
-                  key={feature.title}
-                  className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm hover:shadow-md hover:border-slate-200 transition-all"
-                >
-                  <h3 className="font-semibold text-slate-900">{feature.title}</h3>
-                  <p className="text-slate-600 text-sm mt-2 leading-relaxed">{feature.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20 bg-slate-50/30">
-        <div className="text-center max-w-2xl mx-auto space-y-3 mb-10">
-          <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">
-            Testimonials
-          </p>
-          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Trusted by teams</h2>
-          <p className="text-slate-600 text-base">
-            Scale production without sacrificing quality.
-          </p>
-        </div>
-        <div className="grid gap-5 sm:grid-cols-3">
-          {testimonials.map((item) => (
-            <div
-              key={item.name}
-              className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm hover:shadow-md transition-all"
-            >
-              <p className="text-amber-500 text-sm font-medium" aria-hidden>
-                ★★★★★
-              </p>
-              <p className="text-slate-700 text-sm mt-3 leading-relaxed">“{item.quote}”</p>
-              <div className="mt-4 pt-3 border-t border-slate-100">
-                <p className="text-sm font-semibold text-slate-900">{item.name}</p>
-                <p className="text-xs text-slate-500 mt-0.5">{item.role}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section id="pricing" className="border-y border-slate-200/80 bg-white scroll-mt-20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-2xl space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">
-                Pricing
-              </p>
-              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Simple token pricing</h2>
-              <p className="text-slate-600 text-base">
-                Script: 10 tokens. Each feature: +10 tokens. Top up anytime.
-              </p>
-            </div>
-            <HomeCta className="px-6 py-3 rounded-xl bg-blue-600 text-white font-semibold shadow-lg shadow-blue-600/25 hover:bg-blue-700 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 w-fit">
-              Start free
-            </HomeCta>
-          </div>
-          <div className="mt-8 flex items-center gap-3 p-4 sm:p-5 rounded-2xl bg-green-50/80 border border-green-200/80 text-green-800 text-sm font-medium">
-            <span className="h-9 w-9 rounded-full bg-green-200 flex items-center justify-center text-green-700 font-bold flex-shrink-0" aria-hidden>✓</span>
-            <span>
-              Secure payment via Razorpay. Your card details are never stored. PCI DSS compliant • Instant token delivery.
-            </span>
-          </div>
-          <div className="mt-8 rounded-2xl border border-slate-200/80 bg-slate-50/50 p-6">
-            <p className="text-sm font-semibold text-slate-900 mb-4">
-              Feature cost
-            </p>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 text-sm text-slate-600">
-              {pricingBreakdown.map((item) => (
-                <div key={item.label} className="flex items-center justify-between py-1">
-                  <span>{item.label}</span>
-                  <span className="font-semibold text-slate-800">{item.tokens} tokens</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 mt-10">
-            {pricing.map((plan) => (
+          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto items-stretch">
+            {pricingTiers.map((tier) => (
               <div
-                key={plan.name}
-                className={`relative overflow-hidden rounded-2xl border-2 p-6 transition-all ${
-                  plan.highlight
-                    ? "border-blue-500 bg-white shadow-lg ring-1 ring-blue-500/20"
-                    : "border-slate-200/80 bg-white shadow-sm hover:shadow-md hover:border-slate-200"
+                key={tier.name}
+                className={`relative rounded-2xl p-8 transition-all flex flex-col ${
+                  tier.highlighted
+                    ? "bg-blue-600 text-white shadow-xl shadow-blue-600/20 scale-[1.03] z-10"
+                    : "surface-raised surface-raised-hover bg-white"
                 }`}
               >
-                {plan.highlight && (
-                  <span className="absolute right-4 top-4 text-[10px] font-semibold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-1 rounded-md">
-                    Popular
-                  </span>
+                {tier.highlighted && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-white text-blue-600 text-xs font-bold">
+                    Most popular
+                  </div>
                 )}
-                <p className="text-base font-semibold text-slate-900">{plan.name}</p>
-                <div className="mt-4 flex items-baseline gap-2">
-                  <p className="text-2xl font-bold text-slate-900 tracking-tight">₹{plan.price}</p>
-                  <p className="text-xs text-slate-500">/ {Math.floor(plan.tokens / 10)} outputs</p>
+                <div className="mb-5">
+                  <h3 className={`text-lg font-semibold mb-1 ${tier.highlighted ? "text-white" : "text-slate-900"}`}>{tier.name}</h3>
+                  <p className={tier.highlighted ? "text-blue-100 text-sm" : "text-slate-600 text-sm"}>{tier.description}</p>
                 </div>
-                <p className="text-xs text-slate-500 mt-1">{plan.tokens} tokens</p>
-                <div className="mt-6">
-                  <HomeCta
-                    className={`w-full px-4 py-3 rounded-xl text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
-                      plan.highlight
-                        ? "bg-blue-600 text-white hover:bg-blue-700"
-                        : "border-2 border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50"
-                    }`}
-                  >
-                    Get {plan.name}
-                  </HomeCta>
+                <div className="mb-5">
+                  <span className={`text-4xl font-bold tracking-tight ${tier.highlighted ? "text-white" : "text-slate-900"}`}>{tier.price}</span>
+                  {tier.price !== "Free" && (
+                    <span className={tier.highlighted ? "text-blue-200 text-sm ml-1" : "text-slate-500 text-sm ml-1"}>one-time</span>
+                  )}
                 </div>
-                <p className="mt-3 text-xs text-slate-500">All pro features included</p>
+                <div className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium mb-6 w-fit ${tier.highlighted ? "bg-white/20 text-white" : "bg-slate-100 text-slate-700"}`}>
+                  <Zap className="w-4 h-4" />
+                  {tier.tokens}
+                </div>
+                <ul className="space-y-3 mb-8 flex-1">
+                  {tier.features.map((f) => (
+                    <li key={f} className="flex items-start gap-2.5 text-sm">
+                      <Check className={`w-5 h-5 flex-shrink-0 mt-0.5 ${tier.highlighted ? "text-blue-200" : "text-emerald-600"}`} />
+                      <span className={tier.highlighted ? "text-blue-50" : "text-slate-600"}>{f}</span>
+                    </li>
+                  ))}
+                </ul>
+                <HomeCta
+                  className={`w-full py-3.5 rounded-xl font-semibold text-center transition-all mt-auto ${
+                    tier.highlighted
+                      ? "bg-white text-blue-600 hover:bg-blue-50"
+                      : "bg-slate-900 text-white hover:bg-slate-800"
+                  }`}
+                >
+                  {tier.cta}
+                </HomeCta>
               </div>
             ))}
           </div>
-          <p className="mt-8 text-center text-sm text-slate-500">
-            50 free tokens to start • No subscription • Refund policy available
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section id="faq" className="section-padding bg-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <p className="text-overline mb-3">FAQ</p>
+            <h2 className="text-headline text-slate-900">Common questions</h2>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-4">
+            {faqs.map((faq, i) => (
+              <div key={i} className="surface-raised surface-raised-hover p-5 rounded-xl transition-all">
+                <h3 className="text-sm font-semibold text-slate-900 mb-2">{faq.q}</h3>
+                <p className="text-slate-600 text-sm leading-relaxed">{faq.a}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section className="relative section-padding overflow-hidden bg-gradient-to-br from-blue-600 via-blue-600 to-blue-700">
+        <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-headline text-white mb-4">
+            Ready to write scripts that perform?
+          </h2>
+          <p className="text-lg text-blue-100 mb-10 max-w-xl mx-auto">
+            Join creators who save hours every week. Start with 30 free tokens — no card required.
           </p>
-        </div>
-      </section>
-
-      <section id="faq" className="relative border-y border-slate-200/80 bg-gradient-to-b from-white to-slate-50/50 py-14 sm:py-20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <div className="grid gap-10 lg:grid-cols-[1fr_1.2fr]">
-            <div className="space-y-4">
-              <span className="inline-block text-xs font-semibold uppercase tracking-wider text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full">
-                FAQ
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Frequently asked questions</h2>
-              <p className="text-slate-600 text-base max-w-sm">
-                Questions? Reach out and we’ll help.
-              </p>
-              <div className="h-px w-12 bg-gradient-to-r from-blue-500 to-transparent rounded-full" aria-hidden />
-            </div>
-            <div className="space-y-4">
-              {faqs.map((faq) => (
-                <div
-                  key={faq.question}
-                  className="group rounded-2xl border border-slate-200/80 p-5 sm:p-6 bg-white shadow-sm hover:shadow-lg hover:shadow-blue-500/5 hover:border-blue-200/60 transition-all duration-300 relative overflow-hidden"
-                >
-                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500 to-blue-400 rounded-l-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" aria-hidden />
-                  <div className="flex gap-3">
-                    <span className="flex-shrink-0 h-8 w-8 rounded-lg bg-slate-100 text-slate-600 text-xs font-bold flex items-center justify-center mt-0.5 group-hover:bg-blue-100 group-hover:text-blue-700 transition-colors duration-300">
-                      Q
-                    </span>
-                    <div>
-                      <h3 className="font-semibold text-slate-900 text-base sm:text-lg">{faq.question}</h3>
-                      <p className="text-slate-600 text-sm mt-2 leading-relaxed">{faq.answer}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="border-t border-slate-200/80 bg-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20">
-          <div className="rounded-2xl bg-slate-900 text-white p-8 sm:p-12 flex flex-col gap-4 sm:items-center sm:text-center relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 to-transparent" />
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 relative">
-              Get started
-            </p>
-            <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight relative">
-              Ready to create better scripts?
-            </h2>
-            <p className="text-slate-300 text-base max-w-xl relative">
-              Sign in with Google. 50 free tokens — no card required.
-            </p>
-            <HomeCta className="mt-2 px-6 py-3 rounded-xl bg-white text-slate-900 font-semibold hover:bg-slate-100 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 relative">
-              Get started
-            </HomeCta>
-          </div>
+          <HomeCta className="inline-flex items-center gap-3 px-10 py-5 rounded-2xl font-semibold text-lg bg-white text-blue-600 hover:bg-blue-50 shadow-xl transition-all">
+            <Sparkles className="w-5 h-5" />
+            <span>Generate your first script</span>
+            <ArrowRight className="w-5 h-5" />
+          </HomeCta>
         </div>
       </section>
     </main>

@@ -14,6 +14,7 @@ Before deploying ScriptGen to production, ensure the following.
 | `OPENAI_API_KEY` | ✅ | OpenAI API key (server-side only) |
 | `RAZORPAY_KEY_ID` | ⬜ | Razorpay key (for payments) |
 | `RAZORPAY_KEY_SECRET` | ⬜ | Razorpay secret (for payments) |
+| `RAZORPAY_BUSINESS_NAME` | ⬜ | Business name displayed in Razorpay checkout (defaults to "ScriptGen") |
 
 ## Security
 
@@ -21,6 +22,12 @@ Before deploying ScriptGen to production, ensure the following.
 - [ ] **OPENAI_API_KEY** – Never expose in client; use `OPENAI_API_KEY` (not `NEXT_PUBLIC_`)
 - [ ] **Database** – Use connection pooling in production (e.g. PgBouncer)
 - [ ] **HTTPS** – Enforce HTTPS (HSTS header is set when `NODE_ENV=production`)
+
+## Razorpay Configuration
+
+- [ ] **RAZORPAY_BUSINESS_NAME** – Set to match the business name registered with your Razorpay account (defaults to "ScriptGen")
+- [ ] **Business Model Match** – Ensure the business model/vertical registered with Razorpay matches your website's business type (SaaS/Software)
+- [ ] **Account Verification** – Verify that your Razorpay account business details match the website domain and business model
 
 ## Database
 

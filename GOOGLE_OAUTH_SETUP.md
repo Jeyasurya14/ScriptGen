@@ -13,7 +13,7 @@ Follow these steps to configure Google Sign-In for your application.
 1.  In the left sidebar, navigate to **APIs & Services** > **OAuth consent screen**.
 2.  Select **External** (unless you are a Google Workspace user testing internally) and click **Create**.
 3.  **App Information**:
-    *   **App name**: Thunglish Script Generator
+    *   **App name**: ScriptGen
     *   **User support email**: Select your email.
     *   **Developer contact information**: Enter your email.
 4.  Click **Save and Continue**.

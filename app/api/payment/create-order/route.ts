@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { env } from "@/lib/env";
 import Razorpay from "razorpay";
 
 const TOKEN_PACKAGES = [
@@ -48,6 +49,8 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Invalid package" }, { status: 400 });
         }
         const amount = selected.price * 100; // amount in paise
+        const businessName = env.RAZORPAY_BUSINESS_NAME || "ScriptGen";
+        const websiteUrl = env.NEXTAUTH_URL || "https://scriptgen.learn-made.in";
 
         // Create Razorpay order
         const order = await razorpay.orders.create({
@@ -58,6 +61,9 @@ export async function POST(req: NextRequest) {
                 email: session.user.email,
                 tokens: selected.tokens.toString(),
                 packageId: selected.id,
+                businessName: businessName,
+                website: websiteUrl,
+                businessType: "SaaS",
             },
         });
 
@@ -83,6 +89,7 @@ export async function POST(req: NextRequest) {
             amount: order.amount,
             currency: order.currency,
             keyId: process.env.RAZORPAY_KEY_ID,
+            businessName: businessName,
         });
     } catch (error) {
         console.error("Error creating order:", error);

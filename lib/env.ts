@@ -10,6 +10,7 @@ const envSchema = z.object({
     OPENAI_API_KEY: z.string().optional(),
     RAZORPAY_KEY_ID: z.string().optional(),
     RAZORPAY_KEY_SECRET: z.string().optional(),
+    RAZORPAY_BUSINESS_NAME: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -25,6 +26,7 @@ function parseEnv(): Env {
         OPENAI_API_KEY: process.env.OPENAI_API_KEY,
         RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID,
         RAZORPAY_KEY_SECRET: process.env.RAZORPAY_KEY_SECRET,
+        RAZORPAY_BUSINESS_NAME: process.env.RAZORPAY_BUSINESS_NAME,
     });
     return (parsed.success ? parsed.data : { NODE_ENV: "development" }) as Env;
 }

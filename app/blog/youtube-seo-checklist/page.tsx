@@ -28,10 +28,10 @@ const steps = [
     title: "1. Title (Under 60 Characters)",
     intro: "Your title is the first thing viewers see in search and suggested videos. Make it:",
     items: [
-      "Under 60 characters so it doesn’t get cut off",
+      "Under 60 characters so it doesn't get cut off",
       "Front-loaded with your main keyword (first 3–5 words)",
-      "Clear and specific — avoid clickbait that doesn’t deliver",
-      "Curiosity-driven when possible: “How to…”, “Why…”, “The one thing…”",
+      "Clear and specific — avoid clickbait that doesn't deliver",
+      "Curiosity-driven when possible: "How to…", "Why…", "The one thing…"",
     ],
     tip: "Say your primary keyword in the first half of the title. YouTube and Google both use it for ranking.",
   },
@@ -52,12 +52,12 @@ const steps = [
     title: "3. Tags (Relevant, Not Spammy)",
     intro: "Tags help YouTube understand your video. Use:",
     items: [
-      "One broad tag (e.g. “YouTube tips”), one exact phrase (e.g. “how to write YouTube scripts”)",
+      "One broad tag (e.g. "YouTube tips"), one exact phrase (e.g. "how to write YouTube scripts")",
       "5–15 tags total — mix of short and long-tail",
       "Variations of your main keyword and related topics",
       "Channel name if you want to surface in brand search",
     ],
-    tip: "Don’t repeat the same keyword in every tag. Use synonyms and related phrases.",
+    tip: "Don't repeat the same keyword in every tag. Use synonyms and related phrases.",
   },
   {
     icon: Image,
@@ -91,7 +91,7 @@ const steps = [
       "Uploading or correcting captions so key phrases are accurate",
       "Saying your target keyword naturally in the first 30 seconds",
       "Repeating the main topic in the middle and near the end",
-      "Using your script’s intro as the basis for the description",
+      "Using your script's intro as the basis for the description",
     ],
     tip: "If you script your video, your script and description can share the same opening lines.",
   },
@@ -108,36 +108,39 @@ const checklistItems = [
 
 export default function YouTubeSEOChecklist() {
   return (
-    <main className="min-h-screen bg-slate-50/50">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+    <main className="min-h-screen bg-[#0a0a0f]">
+      <div className="absolute inset-0 bg-grid-pattern opacity-20 pointer-events-none" />
+      <div className="absolute inset-x-0 top-0 h-[400px] bg-radial-glow pointer-events-none" />
+      
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12 relative">
         <Link
           href="/blog"
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 mb-8 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-md px-2 py-1"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-400 hover:text-white mb-8 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a0f] rounded-md px-2 py-1"
         >
           <ChevronLeft className="w-4 h-4" />
-          Back to Documentation
+          Back to Blog
         </Link>
 
-        <header className="rounded-2xl bg-white border border-slate-200/80 shadow-sm p-6 sm:p-8 mb-8">
-          <span className="inline-block text-xs font-semibold uppercase tracking-wider text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full mb-4">
+        <header className="rounded-2xl bg-[#111118]/80 backdrop-blur-sm border border-white/10 p-6 sm:p-8 mb-8">
+          <span className="inline-block text-xs font-semibold uppercase tracking-wider text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-3 py-1.5 rounded-full mb-4">
             Checklist
           </span>
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight mb-2">
             YouTube SEO Checklist: Rank Your Videos Higher
           </h1>
           <p className="text-slate-500 text-sm mb-6">Published Feb 2026 · 8 min read</p>
-          <p className="text-lg text-slate-700 leading-relaxed">
+          <p className="text-lg text-slate-300 leading-relaxed">
             Use this checklist before you publish. Optimize title, description, tags, thumbnail, chapters, and captions so your videos show up in search and suggested.
           </p>
-          <div className="mt-6 pt-6 border-t border-slate-200/80">
+          <div className="mt-6 pt-6 border-t border-white/10">
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">Quick checklist</p>
             <ul className="grid gap-2 sm:grid-cols-2">
               {checklistItems.map((item) => (
                 <li
                   key={item}
-                  className="flex items-center gap-2 text-sm text-slate-700 bg-slate-100/80 px-3 py-2 rounded-lg"
+                  className="flex items-center gap-2 text-sm text-slate-300 bg-white/5 px-3 py-2 rounded-lg"
                 >
-                  <CheckCircle2 className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                  <CheckCircle2 className="w-4 h-4 text-cyan-400 flex-shrink-0" />
                   {item}
                 </li>
               ))}
@@ -151,30 +154,30 @@ export default function YouTubeSEOChecklist() {
             return (
               <section
                 key={step.title}
-                className="rounded-2xl bg-white border border-slate-200/80 shadow-sm p-6 sm:p-8 hover:shadow-md hover:border-slate-200/90 transition-all duration-300"
+                className="rounded-2xl bg-[#111118]/80 backdrop-blur-sm border border-white/10 p-6 sm:p-8 hover:border-white/20 transition-all duration-300"
               >
                 <div className="flex items-start gap-3 mb-4">
-                  <span className="flex-shrink-0 h-10 w-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
+                  <span className="flex-shrink-0 h-10 w-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center">
                     <Icon className="w-5 h-5" />
                   </span>
                   <div>
-                    <h2 className="text-xl font-semibold text-slate-900">{step.title}</h2>
-                    <p className="text-slate-600 mt-1 text-sm leading-relaxed">{step.intro}</p>
+                    <h2 className="text-xl font-semibold text-white">{step.title}</h2>
+                    <p className="text-slate-400 mt-1 text-sm leading-relaxed">{step.intro}</p>
                   </div>
                 </div>
                 <ul className="space-y-2 pl-0 sm:pl-8">
                   {step.items.map((item, i) => (
-                    <li key={i} className="flex gap-3 text-slate-700">
-                      <CheckCircle2 className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                    <li key={i} className="flex gap-3 text-slate-300">
+                      <CheckCircle2 className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" />
                       <span className="text-sm leading-relaxed">{item}</span>
                     </li>
                   ))}
                 </ul>
                 {step.tip && (
-                  <div className="mt-4 flex gap-3 p-3 rounded-xl bg-amber-50 border border-amber-100">
-                    <Quote className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                    <p className="text-sm text-amber-900/90">
-                      <strong className="text-amber-800">Pro tip:</strong> {step.tip}
+                  <div className="mt-4 flex gap-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                    <Quote className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-amber-200/90">
+                      <strong className="text-amber-400">Pro tip:</strong> {step.tip}
                     </p>
                   </div>
                 )}
@@ -183,25 +186,27 @@ export default function YouTubeSEOChecklist() {
           })}
         </div>
 
-        <section className="rounded-2xl bg-white border border-slate-200/80 shadow-sm p-6 sm:p-8 mt-8">
-          <h3 className="text-lg font-semibold text-slate-900 mb-2">Before you hit Publish</h3>
-          <p className="text-slate-700 text-sm leading-relaxed mb-3">
+        <section className="rounded-2xl bg-[#111118]/80 backdrop-blur-sm border border-white/10 p-6 sm:p-8 mt-8">
+          <h3 className="text-lg font-semibold text-white mb-2">Before you hit Publish</h3>
+          <p className="text-slate-400 text-sm leading-relaxed mb-3">
             Run through: title length, description preview, tag count, thumbnail on mobile, chapter list, and that captions are correct. One pass takes a few minutes and can noticeably improve reach.
           </p>
-          <blockquote className="text-slate-600 text-sm pl-4 border-l-4 border-blue-200 bg-slate-50/80 py-3 pr-4 rounded-r-lg italic">
+          <blockquote className="text-slate-300 text-sm pl-4 border-l-4 border-cyan-500/50 bg-white/5 py-3 pr-4 rounded-r-lg italic">
             Save this page and use it as a pre-publish checklist for every video.
           </blockquote>
         </section>
 
-        <div className="mt-10 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 text-white p-6 sm:p-8 shadow-lg shadow-blue-500/20 border border-blue-500/20">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="mt-10 rounded-2xl bg-gradient-to-b from-[#111118] to-[#0a0a0f] border border-white/10 p-6 sm:p-8 relative overflow-hidden">
+          <div className="absolute inset-0 bg-grid-pattern opacity-10" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-cyan-500/20 rounded-full blur-[100px]" />
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 relative">
             <div>
               <h3 className="text-xl font-semibold text-white mb-1">Get SEO built into your script</h3>
-              <p className="text-blue-100 text-sm sm:text-base">
+              <p className="text-slate-400 text-sm sm:text-base">
                 ScriptGen generates titles, descriptions, tags, and chapters with your script. 50 free tokens to start.
               </p>
             </div>
-            <HomeCta className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white text-blue-600 font-semibold hover:bg-blue-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-blue-600 flex-shrink-0">
+            <HomeCta className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-cyan-600 to-cyan-500 text-white font-semibold hover:from-cyan-500 hover:to-cyan-400 shadow-lg shadow-cyan-500/25 transition-all flex-shrink-0">
               Generate free script
             </HomeCta>
           </div>

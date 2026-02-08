@@ -5,7 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sanitizeError } from "@/lib/api-utils";
 
-const FREE_TOKENS = 50;
+const FREE_TOKENS = 30;
 
 // GET - Check user tokens
 export async function GET() {

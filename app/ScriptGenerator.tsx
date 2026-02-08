@@ -28,7 +28,6 @@ import {
     Clock,
     Settings2,
     ShieldCheck,
-    Lock,
     Tag,
     Share2,
 } from "lucide-react";
@@ -126,6 +125,7 @@ interface RazorpayOrderResponse {
     amount: number;
     currency: string;
     orderId: string;
+    businessName?: string;
 }
 
 interface RazorpayOptions {
@@ -156,9 +156,9 @@ const tones = [
 
 // Language options
 const languages = [
-    { value: "Thunglish", label: "Thunglish (Tamil + English)" },
     { value: "English", label: "English (Global)" },
     { value: "Tamil", label: "Pure Tamil" },
+    { value: "Thanglish", label: "Thanglish (Tamil + English)" },
     { value: "Hindi", label: "Hindi / Hinglish" },
 ];
 
@@ -189,7 +189,7 @@ export default function ScriptGenerator() {
         contentType: "Tutorial",
         difficulty: "Beginner",
         tone: "casual",
-        language: "Thunglish",
+        language: "English",
         includeCode: false,
         localContext: false,
         generateImages: true,
@@ -250,12 +250,12 @@ export default function ScriptGenerator() {
     const searchParams = useSearchParams();
 
     const tokenPackages = [
-        { id: "starter", name: "Starter", tokens: 100, price: 99 },
-        { id: "plus", name: "Plus", tokens: 200, price: 179 },
-        { id: "growth", name: "Growth", tokens: 300, price: 249 },
-        { id: "pro", name: "Pro", tokens: 500, price: 399 },
-        { id: "scale", name: "Scale", tokens: 1000, price: 699 },
-        { id: "enterprise", name: "Enterprise", tokens: 1500, price: 999 },
+        { id: "starter", name: "Starter", tokens: 100, price: 149 },
+        { id: "plus", name: "Plus", tokens: 250, price: 299 },
+        { id: "growth", name: "Growth", tokens: 500, price: 499 },
+        { id: "pro", name: "Pro", tokens: 1000, price: 899 },
+        { id: "scale", name: "Scale", tokens: 2500, price: 1999 },
+        { id: "enterprise", name: "Enterprise", tokens: 5000, price: 3499 },
     ];
     const tokenBreakdown = [
         { label: "Core script", tokens: 10 },
@@ -525,7 +525,7 @@ export default function ScriptGenerator() {
             try {
                 await navigator.share({
                     title: "ScriptGen - AI YouTube Script Generator",
-                    text: "Get 25 free tokens when you sign up with my referral link!",
+                    text: "Get 15 free tokens when you sign up with my referral link!",
                     url: referralLink,
                 });
                 setReferralShared(true);
@@ -553,7 +553,7 @@ export default function ScriptGenerator() {
             });
             const data = await res.json();
             if (res.ok) {
-                setReferralApplyMessage({ type: "success", text: data.message || `You both got 25 tokens!` });
+                setReferralApplyMessage({ type: "success", text: data.message || `You both got 15 tokens!` });
                 setReferralApplyCode("");
                 const creditsRes = await fetch("/api/credits");
                 if (creditsRes.ok) setCredits(await creditsRes.json());
@@ -628,7 +628,7 @@ export default function ScriptGenerator() {
                 key: order.keyId,
                 amount: order.amount,
                 currency: order.currency,
-                name: "Thunglish Script Generator",
+                name: order.businessName || "ScriptGen",
                 description: `${selected.tokens} Tokens`,
                 order_id: order.orderId,
                 handler: async (response: RazorpayPaymentResponse) => {
@@ -1428,79 +1428,68 @@ Aspect Ratio: ${prompt.aspectRatio}`;
     ];
 
     return (
-        <div className="min-h-screen bg-slate-50/80 relative overflow-hidden">
-            <div className="absolute inset-x-0 top-0 h-80 bg-gradient-to-br from-blue-50/90 via-slate-50/50 to-violet-50/70 pointer-events-none" />
-            {/* Razorpay Script */}
+        <div className="min-h-screen bg-white">
             <script src="https://checkout.razorpay.com/v1/checkout.js" async />
 
-            {/* Toast */}
             {toastMessage && (
                 <div
                     role="status"
                     aria-live="polite"
-                    className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] px-4 py-2.5 rounded-lg bg-slate-800 text-white text-sm font-medium shadow-lg animate-fade-in"
+                    className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] px-5 py-3 rounded-lg bg-white border border-gray-200 text-gray-900 text-sm shadow-lg animate-fade-in"
                 >
                     <span className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-green-400" />
+                        <Check className="w-4 h-4 text-emerald-600" />
                         {toastMessage}
                     </span>
                 </div>
             )}
 
-            {/* Payment Modal - z-[60] so it appears above sticky header (z-50) */}
             {showPaymentModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-[60] p-0 sm:p-4">
-                    <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md max-h-[92vh] sm:max-h-[90vh] shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
-                        <div className="flex-shrink-0 flex items-center justify-between p-4 sm:p-6 pb-2 sm:pb-4">
-                            <h3 className="text-lg sm:text-xl font-semibold text-slate-900">Recharge Tokens</h3>
+                <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-[60] p-0 sm:p-4">
+                    <div className="bg-white w-full max-w-md max-h-[92vh] sm:max-h-[90vh] border border-gray-200 flex flex-col overflow-hidden sm:rounded-xl shadow-xl">
+                        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                            <h3 className="text-base font-semibold text-gray-900">Recharge Tokens</h3>
                             <button
                                 onClick={() => setShowPaymentModal(false)}
-                                className="p-2 -m-2 text-slate-400 hover:text-slate-600 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center"
+                                className="p-2 text-gray-500 hover:text-gray-900 rounded-md transition-colors"
                                 aria-label="Close"
                             >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
-                        <div className="flex-1 overflow-y-auto overscroll-contain px-4 sm:px-6 pb-4 sm:pb-6 space-y-4">
-                            <div className="flex items-start gap-3 p-3 sm:p-4 rounded-xl bg-green-50 border border-green-100">
-                                <ShieldCheck className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                                <p className="text-sm text-green-800 font-medium leading-relaxed">
-                                    Secure payment via Razorpay. Your card details are never stored.
-                                </p>
-                            </div>
-                            <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 space-y-3">
-                                <p className="text-sm text-slate-700 leading-relaxed">
-                                    Script costs <span className="font-semibold">10 tokens</span>. Each selected feature costs{" "}
-                                    <span className="font-semibold">10 tokens</span> extra.
-                                </p>
-                                <div className="grid gap-2 text-xs text-slate-600">
+                        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                            <p className="text-sm text-gray-600 flex items-center gap-2">
+                                <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                                Secure payment via Razorpay. Card details are never stored.
+                            </p>
+                            <div className="text-sm text-gray-600 space-y-2">
+                                <p>Script: 10 tokens. Each feature: +10 tokens.</p>
+                                <div className="space-y-1 text-xs">
                                     {tokenBreakdown.map((item) => (
-                                        <div key={item.label} className="flex items-center justify-between gap-3 min-w-0">
-                                            <span className="truncate">{item.label}</span>
-                                            <span className="font-semibold text-slate-800 flex-shrink-0">{item.tokens} tokens</span>
+                                        <div key={item.label} className="flex justify-between">
+                                            <span>{item.label}</span>
+                                            <span className="text-gray-900 font-medium">{item.tokens}</span>
                                         </div>
                                     ))}
                                 </div>
                             </div>
-                            <div className="grid gap-2 sm:gap-3">
+                            <div className="space-y-2">
                                 {tokenPackages.map((pkg) => (
                                     <button
                                         key={pkg.id}
                                         onClick={() => setSelectedPackageId(pkg.id)}
-                                        className={`w-full text-left p-3 sm:p-4 rounded-xl border-2 transition-all min-h-[60px] sm:min-h-0 ${
+                                        className={`w-full text-left p-3 rounded-lg border transition-colors ${
                                             selectedPackageId === pkg.id
-                                                ? "border-blue-600 bg-blue-50 shadow-sm"
-                                                : "border-slate-200 hover:border-slate-300"
+                                                ? "border-blue-600 bg-blue-50"
+                                                : "border-gray-200 bg-gray-50 hover:border-gray-300"
                                         }`}
                                     >
-                                        <div className="flex items-center justify-between gap-3 min-w-0">
-                                            <div className="min-w-0">
-                                                <p className="text-sm font-semibold text-slate-900">{pkg.name}</p>
-                                                <p className="text-xs text-slate-500 mt-0.5">
-                                                    {pkg.tokens} tokens • {Math.floor(pkg.tokens / 10)} generations
-                                                </p>
+                                        <div className="flex justify-between items-center">
+                                            <div>
+                                                <p className="text-sm font-medium text-gray-900">{pkg.name}</p>
+                                                <p className="text-xs text-gray-500">{pkg.tokens} tokens</p>
                                             </div>
-                                            <p className="text-sm font-semibold text-slate-900 flex-shrink-0">₹{pkg.price}</p>
+                                            <p className="text-sm font-medium text-gray-900">₹{pkg.price}</p>
                                         </div>
                                     </button>
                                 ))}
@@ -1508,133 +1497,98 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                             <button
                                 onClick={handlePayment}
                                 disabled={processingPayment}
-                                className="w-full py-3.5 sm:py-3 text-slate-900 rounded-xl font-semibold bg-amber-400 brand-glow hover:bg-amber-500 transition-colors disabled:opacity-50 min-h-[48px]"
+                                className="w-full py-3 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50 transition-colors"
                             >
-                                {processingPayment ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Buy tokens with Razorpay"}
+                                {processingPayment ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Pay with Razorpay"}
                             </button>
-                            <div className="pt-4 border-t border-slate-200">
-                                <p className="text-xs font-medium text-slate-600 mb-2 flex items-center gap-1">
-                                    <Tag className="w-3.5 h-3.5 flex-shrink-0" />
-                                    Have a promo code?
+                            <div className="pt-4 border-t border-gray-200">
+                                <p className="text-xs text-gray-500 mb-2 flex items-center gap-1">
+                                    <Tag className="w-3.5 h-3.5" />
+                                    Promo code
                                 </p>
-                                <div className="flex flex-col sm:flex-row gap-2">
+                                <div className="flex gap-2">
                                     <input
                                         type="text"
                                         value={promoCode}
                                         onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
                                         onKeyDown={(e) => e.key === "Enter" && handlePromoCode()}
                                         placeholder="Enter code"
-                                        className="flex-1 min-w-0 px-3 py-3 sm:py-2.5 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="flex-1 min-w-0 px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     />
                                     <button
                                         onClick={handlePromoCode}
                                         disabled={promoLoading || !promoCode.trim()}
-                                        className="px-4 py-3 sm:py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-[44px] flex-shrink-0"
+                                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg disabled:opacity-50 transition-colors"
                                     >
-                                        {promoLoading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : "Apply"}
+                                        {promoLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
                                     </button>
                                 </div>
                                 {promoMessage && (
-                                    <div className={`mt-2 p-3 rounded-xl text-xs font-medium ${
+                                    <div className={`mt-2 p-2 rounded-lg text-xs ${
                                         promoMessage.type === "success"
-                                            ? "bg-green-50 text-green-700 border border-green-200"
-                                            : "bg-red-50 text-red-700 border border-red-200"
+                                            ? "text-emerald-600"
+                                            : "text-red-600"
                                     }`}>
                                         {promoMessage.text}
                                     </div>
                                 )}
                             </div>
-                            {/* Referral - Invite friends, shareable link */}
-                            <div className="pt-4 border-t border-slate-200 space-y-3">
-                                <p className="text-xs font-medium text-slate-600 flex items-center gap-1">
-                                    <Share2 className="w-3.5 h-3.5 flex-shrink-0" />
-                                    Invite friends, get 25 tokens each
+                            <div className="pt-4 border-t border-gray-200 space-y-3">
+                                <p className="text-xs text-gray-500 flex items-center gap-1">
+                                    <Share2 className="w-3.5 h-3.5" />
+                                    Invite friends, get 15 tokens each
                                 </p>
                                 {referralLink ? (
-                                    <div className="space-y-2">
-                                        <div className="flex gap-2">
-                                            <input
-                                                type="text"
-                                                readOnly
-                                                value={referralLink}
-                                                className="flex-1 min-w-0 px-3 py-2.5 text-xs border border-slate-200 rounded-xl bg-slate-50 text-slate-600 truncate"
-                                                aria-label="Your referral link"
-                                            />
-                                            <button
-                                                onClick={handleCopyReferralLink}
-                                                className="px-3 py-2.5 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl flex-shrink-0 transition-colors"
-                                                title="Copy link"
-                                            >
-                                                {referralCopied ? <Check className="w-4 h-4" /> : "Copy"}
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            readOnly
+                                            value={referralLink}
+                                            className="flex-1 min-w-0 px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-lg text-gray-600 truncate"
+                                            aria-label="Your referral link"
+                                        />
+                                        <button onClick={handleCopyReferralLink} className="px-3 py-2 text-xs font-medium text-white bg-gray-700 hover:bg-gray-800 rounded-lg flex-shrink-0" title="Copy">
+                                            {referralCopied ? <Check className="w-4 h-4" /> : "Copy"}
+                                        </button>
+                                        {canShare && (
+                                            <button onClick={handleShareReferralLink} className="px-3 py-2 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg flex-shrink-0" title="Share">
+                                                {referralShared ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
                                             </button>
-                                            {canShare ? (
-                                                <button
-                                                    onClick={handleShareReferralLink}
-                                                    className="px-3 py-2.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-xl flex-shrink-0 transition-colors"
-                                                    title="Share link"
-                                                >
-                                                    {referralShared ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
-                                                </button>
-                                            ) : null}
-                                        </div>
-                                        <p className="text-[11px] text-slate-500">Share this link — friends get 25 tokens when they sign up.</p>
+                                        )}
                                     </div>
                                 ) : referralLinkError ? (
-                                    <p className="text-xs text-amber-700">Could not load referral link. Close and reopen to retry.</p>
+                                    <p className="text-xs text-amber-600">Could not load referral link.</p>
                                 ) : referralLinkLoading ? (
-                                    <p className="text-xs text-slate-500 flex items-center gap-2">
-                                        <Loader2 className="w-4 h-4 animate-spin" /> Loading…
-                                    </p>
-                                ) : (
-                                    <p className="text-xs text-slate-500">Loading your referral link…</p>
-                                )}
-                                <p className="text-[11px] text-slate-500">
-                                    {searchParams?.get("ref") ? (
-                                        <span className="text-emerald-600 font-medium">You have a referral code — apply below:</span>
-                                    ) : (
-                                        "Have a referral code? Apply below:"
-                                    )}
-                                </p>
+                                    <p className="text-xs text-gray-500 flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Loading…</p>
+                                ) : null}
+                                <p className="text-[11px] text-gray-500">{searchParams?.get("ref") ? "You have a referral code — apply below:" : "Have a referral code? Apply below:"}</p>
                                 <div className="flex gap-2">
                                     <input
                                         type="text"
                                         value={referralApplyCode}
                                         onChange={(e) => setReferralApplyCode(e.target.value.toUpperCase())}
                                         onKeyDown={(e) => e.key === "Enter" && handleReferralApply()}
-                                        placeholder="Enter friend's code"
-                                        className="flex-1 min-w-0 px-3 py-2.5 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                        placeholder="Enter code"
+                                        className="flex-1 min-w-0 px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     />
                                     <button
                                         onClick={handleReferralApply}
                                         disabled={referralApplyLoading || !referralApplyCode.trim()}
-                                        className="px-3 py-2.5 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl disabled:opacity-50 flex-shrink-0"
+                                        className="px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg disabled:opacity-50"
                                     >
                                         {referralApplyLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
                                     </button>
                                 </div>
                                 {referralApplyMessage && (
-                                    <div className={`p-3 rounded-xl text-xs ${
-                                        referralApplyMessage.type === "success"
-                                            ? "bg-green-50 text-green-700 border border-green-200"
-                                            : "bg-red-50 text-red-700 border border-red-200"
-                                    }`}>
+                                    <p className={`text-xs ${referralApplyMessage.type === "success" ? "text-emerald-600" : "text-red-600"}`}>
                                         {referralApplyMessage.text}
-                                    </div>
+                                    </p>
                                 )}
                             </div>
-                            <div className="mt-4 flex flex-col items-center gap-2 text-xs text-slate-500 text-center">
-                                <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
-                                    <Lock className="w-3.5 h-3.5 flex-shrink-0" />
-                                    <span>PCI DSS compliant • Instant token delivery</span>
-                                </div>
-                                <span>No subscription • Pay once, use your tokens anytime</span>
-                                <a
-                                    href="/refund-policy"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-blue-600 hover:text-blue-700 font-medium underline underline-offset-2"
-                                >
-                                    Not satisfied? See our Refund Policy
+                            <div className="mt-4 pt-4 border-t border-gray-200 text-center text-xs text-gray-500">
+                                <p>PCI DSS compliant · Instant delivery</p>
+                                <a href="/refund-policy" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-gray-900 underline underline-offset-1 mt-1 inline-block">
+                                    Refund Policy
                                 </a>
                             </div>
                         </div>
@@ -1642,58 +1596,44 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                 </div>
             )}
 
-            {/* History Modal - z-[60] above header */}
             {showHistory && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
-                    <div className="bg-white rounded-xl p-6 max-w-lg w-full shadow-2xl max-h-[80vh] flex flex-col">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
-                                <History className="w-5 h-5 text-blue-600" />
-                                Script History
-                            </h3>
-                            <button onClick={() => setShowHistory(false)} className="text-slate-400 hover:text-slate-600">
+                <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[60] p-4">
+                    <div className="bg-white rounded-xl p-4 max-w-lg w-full max-h-[80vh] flex flex-col border border-gray-200 shadow-xl">
+                        <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200">
+                            <h3 className="text-base font-semibold text-gray-900">History</h3>
+                            <button onClick={() => setShowHistory(false)} className="p-2 text-gray-500 hover:text-gray-900 rounded-md">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
-
                         <div className="flex-1 overflow-y-auto">
                             {loadingHistory ? (
-                                <div className="flex items-center justify-center py-8">
-                                    <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+                                <div className="flex justify-center py-8">
+                                    <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
                                 </div>
                             ) : scriptHistory.length === 0 ? (
-                                <div className="text-center py-8 text-slate-500">
-                                    <FileText className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                                <div className="text-center py-8 text-gray-500 text-sm">
+                                    <FileText className="w-10 h-10 mx-auto mb-2 text-gray-300" />
                                     <p>No scripts yet</p>
-                                    <p className="text-sm">Generated scripts will appear here</p>
                                 </div>
                             ) : (
-                                <div className="space-y-2">
+                                <div className="space-y-1">
                                     {scriptHistory.map((item) => (
                                         <div
                                             key={item.id}
-                                            className="flex items-center gap-3 p-3 bg-slate-50 hover:bg-slate-100 rounded-lg cursor-pointer group transition-colors"
+                                            className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-gray-300 hover:bg-gray-50 cursor-pointer group"
                                             onClick={() => loadScript(item.id)}
                                         >
                                             <div className="flex-1 min-w-0">
-                                                <p className="font-medium text-slate-900 truncate">{item.title}</p>
-                                                <div className="flex items-center gap-2 text-xs text-slate-500">
+                                                <p className="font-medium text-gray-900 truncate text-sm">{item.title}</p>
+                                                <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
                                                     <Clock className="w-3 h-3" />
-                                                    {new Date(item.created_at).toLocaleDateString("en-IN", {
-                                                        day: "numeric",
-                                                        month: "short",
-                                                        year: "numeric",
-                                                        hour: "2-digit",
-                                                        minute: "2-digit"
-                                                    })}
-                                                    <span className="px-1.5 py-0.5 bg-slate-200 rounded text-slate-600">
-                                                        {item.duration}min
-                                                    </span>
+                                                    {new Date(item.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                                                    <span>{item.duration} min</span>
                                                 </div>
                                             </div>
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); deleteScript(item.id); }}
-                                                className="p-2 text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                className="p-2 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100"
                                                 title="Delete"
                                             >
                                                 <Trash2 className="w-4 h-4" />
@@ -1707,564 +1647,212 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                 </div>
             )}
 
-            {/* Header */}
-            <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/95 backdrop-blur-md">
-                <div className="h-0.5 w-full bg-gradient-to-r from-blue-600 via-blue-500 to-amber-400" />
-                <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="flex items-center gap-4">
-                            <div>
-                                <div className="flex items-center gap-3">
-                                    <a
-                                        href="/"
-                                        className="text-base font-semibold text-slate-900 hover:text-slate-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded px-1"
-                                    >
-                                        Script<span className="text-blue-600">Gen</span>
-                                    </a>
-                                    <a
-                                        href="/"
-                                        className="text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors hidden sm:inline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded px-2 py-1"
-                                    >
-                                        Home
-                                    </a>
-                                </div>
-                                <p className="text-xs text-slate-500 mt-0.5 hidden sm:block">
-                                    YouTube script generator
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Auth & Credits */}
-                        <div className="flex items-center gap-3 sm:gap-6">
-                            {session ? (
-                                <>
-                                    {/* History Button */}
-                                    <button
-                                        onClick={() => { setShowHistory(true); fetchHistory(); }}
-                                        className="flex items-center gap-2 px-3 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all duration-200"
-                                        title="Script History"
-                                    >
-                                        <History className="w-5 h-5" />
-                                        <span className="hidden sm:inline text-sm font-medium">History</span>
-                                    </button>
-
-                                    {/* Tokens Display */}
-                                    {credits && (
-                                        <div className="flex items-center gap-2">
-                                            {totalTokens < 20 && (
-                                                <button
-                                                    onClick={() => setShowPaymentModal(true)}
-                                                    className="text-xs font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-md px-2 py-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-1"
-                                                >
-                                                    Low balance — Recharge
-                                                </button>
-                                            )}
-                                            <button
-                                                onClick={() => setShowPaymentModal(true)}
-                                                className="flex items-center gap-2 px-3 sm:px-4 py-1.5 brand-pill rounded-full shadow-inner hover:shadow-md transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-1"
-                                                title="Recharge tokens or use promo code"
-                                            >
-                                                <CreditCard className="w-4 h-4 text-amber-600 flex-shrink-0" />
-                                                <span className="text-sm font-semibold text-amber-900">
-                                                    {totalTokens} tokens
-                                                </span>
-                                                <span className="text-xs font-medium text-amber-700/80 hidden sm:inline">· Recharge</span>
-                                            </button>
-                                        </div>
-                                    )}
-
-                                    {/* User Avatar */}
-                                    <div className="flex items-center gap-4 sm:pl-4 sm:border-l sm:border-slate-200">
-                                        {session.user?.image ? (
-                                            <Image
-                                                src={session.user.image}
-                                                alt=""
-                                                width={40}
-                                                height={40}
-                                                className="w-10 h-10 rounded-full ring-2 ring-blue-500/20 shadow-lg"
-                                                unoptimized
-                                            />
-                                        ) : (
-                                            <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center ring-2 ring-blue-500/20">
-                                                <User className="w-5 h-5 text-blue-600" />
-                                            </div>
-                                        )}
-                                    <button
-                                            onClick={() => signOut()}
-                                        className="flex text-slate-500 hover:text-red-500 transition-colors p-2 rounded-md hover:bg-red-500/10"
-                                            title="Sign Out"
-                                        >
-                                            <LogOut className="w-5 h-5" />
-                                        </button>
-                                    </div>
-                                </>
-                            ) : (
+            <header className="app-bar fixed top-0 left-0 right-0 z-[var(--z-sticky)] bg-white">
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+                    <div className="flex items-center gap-6">
+                        <a href="/" className="flex items-center gap-2 text-slate-900 font-semibold text-lg tracking-tight">
+                            <span className="text-blue-600">ScriptGen</span>
+                        </a>
+                        <span className="hidden sm:block h-5 w-px bg-slate-200" aria-hidden />
+                        <span className="hidden sm:block text-sm font-medium text-slate-600">Script Generator</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        {session ? (
+                            <>
                                 <button
-                                    onClick={() => signIn("google", { callbackUrl: "/app" })}
-                                    className="flex items-center gap-2 px-6 py-2.5 text-white text-sm font-semibold rounded-lg bg-blue-700 brand-glow hover:bg-blue-800 transition-all duration-200 transform hover:-translate-y-0.5"
+                                    onClick={() => { setShowHistory(true); fetchHistory(); }}
+                                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+                                    title="History"
                                 >
-                                    <LogIn className="w-4 h-4" />
-                                    <span className="hidden sm:inline">Sign in with Google</span>
-                                    <span className="sm:hidden">Sign in</span>
+                                    <History className="w-4 h-4" />
+                                    <span className="hidden sm:inline">History</span>
                                 </button>
-                            )}
-                        </div>
+                                {credits && (
+                                    <button
+                                        onClick={() => setShowPaymentModal(true)}
+                                        className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+                                    >
+                                        <CreditCard className="w-4 h-4 text-slate-500" />
+                                        <span>{totalTokens} tokens</span>
+                                    </button>
+                                )}
+                                <span className="h-6 w-px bg-slate-200 mx-1" aria-hidden />
+                                {session.user?.image ? (
+                                    <Image src={session.user.image} alt="" width={32} height={32} className="w-8 h-8 rounded-full ring-2 ring-slate-100" unoptimized />
+                                ) : (
+                                    <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center ring-2 ring-slate-100">
+                                        <User className="w-4 h-4 text-slate-600" />
+                                    </div>
+                                )}
+                                <button onClick={() => signOut()} className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors" title="Sign Out">
+                                    <LogOut className="w-4 h-4" />
+                                </button>
+                            </>
+                        ) : (
+                            <button
+                                onClick={() => signIn("google", { callbackUrl: "/app" })}
+                                className="px-5 py-2.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-all hover:shadow"
+                            >
+                                Sign in
+                            </button>
+                        )}
                     </div>
                 </div>
             </header>
 
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6 relative z-10">
-                <div className="mb-6 text-center">
-                    <h2 className="text-2xl font-semibold text-slate-900 tracking-tight">
-                        Create YouTube scripts with AI
-                    </h2>
-                    <p className="text-sm text-slate-500 mt-1.5 max-w-xl mx-auto">
-                        Configure your video, then generate script, SEO, chapters, and more. Secure payment via Razorpay.
-                    </p>
-                </div>
-                <div className="mb-6 flex items-center gap-3 px-4 py-3 rounded-xl bg-white/80 backdrop-blur-sm border border-slate-200/80 text-slate-600 text-sm shadow-sm">
-                    <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
-                        <ShieldCheck className="w-5 h-5 text-emerald-600" />
-                    </div>
-                    <span>
-                        Your card details are never stored. PCI DSS compliant • Instant token delivery.
-                    </span>
-                </div>
-                <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
-                    {/* Left Panel - Configuration (Protected) */}
-                    <div className="w-full lg:w-2/5">
-                        <div className="brand-card rounded-2xl p-6 sm:p-8 lg:sticky lg:top-28">
-                            {!session ? (
-                                /* Login Required Panel */
-                                <div className="relative text-center py-10 sm:py-12 max-w-sm mx-auto px-6 rounded-2xl bg-white/90 backdrop-blur-sm border border-slate-200/80 shadow-xl shadow-slate-200/50 overflow-hidden">
-                                    <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500 via-violet-500 to-blue-600" />
-                                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500/10 to-violet-500/10 flex items-center justify-center mx-auto mb-5 ring-4 ring-blue-500/5">
-                                        <Sparkles className="w-7 h-7 text-blue-600" />
-                                    </div>
-                                    <h3 className="text-xl font-semibold text-slate-900 mb-2 tracking-tight">Get started</h3>
-                                    <p className="text-slate-500 text-sm leading-relaxed mb-6 max-w-[260px] mx-auto">
-                                        Sign in with Google. 50 free tokens, no card required.
-                                    </p>
-                                    <div className="flex flex-col gap-3 text-left max-w-[260px] mx-auto">
-                                        <div className="flex items-center gap-3 px-3 py-2 rounded-xl bg-slate-50/80 border border-slate-100 text-slate-700 text-sm">
-                                            <div className="w-7 h-7 rounded-lg bg-green-500/10 flex items-center justify-center flex-shrink-0">
-                                                <Check className="w-4 h-4 text-green-600" />
-                                            </div>
-                                            <span>Script + SEO + chapters</span>
-                                        </div>
-                                        <div className="flex items-center gap-3 px-3 py-2 rounded-xl bg-slate-50/80 border border-slate-100 text-slate-700 text-sm">
-                                            <div className="w-7 h-7 rounded-lg bg-green-500/10 flex items-center justify-center flex-shrink-0">
-                                                <Check className="w-4 h-4 text-green-600" />
-                                            </div>
-                                            <span>Image prompts, B-roll, shorts</span>
-                                        </div>
-                                    </div>
-                                    <button
-                                        onClick={() => signIn("google", { callbackUrl: "/app" })}
-                                        className="w-full mt-6 py-3 px-4 text-white text-sm font-semibold rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg shadow-blue-500/25 transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-xl hover:shadow-blue-500/30"
-                                    >
-                                        <LogIn className="w-4 h-4" />
-                                        Sign in with Google
-                                    </button>
+            <main className="pt-16 min-h-screen bg-slate-50/80">
+                {!session ? (
+                    <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] px-4 py-16 bg-gradient-to-b from-slate-50/80 to-white">
+                        <div className="w-full max-w-md surface-raised rounded-2xl p-10 text-center shadow-xl border border-slate-200/80">
+                            <p className="text-overline mb-3">AI Script Generator</p>
+                            <h1 className="text-headline text-slate-900 mb-3">Scripts that convert & scale</h1>
+                            <p className="text-slate-600 text-sm leading-relaxed mb-8 max-w-sm mx-auto">
+                                Professional, SEO-optimized YouTube scripts in seconds. Sign in to get 30 free tokens.
+                            </p>
+                            <div className="grid grid-cols-1 gap-3 text-left mb-8 p-4 rounded-xl bg-slate-50 border border-slate-200">
+                                <div className="flex items-center gap-3 text-sm text-slate-700">
+                                    <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0"><Check className="w-4 h-4 text-blue-600" /></div>
+                                    <span>Script, SEO, chapters, B-roll, Shorts</span>
                                 </div>
-                            ) : (
-                                /* Authenticated - Show Configuration */
-                                <div className="space-y-6 sm:space-y-7">
-                                    {/* Header */}
-                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-4 border-b border-slate-200/80">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500/10 to-violet-500/10 text-blue-600">
-                                                <Settings2 className="w-5 h-5" />
-                                            </div>
-                                            <div>
-                                                <h2 className="text-lg font-bold text-slate-900">Configuration</h2>
-                                                <p className="text-xs text-slate-500">Set your video details</p>
-                                            </div>
+                                <div className="flex items-center gap-3 text-sm text-slate-700">
+                                    <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0"><Check className="w-4 h-4 text-blue-600" /></div>
+                                    <span>English, Tamil, Thanglish, Hindi</span>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => signIn("google", { callbackUrl: "/app" })}
+                                className="w-full py-3.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-lg shadow-blue-600/20 hover:shadow-xl transition-all"
+                            >
+                                Sign in with Google
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="flex flex-col min-h-[calc(100vh-4rem)]">
+                        {/* Generator — enterprise card */}
+                        <div className="w-full border-b border-slate-200 bg-white px-4 sm:px-6 py-6">
+                            <div className="max-w-5xl mx-auto">
+                                <div className="surface-raised surface-raised-hover p-6 sm:p-8 rounded-2xl space-y-6">
+                                    <div>
+                                        <p className="text-overline mb-2">Video topic</p>
+                                        <div className="flex flex-col sm:flex-row gap-3">
+                                            <input
+                                                type="text"
+                                                value={formData.title}
+                                                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                                placeholder="e.g. How to build a habit in 21 days"
+                                                className="flex-1 min-w-0 px-4 py-3.5 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base font-medium"
+                                            />
+                                            <button
+                                                onClick={generateScript}
+                                                disabled={loading || !formData.title.trim()}
+                                                className="sm:w-auto w-full py-3.5 px-8 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 flex-shrink-0 shadow-sm hover:shadow"
+                                            >
+                                                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                                                {loading ? "Generating…" : "Generate script"}
+                                            </button>
                                         </div>
-                                        {credits && (
-                                            <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-50 border border-amber-200/80 text-amber-800 font-semibold text-sm">
-                                                <CreditCard className="w-4 h-4" />
-                                                {totalTokens} tokens
-                                            </span>
+                                        {loading && progress && (
+                                            <p className="flex items-center gap-2 text-sm text-slate-500 mt-3">
+                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                                {progress}
+                                            </p>
                                         )}
+                                        {error && <p className="text-sm text-red-600 mt-3">{error}</p>}
                                     </div>
 
-                                    {/* Section 1: Quick start */}
-                                    <div>
-                                        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">Quick start</p>
-                                        <div className="flex flex-wrap gap-2">
+                                    <div className="border-t border-slate-200 pt-6">
+                                        <p className="text-overline mb-3">Template & parameters</p>
+                                        <div className="flex flex-wrap items-center gap-3 mb-4">
                                             {scriptTemplates.map((t) => (
                                                 <button
                                                     key={t.id}
-                                                    type="button"
-                                                    onClick={() =>
-                                                        setFormData({
-                                                            ...formData,
-                                                            contentType: t.formData.contentType,
-                                                            duration: t.formData.duration,
-                                                            tone: t.formData.tone,
-                                                            difficulty: t.formData.difficulty,
-                                                        })
-                                                    }
-                                                    className={`inline-flex items-center px-4 py-2.5 text-sm font-medium rounded-xl border-2 transition-all ${
-                                                        formData.contentType === t.formData.contentType
-                                                            ? "bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-500/20"
-                                                            : "bg-white border-slate-200 text-slate-600 hover:border-blue-200 hover:bg-blue-50/50"
-                                                    }`}
+                                                    onClick={() => setFormData({ ...formData, contentType: t.formData.contentType, duration: t.formData.duration, tone: t.formData.tone, difficulty: t.formData.difficulty })}
+                                                    className={`px-4 py-2 text-xs font-medium rounded-lg border transition-all ${formData.contentType === t.formData.contentType ? "border-blue-300 bg-blue-50 text-blue-700 shadow-sm" : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900"}`}
                                                 >
                                                     {t.label}
                                                 </button>
                                             ))}
                                         </div>
-                                    </div>
-
-                                    {/* Section 2: Video basics */}
-                                    <div className="p-5 rounded-2xl bg-slate-50/80 border border-slate-200/80 space-y-4">
-                                        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Video basics</p>
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                                                Title <span className="text-red-500">*</span>
-                                            </label>
-                                            <input
-                                                type="text"
-                                                value={formData.title}
-                                                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                                placeholder={
-                                                    scriptTemplates.find((t) => t.formData.contentType === formData.contentType)?.formData.titlePlaceholder ||
-                                                    "e.g., React useState hook complete guide"
-                                                }
-                                                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 placeholder-slate-400 transition-all"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                                                Channel <span className="text-slate-400 font-normal">(optional)</span>
-                                            </label>
-                                            <input
-                                                type="text"
-                                                value={formData.channelName}
-                                                onChange={(e) => setFormData({ ...formData, channelName: e.target.value })}
-                                                placeholder="Your channel name"
-                                                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 placeholder-slate-400 transition-all"
-                                            />
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            <select value={formData.duration} onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) })} className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                                {[5, 8, 10, 12, 15, 20].map(m => <option key={m} value={m}>{m} min</option>)}
+                                            </select>
+                                            <select value={formData.language} onChange={(e) => setFormData({ ...formData, language: e.target.value })} className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                                {languages.map(l => <option key={l.value} value={l.value}>{l.value}</option>)}
+                                            </select>
+                                            <select value={formData.tone} onChange={(e) => setFormData({ ...formData, tone: e.target.value })} className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 capitalize">
+                                                {tones.map(t => <option key={t.value} value={t.value}>{t.value}</option>)}
+                                            </select>
+                                            <select value={formData.difficulty} onChange={(e) => setFormData({ ...formData, difficulty: e.target.value })} className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                                <option value="Beginner">Beginner</option>
+                                                <option value="Intermediate">Intermediate</option>
+                                                <option value="Advanced">Advanced</option>
+                                            </select>
                                         </div>
                                     </div>
 
-                                    {/* Section 3: Duration */}
-                                    <div className="p-5 rounded-2xl bg-gradient-to-br from-blue-50/60 to-slate-50/80 border border-blue-100/80 space-y-4">
-                                        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Duration</p>
-                                        <div className="flex flex-wrap gap-2">
-                                            {[5, 8, 10, 12, 15, 20].map((m) => (
-                                                <button
-                                                    key={m}
-                                                    type="button"
-                                                    onClick={() => setFormData({ ...formData, duration: m })}
-                                                    className={`px-4 py-2 text-sm font-semibold rounded-xl transition-all ${
-                                                        formData.duration === m
-                                                            ? "bg-blue-600 text-white shadow-md"
-                                                            : "bg-white border border-slate-200 text-slate-600 hover:border-blue-200 hover:bg-blue-50/50"
-                                                    }`}
-                                                >
-                                                    {m} min
-                                                </button>
+                                    <div className="border-t border-slate-200 pt-6">
+                                        <p className="text-overline mb-3">Add-ons</p>
+                                        <div className="flex flex-wrap items-center gap-4">
+                                            {[
+                                                { key: "includeChapters", label: "Chapters", icon: List },
+                                                { key: "includeBRoll", label: "B-Roll", icon: Film },
+                                                { key: "includeShorts", label: "Shorts", icon: Scissors },
+                                                { key: "generateImages", label: "Images", icon: ImageIcon },
+                                                { key: "includeCode", label: "Code", icon: FileText },
+                                            ].map(({ key, label, icon: Icon }) => (
+                                                <label key={key} className="flex items-center gap-2 cursor-pointer text-sm font-medium text-slate-700 hover:text-slate-900">
+                                                    <input type="checkbox" checked={(formData as unknown as Record<string, boolean>)[key]} onChange={(e) => setFormData({ ...formData, [key]: e.target.checked })} className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                                                    <Icon className="w-4 h-4 text-slate-400" />
+                                                    {label}
+                                                </label>
                                             ))}
-                                        </div>
-                                        <div className="flex items-center gap-3">
-                                            <div className="flex-1 h-3 bg-slate-200/80 rounded-full relative overflow-hidden">
-                                                <div
-                                                    className="absolute h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all duration-200"
-                                                    style={{ width: `${((formData.duration - 5) / 15) * 100}%` }}
-                                                />
-                                                <input
-                                                    type="range"
-                                                    min="5"
-                                                    max="20"
-                                                    step="1"
-                                                    value={formData.duration}
-                                                    onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) })}
-                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                                />
-                                                <div
-                                                    className="absolute h-5 w-5 bg-white rounded-full shadow-lg border-2 border-blue-600 top-1/2 -translate-y-1/2 pointer-events-none ring-4 ring-blue-500/10"
-                                                    style={{ left: `calc(${((formData.duration - 5) / 15) * 100}% - 10px)` }}
-                                                />
-                                            </div>
-                                            <span className="text-sm font-bold text-blue-600 w-12">{formData.duration} min</span>
-                                        </div>
-                                        <p className="text-xs text-slate-500">~{estimatedWords} words</p>
-                                    </div>
-
-                                    {/* Section 4: Style */}
-                                    <div className="p-5 rounded-2xl bg-slate-50/80 border border-slate-200/80 space-y-4">
-                                        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Style</p>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-sm font-medium text-slate-700 mb-1.5">Content Type</label>
-                                                <div className="relative">
-                                                    <select
-                                                        value={formData.contentType}
-                                                        onChange={(e) => setFormData({ ...formData, contentType: e.target.value })}
-                                                        className="w-full pl-4 pr-10 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 appearance-none cursor-pointer"
-                                                    >
-                                                        <option value="Tutorial">Tutorial / How-to</option>
-                                                        <option value="Review">Product Review</option>
-                                                        <option value="Vlog">Vlog / Storytelling</option>
-                                                        <option value="Educational">Educational</option>
-                                                        <option value="Entertainment">Entertainment</option>
-                                                    </select>
-                                                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-slate-700 mb-1.5">Difficulty</label>
-                                                <div className="relative">
-                                                    <select
-                                                        value={formData.difficulty}
-                                                        onChange={(e) => setFormData({ ...formData, difficulty: e.target.value })}
-                                                        className="w-full pl-4 pr-10 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 appearance-none cursor-pointer"
-                                                    >
-                                                        <option value="Beginner">Beginner</option>
-                                                        <option value="Intermediate">Intermediate</option>
-                                                        <option value="Advanced">Advanced</option>
-                                                    </select>
-                                                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1.5">Tone</label>
-                                            <div className="relative">
-                                                <select
-                                                    value={formData.tone}
-                                                    onChange={(e) => setFormData({ ...formData, tone: e.target.value })}
-                                                    className="w-full pl-4 pr-10 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 appearance-none cursor-pointer"
-                                                >
-                                                    {tones.map((t) => (
-                                                        <option key={t.value} value={t.value}>{t.label}</option>
-                                                    ))}
-                                                </select>
-                                                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                                            </div>
+                                            <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md">{requiredTokens} tokens</span>
                                         </div>
                                     </div>
-
-                                    {/* Section 5: Language */}
-                                    <div className="p-5 rounded-2xl border-2 border-blue-100/80 bg-gradient-to-br from-blue-50/40 to-white space-y-4">
-                                        <div className="flex items-center justify-between">
-                                            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Language</p>
-                                            <span className="text-[10px] font-bold uppercase text-amber-700 bg-amber-100 px-2 py-0.5 rounded-md">AI Optimized</span>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            {languages.map((lang) => (
-                                                <button
-                                                    key={lang.value}
-                                                    type="button"
-                                                    onClick={() => setFormData({ ...formData, language: lang.value })}
-                                                    className={`px-4 py-3 text-sm font-semibold rounded-xl border-2 transition-all ${
-                                                        formData.language === lang.value
-                                                            ? "bg-blue-600 border-blue-600 text-white shadow-md"
-                                                            : "bg-white border-slate-200 text-slate-600 hover:border-blue-200 hover:bg-blue-50/50"
-                                                    }`}
-                                                >
-                                                    {lang.label}
-                                                </button>
-                                            ))}
-                                        </div>
-                                        <p className="text-xs text-slate-500">
-                                            {formData.language === "Thunglish" && "60% Tamil + 40% English (high retention)"}
-                                            {formData.language === "English" && "International standard English"}
-                                            {formData.language === "Tamil" && "Pure Tamil, tech terms in English"}
-                                            {formData.language === "Hindi" && "Hinglish – natural conversational style"}
-                                        </p>
-                                    </div>
-
-                                    {/* Section 6: Options & Premium */}
-                                    <div className="p-5 rounded-2xl bg-slate-50/80 border border-slate-200/80 space-y-4">
-                                        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Options</p>
-                                        <div className="flex flex-wrap gap-4">
-                                            <label className="flex items-center gap-3 cursor-pointer p-3 rounded-xl hover:bg-white/60 transition-colors min-h-[48px]">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={formData.includeCode}
-                                                    onChange={(e) => setFormData({ ...formData, includeCode: e.target.checked })}
-                                                    className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-                                                />
-                                                <span className="text-sm font-medium text-slate-700">Include code examples</span>
-                                            </label>
-                                            <label className="flex items-center gap-3 cursor-pointer p-3 rounded-xl hover:bg-white/60 transition-colors min-h-[48px]">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={formData.localContext}
-                                                    onChange={(e) => setFormData({ ...formData, localContext: e.target.checked })}
-                                                    className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-                                                />
-                                                <span className="text-sm font-medium text-slate-700">Tamil Nadu context</span>
-                                            </label>
-                                        </div>
-                                        <div className="pt-4 border-t border-slate-200/80">
-                                            <p className="text-xs font-semibold text-slate-600 mb-3 flex items-center gap-2">
-                                                <Sparkles className="w-4 h-4 text-amber-500" />
-                                                Premium (10 tokens each)
-                                            </p>
-                                            <div className="grid gap-2 sm:grid-cols-2">
-                                                {[
-                                                    { key: "includeChapters", label: "Chapters", icon: List },
-                                                    { key: "includeBRoll", label: "B-Roll", icon: Film },
-                                                    { key: "includeShorts", label: "Shorts", icon: Scissors },
-                                                    { key: "generateImages", label: "Image prompts", icon: ImageIcon },
-                                                ].map(({ key, label, icon: Icon }) => (
-                                                    <label
-                                                        key={key}
-                                                        className="flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-200/80 hover:border-blue-200 cursor-pointer transition-colors"
-                                                    >
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={(formData as unknown as Record<string, boolean>)[key]}
-                                                            onChange={(e) => setFormData({ ...formData, [key]: e.target.checked })}
-                                                            className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-                                                        />
-                                                        <Icon className="w-4 h-4 text-slate-500" />
-                                                        <span className="text-sm font-medium text-slate-700">{label}</span>
-                                                    </label>
-                                                ))}
-                                            </div>
-                                            {formData.generateImages && (
-                                                <div className="mt-3 pl-8">
-                                                    <select
-                                                        value={formData.imageFormat}
-                                                        onChange={(e) => setFormData({ ...formData, imageFormat: e.target.value })}
-                                                        className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                                    >
-                                                        {imageFormats.map((f) => (
-                                                            <option key={f.value} value={f.value}>{f.label}</option>
-                                                        ))}
-                                                    </select>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* Error Message */}
-                                    {error && (
-                                        <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
-                                            {error}
-                                        </div>
-                                    )}
-
-                                    {/* Generate Button */}
-                                    <div className="pt-2 space-y-3">
-                                        <button
-                                            onClick={generateScript}
-                                            disabled={loading || !formData.title.trim()}
-                                            className="w-full py-4 px-5 text-white text-base font-bold rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
-                                        >
-                                            {loading ? (
-                                                <>
-                                                    <Loader2 className="w-5 h-5 animate-spin" />
-                                                    Generating Magic...
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Sparkles className="w-5 h-5" />
-                                                    Generate Script
-                                                </>
-                                            )}
-                                        </button>
-                                        {loading && (
-                                            <button
-                                                onClick={cancelGeneration}
-                                                className="w-full py-3 px-4 bg-slate-100 text-slate-700 font-semibold rounded-xl hover:bg-slate-200 transition-colors"
-                                            >
-                                                Cancel Generation
-                                            </button>
-                                        )}
-                                        <div className="mt-2 text-center text-xs text-slate-400 space-y-1">
-                                            {totalTokens < requiredTokens && (
-                                                <p>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setShowPaymentModal(true)}
-                                                        className="text-amber-600 hover:text-amber-700 font-medium underline underline-offset-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-1 rounded"
-                                                    >
-                                                        Not enough tokens — recharge
-                                                    </button>
-                                                </p>
-                                            )}
-                                            <p>Script costs 10 tokens + 10 per selected feature</p>
-                                        </div>
-                                        {hasSavedState && (
-                                            <button
-                                                onClick={clearSavedState}
-                                                className="w-full text-xs text-slate-500 hover:text-slate-700 underline underline-offset-4"
-                                            >
-                                                Clear saved draft on this device
-                                            </button>
-                                        )}
-                                    </div>
-
-                                    {/* Progress Indicator */}
-                                    {progress && (
-                                        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-                                            <div className="flex items-center gap-2">
-                                                <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
-                                                <span className="text-sm text-blue-700">{progress}</span>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Right Panel - Output */}
-                    <div className="w-full lg:w-3/5">
-                        <div className="rounded-2xl min-h-[600px] flex flex-col relative overflow-hidden bg-white border-2 border-slate-200 shadow-xl shadow-slate-300/30">
-                            {/* Accent Top Border */}
-                            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-violet-500 to-blue-600"></div>
-
-                            {/* Tabs Header */}
-                            <div className="px-4 pt-3 pb-0 bg-slate-50/80 border-b border-slate-200/80">
-                                <div className="flex gap-1 overflow-x-auto no-scrollbar">
-                                    {tabs.map((tab) => (
-                                        <button
-                                            key={tab.id}
-                                            onClick={() => setActiveTab(tab.id)}
-                                            className={`relative flex-shrink-0 px-4 py-3 text-sm font-semibold rounded-t-xl transition-all ${activeTab === tab.id
-                                                ? "bg-white text-blue-600 shadow-sm border border-slate-200/80 border-b-0 -mb-px"
-                                                : "text-slate-500 hover:text-slate-700 hover:bg-white/80"
-                                                }`}
-                                        >
-                                            {tab.label}
-                                        </button>
-                                    ))}
                                 </div>
                             </div>
+                        </div>
 
-                            {/* Content */}
-                            <div className="flex-1 p-4 sm:p-5 md:p-6 bg-white min-h-[400px]">
+                        {/* Output */}
+                        <section className="flex-1 flex flex-col min-h-0 min-w-0 bg-white">
+                            <div className="flex border-b border-slate-200 overflow-x-auto bg-white flex-shrink-0 px-4 sm:px-6">
+                                <div className="max-w-5xl mx-auto w-full flex gap-1">
+                                {tabs.map((tab) => (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => setActiveTab(tab.id)}
+                                        className={`px-5 py-3.5 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 -mb-px ${activeTab === tab.id ? "text-blue-600 border-blue-600" : "text-slate-500 border-transparent hover:text-slate-900"}`}
+                                    >
+                                        {tab.label}
+                                    </button>
+                                ))}
+                                </div>
+                            </div>
+                            <div className="flex-1 min-h-0 overflow-auto p-4 sm:p-6">
+                                <div className="max-w-5xl mx-auto">
                                 {activeTab === "script" ? (
                                     script ? (
                                         <div className="space-y-4">
-                                            {/* Action Bar */}
-                                            <div className="flex flex-wrap items-center gap-2 p-3 rounded-xl bg-slate-50/80 border border-slate-200/80">
+                                            <div className="flex flex-wrap items-center gap-2 p-3 rounded-lg bg-gray-50 border border-gray-200">
                                                 <div className="flex flex-wrap items-center gap-2">
-                                                    {/* Translate */}
                                                     <div className="relative">
                                                         <button
                                                             onClick={() => setShowTranslateDropdown(!showTranslateDropdown)}
                                                             disabled={isTranslating}
-                                                            className="px-4 py-2.5 text-sm font-medium rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                            className="px-3 py-2 text-sm rounded-md border border-gray-200 bg-white text-gray-600 hover:text-gray-900 hover:border-gray-300 transition-colors disabled:opacity-50"
                                                         >
                                                             {isTranslating ? "Translating…" : "Translate"}
                                                             <ChevronDown className="inline-block w-4 h-4 ml-1 align-middle" />
                                                         </button>
                                                         {showTranslateDropdown && (
-                                                            <div className="absolute top-full left-0 mt-2 w-44 bg-white rounded-xl shadow-lg border border-slate-200 py-1 z-20">
+                                                            <div className="absolute top-full left-0 mt-2 w-40 bg-white rounded-lg border border-gray-200 shadow-lg py-1 z-20">
                                                                 {languages.map((lang) => (
                                                                     <button
                                                                         key={lang.value}
                                                                         onClick={() => translateScript(lang.value)}
-                                                                        className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                                                        className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                                                                     >
                                                                         {lang.label.split(" ")[0]}
                                                                     </button>
@@ -2273,15 +1861,14 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                                         )}
                                                     </div>
 
-                                                    {/* Regenerate */}
                                                     {hookSection && (
-                                                        <div className="flex gap-1.5 pl-2 border-l border-slate-200">
+                                                        <div className="flex gap-1.5 pl-2 border-l border-gray-200">
                                                             {(["hook_intro", "main_content", "demo_outro"] as const).map((stage) => (
                                                                 <button
                                                                     key={stage}
                                                                     onClick={() => regenerateSection(stage)}
                                                                     disabled={loading}
-                                                                    className="px-3 py-2 text-xs font-medium rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors disabled:opacity-50"
+                                                                    className="px-2 py-1.5 text-xs rounded-md border border-gray-200 text-gray-600 hover:text-gray-900 hover:border-gray-300 disabled:opacity-50"
                                                                     title={`Regenerate ${stage === "hook_intro" ? "Hook" : stage === "main_content" ? "Main" : "Outro"} (10 tokens)`}
                                                                 >
                                                                     {stage === "hook_intro" ? "Hook" : stage === "main_content" ? "Main" : "Outro"}
@@ -2290,59 +1877,43 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                                         </div>
                                                     )}
 
-                                                    {/* Copy */}
                                                     <button
                                                         onClick={copyToClipboard}
-                                                        className="px-4 py-2.5 text-sm font-medium rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-colors"
+                                                        className="px-3 py-2 text-sm rounded-md border border-gray-200 bg-white text-gray-600 hover:text-gray-900"
                                                     >
-                                                        {copied ? "Copied!" : "Copy"}
+                                                        {copied ? "Copied" : "Copy"}
                                                     </button>
-
-                                                    {/* Export */}
                                                     <div className="relative">
                                                         <button
                                                             onClick={() => setShowExportDropdown(!showExportDropdown)}
-                                                            className="px-4 py-2.5 text-sm font-medium rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-colors flex items-center gap-1.5"
+                                                            className="px-3 py-2 text-sm rounded-md border border-gray-200 bg-white text-gray-600 hover:text-gray-900 flex items-center gap-1"
                                                         >
                                                             Export
                                                             <ChevronDown className="w-4 h-4" />
                                                         </button>
                                                         {showExportDropdown && (
-                                                            <div className="absolute top-full left-0 mt-2 w-52 bg-white rounded-xl shadow-lg border border-slate-200 py-1.5 z-20">
-                                                                <button onClick={downloadAsPDF} className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
-                                                                    PDF
-                                                                </button>
-                                                                <button onClick={downloadAsDOC} className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
-                                                                    Word
-                                                                </button>
-                                                                <button onClick={() => { downloadScript(); setShowExportDropdown(false); }} className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
-                                                                    Text
-                                                                </button>
-                                                                <button onClick={downloadAsSRT} className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
-                                                                    SRT (captions)
-                                                                </button>
+                                                            <div className="absolute top-full left-0 mt-2 w-40 bg-white rounded-lg border border-gray-200 shadow-lg py-1 z-20">
+                                                                <button onClick={downloadAsPDF} className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900">PDF</button>
+                                                                <button onClick={downloadAsDOC} className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900">Word</button>
+                                                                <button onClick={() => { downloadScript(); setShowExportDropdown(false); }} className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900">Text</button>
+                                                                <button onClick={downloadAsSRT} className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900">SRT</button>
                                                             </div>
                                                         )}
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            {/* Script Display */}
-                                            <div className="rounded-xl border-2 border-slate-200 bg-white p-6 sm:p-8 overflow-auto max-h-[70vh] shadow-lg shadow-slate-200/40 ring-1 ring-slate-100">
-                                                <pre className="font-script text-slate-900 text-base sm:text-[17px] leading-[1.85] whitespace-pre-wrap antialiased tracking-[0.01em]">
+                                            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 sm:p-6 overflow-auto">
+                                                <pre className="text-gray-800 text-[15px] leading-[1.7] whitespace-pre-wrap">
                                                     {script}
                                                 </pre>
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="flex flex-col items-center justify-center py-20 px-8 text-center border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/80">
-                                            <div className="w-20 h-20 rounded-2xl bg-white border border-slate-200 flex items-center justify-center mb-5 shadow-sm">
-                                                <FileText className="w-10 h-10 text-slate-500" />
-                                            </div>
-                                            <p className="text-xl font-bold text-slate-800">No script yet</p>
-                                            <p className="text-base text-slate-600 mt-2 max-w-sm">
-                                                Configure your video and click Generate to create your script
-                                            </p>
+                                        <div className="flex flex-col items-center justify-center py-16 text-center text-gray-500 text-sm">
+                                            <FileText className="w-10 h-10 mb-3 text-gray-400" />
+                                            <p className="font-medium text-gray-900">No script yet</p>
+                                            <p className="mt-1">Enter a topic and click Generate</p>
                                         </div>
                                     )
                                 ) : activeTab === "seo" ? (
@@ -2350,12 +1921,12 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                         <div className="space-y-6">
                                             {/* Alternative Titles */}
                                             <div>
-                                                <h3 className="text-sm font-semibold text-slate-900 mb-3">Alternative Titles</h3>
+                                                <h3 className="text-sm font-semibold text-gray-900 mb-3">Alternative Titles</h3>
                                                 <ul className="space-y-2">
                                                     {seoData.titles.map((title, index) => (
-                                                        <li key={index} className="p-2 bg-slate-50 rounded-md text-sm text-slate-700 flex items-center justify-between gap-3">
+                                                        <li key={index} className="p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700 flex items-center justify-between gap-3">
                                                             <span>{index + 1}. {title.text}</span>
-                                                            <span className="text-xs text-slate-500">Score {title.score}</span>
+                                                            <span className="text-xs text-blue-600 font-medium">Score {title.score}</span>
                                                         </li>
                                                     ))}
                                                 </ul>
@@ -2363,23 +1934,23 @@ Aspect Ratio: ${prompt.aspectRatio}`;
 
                                             {/* Description */}
                                             <div>
-                                                <h3 className="text-sm font-semibold text-slate-900 mb-3">Description</h3>
-                                                <div className="p-3 bg-slate-50 rounded-md text-sm text-slate-700 whitespace-pre-wrap">
+                                                <h3 className="text-sm font-semibold text-gray-900 mb-3">Description</h3>
+                                                <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700 whitespace-pre-wrap">
                                                     {seoData.description}
                                                 </div>
                                             </div>
 
                                             {/* Tags */}
                                             <div>
-                                                <h3 className="text-sm font-semibold text-slate-900 mb-3">Tags ({seoData.tags.length})</h3>
+                                                <h3 className="text-sm font-semibold text-gray-900 mb-3">Tags ({seoData.tags.length})</h3>
                                                 <div className="flex flex-wrap gap-2">
                                                     {seoData.tags.map((tag, index) => (
                                                         <span
                                                             key={index}
-                                                            className="px-2 py-1 bg-blue-50 text-blue-700 rounded-md text-xs flex items-center gap-2"
+                                                            className="px-3 py-1.5 bg-blue-50 border border-blue-200 text-blue-700 rounded-lg text-xs flex items-center gap-2"
                                                         >
                                                             {tag.text}
-                                                            <span className="text-[10px] text-blue-500">({tag.score})</span>
+                                                            <span className="text-[10px] text-blue-600">({tag.score})</span>
                                                         </span>
                                                     ))}
                                                 </div>
@@ -2387,12 +1958,12 @@ Aspect Ratio: ${prompt.aspectRatio}`;
 
                                             {/* Thumbnail Suggestions */}
                                             <div>
-                                                <h3 className="text-sm font-semibold text-slate-900 mb-3">Thumbnail Text Suggestions</h3>
+                                                <h3 className="text-sm font-semibold text-gray-900 mb-3">Thumbnail Text Suggestions</h3>
                                                 <ul className="space-y-2">
                                                     {seoData.thumbnails.map((thumb, index) => (
-                                                        <li key={index} className="p-2 bg-slate-50 rounded-md text-sm font-medium text-slate-700 flex items-center justify-between gap-3">
+                                                        <li key={index} className="p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 flex items-center justify-between gap-3">
                                                             <span>{index + 1}. {thumb.text}</span>
-                                                            <span className="text-xs text-slate-500">Score {thumb.score}</span>
+                                                            <span className="text-xs text-cyan-600 font-medium">Score {thumb.score}</span>
                                                         </li>
                                                     ))}
                                                 </ul>
@@ -2400,19 +1971,17 @@ Aspect Ratio: ${prompt.aspectRatio}`;
 
                                             {/* First Comment */}
                                             <div>
-                                                <h3 className="text-sm font-semibold text-slate-900 mb-3">First Comment to Pin</h3>
-                                                <div className="p-3 bg-slate-50 rounded-md text-sm text-slate-700 whitespace-pre-wrap">
+                                                <h3 className="text-sm font-semibold text-gray-900 mb-3">First Comment to Pin</h3>
+                                                <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700 whitespace-pre-wrap">
                                                     {seoData.comment}
                                                 </div>
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="empty-state">
-                                            <div className="empty-state-icon">
-                                                <Search className="w-8 h-8" />
-                                            </div>
-                                            <p className="text-base font-medium text-slate-600">No SEO data generated yet</p>
-                                            <p className="text-sm mt-1 text-slate-500">SEO data will be generated after the script</p>
+                                        <div className="flex flex-col items-center justify-center py-16 text-center text-gray-500 text-sm">
+                                            <Search className="w-10 h-10 mb-3 text-gray-400" />
+                                            <p className="font-medium text-gray-900">No SEO data yet</p>
+                                            <p className="mt-1">Generate a script first</p>
                                         </div>
                                     )
                                 ) : activeTab === "images" ? (
@@ -2421,8 +1990,8 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                             {/* Header */}
                                             <div className="flex items-center justify-between mb-4">
                                                 <div>
-                                                    <h3 className="text-lg font-semibold text-white">AI Image Prompts</h3>
-                                                    <p className="text-sm text-zinc-400">{imagesData.length} prompts generated for your video</p>
+                                                    <h3 className="text-lg font-semibold text-gray-900">AI Image Prompts</h3>
+                                                    <p className="text-sm text-gray-500">{imagesData.length} prompts generated for your video</p>
                                                 </div>
                                             </div>
 
@@ -2430,30 +1999,30 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                             <div className="space-y-4 max-h-[70vh] overflow-auto">
                                                 {imagesData.map((prompt) => <div
                                                     key={prompt.id}
-                                                    className="bg-white rounded-xl p-5 border border-slate-200 hover:border-blue-400 hover:shadow-md transition-all group"
+                                                    className="bg-gray-50 rounded-lg p-5 border border-gray-200 hover:border-blue-200 transition-colors group"
                                                 >
                                                     {/* Header Row */}
                                                     <div className="flex items-start justify-between mb-3">
                                                         <div className="flex items-center gap-3">
-                                                            <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded">
+                                                            <span className="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs font-bold rounded-lg">
                                                                 {prompt.timestamp}
                                                             </span>
-                                                            <span className={`px-2 py-1 text-xs font-medium rounded border ${prompt.scene === "Hook" ? "bg-amber-50 text-amber-700 border-amber-200" :
-                                                                prompt.scene === "Intro" ? "bg-blue-50 text-blue-700 border border-blue-200" :
-                                                                    prompt.scene === "Main Content" ? "bg-amber-50 text-amber-700 border border-amber-200" :
-                                                                        prompt.scene === "Demo" ? "bg-blue-50 text-blue-700 border border-blue-200" :
-                                                                            "bg-slate-50 text-slate-600 border border-slate-200"
+                                                            <span className={`px-2 py-1 text-xs font-medium rounded-lg ${prompt.scene === "Hook" ? "bg-amber-500/20 text-amber-400" :
+                                                                prompt.scene === "Intro" ? "bg-blue-500/20 text-blue-400" :
+                                                                    prompt.scene === "Main Content" ? "bg-amber-500/20 text-amber-400" :
+                                                                        prompt.scene === "Demo" ? "bg-cyan-500/20 text-cyan-400" :
+                                                                            "bg-gray-100 text-gray-600"
                                                                 }`}>
                                                                 {prompt.scene}
                                                             </span>
                                                         </div>
                                                         <button
                                                             onClick={() => copyImagePrompt(prompt)}
-                                                            className="flex items-center gap-1 px-2 py-1 text-xs border border-slate-200 rounded hover:bg-slate-100 transition-colors text-slate-500 hover:text-blue-600"
+                                                            className="flex items-center gap-1 px-2 py-1 text-xs bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-gray-600 hover:text-blue-600"
                                                         >
                                                             {copiedImageId === prompt.id ? (
                                                                 <>
-                                                                    <Check className="w-3 h-3 text-green-600" />
+                                                                    <Check className="w-3 h-3 text-green-400" />
                                                                     Copied!
                                                                 </>
                                                             ) : (
@@ -2466,27 +2035,27 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                                     </div>
 
                                                     {/* Description */}
-                                                    <p className="text-sm text-slate-700 mb-4 leading-relaxed font-medium">
+                                                    <p className="text-sm text-gray-700 mb-4 leading-relaxed font-medium">
                                                         {prompt.description}
                                                     </p>
 
                                                     {/* Metadata Grid */}
                                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                                                        <div className="bg-slate-50 rounded p-2 border border-slate-100">
-                                                            <span className="text-xs text-slate-400 block mb-0.5">Style</span>
-                                                            <span className="text-xs font-semibold text-slate-700">{prompt.style}</span>
+                                                        <div className="bg-white rounded-lg p-2 border border-gray-200">
+                                                            <span className="text-xs text-gray-500 block mb-0.5">Style</span>
+                                                            <span className="text-xs font-semibold text-gray-700">{prompt.style}</span>
                                                         </div>
-                                                        <div className="bg-slate-50 rounded p-2 border border-slate-100">
-                                                            <span className="text-xs text-slate-400 block mb-0.5">Mood</span>
-                                                            <span className="text-xs font-semibold text-slate-700">{prompt.mood}</span>
+                                                        <div className="bg-white rounded-lg p-2 border border-gray-200">
+                                                            <span className="text-xs text-gray-500 block mb-0.5">Mood</span>
+                                                            <span className="text-xs font-semibold text-gray-700">{prompt.mood}</span>
                                                         </div>
-                                                        <div className="bg-slate-50 rounded p-2 border border-slate-100">
-                                                            <span className="text-xs text-slate-400 block mb-0.5">Colors</span>
-                                                            <span className="text-xs font-semibold text-slate-700">{prompt.colorPalette}</span>
+                                                        <div className="bg-white rounded-lg p-2 border border-gray-200">
+                                                            <span className="text-xs text-gray-500 block mb-0.5">Colors</span>
+                                                            <span className="text-xs font-semibold text-gray-700">{prompt.colorPalette}</span>
                                                         </div>
-                                                        <div className="bg-slate-50 rounded p-2 border border-slate-100">
-                                                            <span className="text-xs text-slate-400 block mb-0.5">Ratio</span>
-                                                            <span className="text-xs font-semibold text-slate-700">{prompt.aspectRatio}</span>
+                                                        <div className="bg-white rounded-lg p-2 border border-gray-200">
+                                                            <span className="text-xs text-gray-500 block mb-0.5">Ratio</span>
+                                                            <span className="text-xs font-semibold text-gray-700">{prompt.aspectRatio}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -2494,12 +2063,10 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="empty-state">
-                                            <div className="empty-state-icon">
-                                                <ImageIcon className="w-8 h-8" />
-                                            </div>
-                                            <p className="text-base font-medium text-slate-600">No image prompts generated yet</p>
-                                            <p className="text-sm mt-1 text-slate-500">Image prompts will be generated after the script</p>
+                                        <div className="flex flex-col items-center justify-center py-16 text-center text-gray-500 text-sm">
+                                            <ImageIcon className="w-10 h-10 mb-3 text-gray-400" />
+                                            <p className="font-medium text-gray-900">No image prompts yet</p>
+                                            <p className="mt-1">Generate a script first</p>
                                         </div>
                                     )
                                 ) : activeTab === "chapters" ? (
@@ -2507,15 +2074,15 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                         <div className="space-y-4">
                                             <div className="flex items-center justify-between mb-4">
                                                 <div>
-                                                    <h3 className="text-lg font-semibold text-slate-900">YouTube Chapters</h3>
-                                                    <p className="text-sm text-slate-500">Copy and paste into your video description</p>
+                                                    <h3 className="text-lg font-semibold text-gray-900">YouTube Chapters</h3>
+                                                    <p className="text-sm text-gray-500">Copy and paste into your video description</p>
                                                 </div>
                                                 <button
                                                     onClick={() => copyToClipboardGeneric(
                                                         chaptersData.map(c => `${c.timestamp} ${c.title}`).join('\n'),
                                                         'all-chapters'
                                                     )}
-                                                    className="flex items-center gap-2 px-3 py-2 text-sm bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors shadow-sm"
+                                                    className="flex items-center gap-2 px-3 py-2 text-sm bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
                                                 >
                                                     {copiedItem === 'all-chapters' ? (
                                                         <><Check className="w-4 h-4" /> Copied!</>
@@ -2525,33 +2092,31 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                                 </button>
                                             </div>
 
-                                            <div className="bg-slate-50 rounded-lg p-4 overflow-auto border border-slate-200">
-                                                <pre className="text-slate-700 text-sm font-mono leading-relaxed">
+                                            <div className="bg-gray-50 rounded-lg p-4 overflow-auto border border-gray-200">
+                                                <pre className="text-gray-800 text-sm font-mono leading-relaxed">
                                                     {chaptersData.map(c => `${c.timestamp} ${c.title}`).join('\n')}
                                                 </pre>
                                             </div>
 
                                             <div className="space-y-2 mt-4">
                                                 {chaptersData.map((chapter, index) => (
-                                                    <div key={index} className="flex items-center gap-3 p-3 bg-white rounded-lg border border-slate-200 hover:border-blue-300 transition-colors">
-                                                        <span className="px-2 py-1 bg-blue-50 text-blue-600 text-xs font-mono rounded border border-blue-100">
+                                                    <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200 hover:border-blue-200 transition-colors">
+                                                        <span className="px-2 py-1 bg-blue-50 text-blue-700 text-xs font-mono rounded-lg border border-blue-200">
                                                             {chapter.timestamp}
                                                         </span>
                                                         <div className="flex-1">
-                                                            <p className="text-sm font-medium text-slate-800">{chapter.title}</p>
-                                                            <p className="text-xs text-slate-500">{chapter.description}</p>
+                                                            <p className="text-sm font-medium text-gray-900">{chapter.title}</p>
+                                                            <p className="text-xs text-gray-500">{chapter.description}</p>
                                                         </div>
                                                     </div>
                                                 ))}
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="empty-state">
-                                            <div className="empty-state-icon">
-                                                <List className="w-8 h-8" />
-                                            </div>
-                                            <p className="text-base font-medium text-slate-600">No chapters generated yet</p>
-                                            <p className="text-sm mt-1 text-slate-500">Chapters will be generated after the script</p>
+                                        <div className="flex flex-col items-center justify-center py-16 text-center text-gray-500 text-sm">
+                                            <List className="w-10 h-10 mb-3 text-gray-400" />
+                                            <p className="font-medium text-gray-900">No chapters yet</p>
+                                            <p className="mt-1">Generate a script first</p>
                                         </div>
                                     )
                                 ) : activeTab === "broll" ? (
@@ -2559,32 +2124,32 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                         <div className="space-y-4">
                                             <div className="flex items-center justify-between mb-4">
                                                 <div>
-                                                    <h3 className="text-lg font-semibold text-white">B-Roll Suggestions</h3>
-                                                    <p className="text-sm text-zinc-400">{brollData.length} clips suggested for your video</p>
+                                                    <h3 className="text-lg font-semibold text-gray-900">B-Roll Suggestions</h3>
+                                                    <p className="text-sm text-gray-500">{brollData.length} clips suggested for your video</p>
                                                 </div>
                                             </div>
 
                                             <div className="space-y-3 max-h-[70vh] overflow-auto">
                                                 {brollData.map((broll) => (
-                                                    <div key={broll.id} className="bg-zinc-800/30 rounded-lg p-4 border border-zinc-700/50 hover:border-blue-500/30 transition-colors">
-                                                        <div className="flex items-start justify-between mb-2">
+                                                    <div key={broll.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:border-cyan-200 transition-colors">
+                                                        <div className="flex items-start justify-between mb-3">
                                                             <div className="flex items-center gap-2">
-                                                                <span className="px-2 py-1 bg-blue-500/10 text-blue-400 text-xs font-medium rounded border border-blue-500/20">
+                                                                <span className="px-2.5 py-1 bg-cyan-500/10 text-cyan-400 text-xs font-medium rounded-lg border border-cyan-500/20">
                                                                     {broll.timestamp}
                                                                 </span>
-                                                                <span className={`px-2 py-1 text-xs font-medium rounded border ${broll.source === "stock" ? "bg-blue-500/10 text-blue-400 border-blue-500/20" :
-                                                                    broll.source === "screen" ? "bg-zinc-500/10 text-zinc-400 border-zinc-500/20" :
-                                                                        broll.source === "animation" ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/20" :
+                                                                <span className={`px-2.5 py-1 text-xs font-medium rounded-lg border ${broll.source === "stock" ? "bg-blue-500/10 text-blue-400 border-blue-500/20" :
+                                                                    broll.source === "screen" ? "bg-violet-500/10 text-violet-400 border-violet-500/20" :
+                                                                        broll.source === "animation" ? "bg-amber-500/10 text-amber-400 border-amber-500/20" :
                                                                             "bg-blue-500/10 text-blue-400 border-blue-500/20"
                                                                     }`}>
                                                                     {broll.source}
                                                                 </span>
                                                             </div>
                                                         </div>
-                                                        <p className="text-sm text-zinc-300 mb-2">{broll.suggestion}</p>
-                                                        <div className="flex flex-wrap gap-1">
+                                                        <p className="text-sm text-gray-700 mb-3">{broll.suggestion}</p>
+                                                        <div className="flex flex-wrap gap-1.5">
                                                             {broll.searchTerms.map((term, i) => (
-                                                                <span key={i} className="px-2 py-0.5 bg-black/40 text-zinc-400 text-xs rounded border border-zinc-700/50">
+                                                                <span key={i} className="px-2 py-1 bg-white text-gray-600 text-xs rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
                                                                     {term}
                                                                 </span>
                                                             ))}
@@ -2594,12 +2159,10 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="empty-state">
-                                            <div className="empty-state-icon">
-                                                <Film className="w-8 h-8" />
-                                            </div>
-                                            <p className="text-base font-medium text-slate-600">No B-Roll suggestions yet</p>
-                                            <p className="text-sm mt-1 text-slate-500">B-Roll will be generated after the script</p>
+                                        <div className="flex flex-col items-center justify-center py-16 text-center text-gray-500 text-sm">
+                                            <Film className="w-10 h-10 mb-3 text-gray-400" />
+                                            <p className="font-medium text-gray-900">No B-Roll yet</p>
+                                            <p className="mt-1">Generate a script first</p>
                                         </div>
                                     )
                                 ) : activeTab === "shorts" ? (
@@ -2607,23 +2170,23 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                         <div className="space-y-4">
                                             <div className="flex items-center justify-between mb-4">
                                                 <div>
-                                                    <h3 className="text-lg font-semibold text-slate-900">YouTube Shorts Clips</h3>
-                                                    <p className="text-sm text-slate-500">{shortsData.length} viral-worthy clips extracted</p>
+                                                    <h3 className="text-lg font-semibold text-gray-900">YouTube Shorts Clips</h3>
+                                                    <p className="text-sm text-gray-500">{shortsData.length} viral-worthy clips extracted</p>
                                                 </div>
                                             </div>
 
                                             <div className="space-y-4 max-h-[70vh] overflow-auto">
                                                 {shortsData.map((short) => (
-                                                    <div key={short.id} className="bg-white rounded-xl p-5 border border-slate-200 hover:border-blue-400 hover:shadow-md transition-all">
+                                                    <div key={short.id} className="bg-gray-50 rounded-lg p-5 border border-gray-200 hover:border-violet-200 transition-colors">
                                                         <div className="flex items-start justify-between mb-3">
                                                             <div>
-                                                                <h4 className="font-bold text-slate-800">{short.title}</h4>
-                                                                <span className="text-xs text-slate-500">From: {short.originalTimestamp}</span>
+                                                                <h4 className="font-bold text-gray-900">{short.title}</h4>
+                                                                <span className="text-xs text-gray-500">From: {short.originalTimestamp}</span>
                                                             </div>
                                                             <div className="flex items-center gap-2">
-                                                                <span className={`px-2 py-1 text-xs font-bold rounded ${short.viralScore >= 80 ? "bg-green-100 text-green-700" :
-                                                                    short.viralScore >= 60 ? "bg-amber-100 text-amber-700" :
-                                                                        "bg-orange-100 text-orange-700"
+                                                                <span className={`px-2.5 py-1 text-xs font-bold rounded-lg ${short.viralScore >= 80 ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" :
+                                                                    short.viralScore >= 60 ? "bg-amber-500/10 text-amber-400 border border-amber-500/20" :
+                                                                        "bg-orange-500/10 text-orange-400 border border-orange-500/20"
                                                                     }`}>
                                                                     {short.viralScore}% Viral
                                                                 </span>
@@ -2632,10 +2195,10 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                                                         `${short.hook}\n\n${short.content}\n\n${short.cta}`,
                                                                         `short-${short.id}`
                                                                     )}
-                                                                    className="flex items-center gap-1 px-2 py-1 text-xs border border-slate-200 rounded hover:bg-slate-50 transition-colors text-slate-500"
+                                                                    className="flex items-center gap-1 px-2.5 py-1 text-xs border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-gray-600"
                                                                 >
                                                                     {copiedItem === `short-${short.id}` ? (
-                                                                        <><Check className="w-3 h-3 text-green-600" /> Copied!</>
+                                                                        <><Check className="w-3 h-3 text-emerald-400" /> Copied!</>
                                                                     ) : (
                                                                         <><Copy className="w-3 h-3" /> Copy</>
                                                                     )}
@@ -2644,17 +2207,17 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                                         </div>
 
                                                         <div className="space-y-2">
-                                                            <div className="p-3 bg-red-50 rounded border-l-4 border-red-500">
-                                                                <span className="text-xs font-bold text-red-600 tracking-wide">HOOK</span>
-                                                                <p className="text-sm text-slate-700 font-medium">{short.hook}</p>
+                                                            <div className="p-3 bg-rose-500/10 rounded-lg border-l-4 border-rose-500">
+                                                                <span className="text-xs font-bold text-rose-400 tracking-wide">HOOK</span>
+                                                                <p className="text-sm text-gray-800 font-medium mt-1">{short.hook}</p>
                                                             </div>
-                                                            <div className="p-3 bg-blue-50 rounded border-l-4 border-blue-500">
-                                                                <span className="text-xs font-bold text-blue-600 tracking-wide">CONTENT</span>
-                                                                <p className="text-sm text-slate-700">{short.content}</p>
+                                                            <div className="p-3 bg-blue-500/10 rounded-lg border-l-4 border-blue-500">
+                                                                <span className="text-xs font-bold text-blue-400 tracking-wide">CONTENT</span>
+                                                                <p className="text-sm text-gray-700 mt-1">{short.content}</p>
                                                             </div>
-                                                            <div className="p-3 bg-green-50 rounded border-l-4 border-green-500">
-                                                                <span className="text-xs font-bold text-green-600 tracking-wide">CTA</span>
-                                                                <p className="text-sm text-slate-700 font-medium">{short.cta}</p>
+                                                            <div className="p-3 bg-emerald-500/10 rounded-lg border-l-4 border-emerald-500">
+                                                                <span className="text-xs font-bold text-emerald-400 tracking-wide">CTA</span>
+                                                                <p className="text-sm text-gray-800 font-medium mt-1">{short.cta}</p>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -2662,20 +2225,19 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="empty-state">
-                                            <div className="empty-state-icon">
-                                                <Scissors className="w-8 h-8" />
-                                            </div>
-                                            <p className="text-base font-medium text-slate-600">No Shorts clips generated yet</p>
-                                            <p className="text-sm mt-1 text-slate-500">Shorts will be extracted after the script</p>
+                                        <div className="flex flex-col items-center justify-center py-16 text-center text-gray-500 text-sm">
+                                            <Scissors className="w-10 h-10 mb-3 text-gray-400" />
+                                            <p className="font-medium text-gray-900">No Shorts yet</p>
+                                            <p className="mt-1">Generate a script first</p>
                                         </div>
                                     )
                                 ) : null}
+                                </div>
                             </div>
-                        </div>
+                        </section>
                     </div>
-                </div >
-            </main >
-        </div >
+                )}
+            </main>
+        </div>
     );
 }

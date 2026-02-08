@@ -1,8 +1,8 @@
-# Thunglish Script Generator
+# ScriptGen – AI YouTube Script Generator
 
-A professional web application for Tamil tech YouTube creators to generate Thunglish scripts with AI-powered multi-stage generation, SEO optimization, and production notes.
+A professional web application for YouTube creators to generate scripts with AI-powered generation, SEO optimization, chapters, B-roll suggestions, and shorts extraction. Supports English, Tamil, Thanglish, and Hindi.
 
-![Thunglish Script Generator](https://img.shields.io/badge/Next.js-14-black?style=flat-square&logo=next.js)
+![ScriptGen](https://img.shields.io/badge/Next.js-14-black?style=flat-square&logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=flat-square&logo=typescript)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?style=flat-square&logo=tailwind-css)
 
@@ -20,14 +20,15 @@ A professional web application for Tamil tech YouTube creators to generate Thung
 When "Include code examples" is enabled:
 - Complete working code shown first
 - Every single line explained separately
-- Thunglish format: `"Inga paaru, [explanation]"`
+- Thanglish format: `"Inga paaru, [explanation]"`
 - Expected output and common errors included
 
-### 🗣️ Natural Thunglish Generation
-- Adjustable ratio: **50-90% Tamil** (default 70%)
-- Tamil for emotions, explanations, connecting with audience
-- English for technical terms (React, API, useState, etc.)
-- Natural phrases: "paathen", "pannalam", "theriyuma", "solren", "parunga", "Dei", "Da"
+### 🗣️ Multi-Language Support
+- **English, Tamil, Thanglish, Hindi**
+- Thanglish = Tamil + English mix
+- Adjustable Thanglish ratio: **50-90% Tamil** (default 70%)
+- Natural phrases and regional context support
+- Instant translation between languages
 
 ### ⏱️ Timestamp-Based Structure
 Precise timestamps calculated based on video duration (5-20 minutes):
@@ -72,7 +73,7 @@ Precise timestamps calculated based on video duration (5-20 minutes):
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd thunglish-script-generator
+   cd script-generator
    ```
 
 2. **Install dependencies**
@@ -107,7 +108,7 @@ Precise timestamps calculated based on video duration (5-20 minutes):
 5. **Choose Tone** - Casual, Professional, Humorous, etc.
 6. **Configure Advanced Options**:
    - Difficulty Level (Beginner/Intermediate/Advanced)
-   - Thunglish Ratio (50-90% Tamil)
+   - Thanglish Ratio (50-90% Tamil)
    - Include Code Examples (checkbox)
    - Add Tamil Nadu Context (checkbox)
 7. **Click Generate Script**
@@ -117,7 +118,7 @@ Precise timestamps calculated based on video duration (5-20 minutes):
 ## Project Structure
 
 ```
-thunglish-script-generator/
+script-generator/
 ├── app/
 │   ├── globals.css          # Global styles and Tailwind config
 │   ├── layout.tsx           # Root layout with metadata
@@ -160,4 +161,4 @@ MIT License - feel free to use this for your own projects.
 
 ---
 
-Built with ❤️ for Tamil Tech YouTube Creators
+Built with ❤️ for YouTube Creators worldwide
