@@ -242,6 +242,8 @@ export default function ScriptGenerator() {
         canGenerate: boolean;
     } | null>(null);
     const [creditsLoading, setCreditsLoading] = useState<boolean>(false);
+    const [creditsError, setCreditsError] = useState<string | null>(null);
+    const [creditsRetryCount, setCreditsRetryCount] = useState<number>(0);
     const [showPaymentModal, setShowPaymentModal] = useState<boolean>(false);
     const [processingPayment, setProcessingPayment] = useState<boolean>(false);
     const [selectedPackageId, setSelectedPackageId] = useState<string>("pro");
@@ -416,17 +418,24 @@ export default function ScriptGenerator() {
         if (!session?.user) {
             setCredits(null);
             setCreditsLoading(false);
+            setCreditsError(null);
             return;
         }
         setCreditsLoading(true);
+        setCreditsError(null);
         try {
-            const res = await fetch("/api/credits");
+            const res = await fetch("/api/credits", { credentials: "include" });
             if (res.ok) {
                 const data = await res.json();
                 setCredits(data);
+                setCreditsError(null);
+            } else {
+                const data = await res.json().catch(() => ({}));
+                setCreditsError(data?.error || `Failed to load tokens (${res.status})`);
             }
         } catch (err) {
             console.error("Failed to fetch tokens:", err);
+            setCreditsError("Failed to load tokens");
         } finally {
             setCreditsLoading(false);
         }
@@ -436,6 +445,16 @@ export default function ScriptGenerator() {
     useEffect(() => {
         refreshCredits();
     }, [session?.user?.email]);
+
+    useEffect(() => {
+        if (!isAuthenticated || credits || creditsLoading) return;
+        if (creditsRetryCount >= 3) return;
+        const retryTimer = setTimeout(() => {
+            setCreditsRetryCount((prev) => prev + 1);
+            refreshCredits();
+        }, 2000);
+        return () => clearTimeout(retryTimer);
+    }, [isAuthenticated, credits, creditsLoading, creditsRetryCount]);
 
     // Hydrate credits from session if available (fallback when API fetch lags/fails)
     useEffect(() => {
@@ -1762,8 +1781,10 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                                 <span className="text-sm font-semibold text-slate-900">
                                                     {totalTokens} tokens
                                                 </span>
+                                            ) : creditsError ? (
+                                                <span className="text-xs text-rose-600">Sync failed</span>
                                             ) : (
-                                                <span className="text-xs text-slate-500">Unavailable</span>
+                                                <span className="text-xs text-slate-500">Syncing...</span>
                                             )}
                                         </div>
                                         <button
