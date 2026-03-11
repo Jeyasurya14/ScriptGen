@@ -115,6 +115,12 @@ interface ShortClip {
 
 type ActiveTab = "script" | "seo" | "images" | "chapters" | "broll" | "shorts";
 
+type SessionCredits = {
+    freeScriptsUsed?: number;
+    paidCredits?: number;
+    totalGenerated?: number;
+};
+
 interface RazorpayPaymentResponse {
     razorpay_payment_id: string;
     razorpay_order_id: string;
@@ -171,6 +177,7 @@ const imageFormats = [
 ];
 
 const STORAGE_KEY = "scriptgen:lastState";
+const FREE_TOKENS = 30;
 
 // Script templates - quick start presets
 const scriptTemplates = [
@@ -231,6 +238,7 @@ export default function ScriptGenerator() {
         freeTokensUsed: number;
         freeTokensRemaining: number;
         paidTokens: number;
+        totalGenerated?: number;
         canGenerate: boolean;
     } | null>(null);
     const [creditsLoading, setCreditsLoading] = useState<boolean>(false);
@@ -428,6 +436,23 @@ export default function ScriptGenerator() {
     useEffect(() => {
         refreshCredits();
     }, [session?.user?.email]);
+
+    // Hydrate credits from session if available (fallback when API fetch lags/fails)
+    useEffect(() => {
+        if (credits || !session?.user) return;
+        const sessionCredits = (session.user as { credits?: SessionCredits }).credits;
+        if (!sessionCredits) return;
+        const freeUsed = sessionCredits.freeScriptsUsed || 0;
+        const paid = sessionCredits.paidCredits || 0;
+        const freeRemaining = Math.max(0, FREE_TOKENS - freeUsed);
+        setCredits({
+            freeTokensUsed: freeUsed,
+            freeTokensRemaining: freeRemaining,
+            paidTokens: paid,
+            totalGenerated: sessionCredits.totalGenerated || 0,
+            canGenerate: freeRemaining + paid >= 10,
+        });
+    }, [session?.user, credits]);
 
     // Fetch script history
     const fetchHistory = async () => {
