@@ -4,7 +4,6 @@ import { Youtube, Twitter, Mail } from "lucide-react";
 const footerLinks = {
   product: [
     { label: "Script Generator", href: "/app", badge: "New" },
-    { label: "Offers", href: "/promo" },
     { label: "Features", href: "/#features" },
     { label: "Pricing", href: "/#pricing" },
     { label: "FAQ", href: "/#faq" },

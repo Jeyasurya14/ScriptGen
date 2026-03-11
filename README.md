@@ -2,6 +2,8 @@
 
 A professional web application for YouTube creators to generate scripts with AI-powered generation, SEO optimization, chapters, B-roll suggestions, and shorts extraction. Supports English, Tamil, Thanglish, and Hindi.
 
+**Want to promote for free and reach more users?** Follow the step-by-step guide: [PROMOTE_FOR_FREE_STEP_BY_STEP.md](./PROMOTE_FOR_FREE_STEP_BY_STEP.md). For more tactics (including paid), see [REACH_MORE_USERS.md](./REACH_MORE_USERS.md).
+
 ![ScriptGen](https://img.shields.io/badge/Next.js-14-black?style=flat-square&logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=flat-square&logo=typescript)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?style=flat-square&logo=tailwind-css)
