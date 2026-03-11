@@ -232,6 +232,7 @@ export default function ScriptGenerator() {
         paidTokens: number;
         canGenerate: boolean;
     } | null>(null);
+    const [creditsLoading, setCreditsLoading] = useState<boolean>(false);
     const [showPaymentModal, setShowPaymentModal] = useState<boolean>(false);
     const [processingPayment, setProcessingPayment] = useState<boolean>(false);
     const [selectedPackageId, setSelectedPackageId] = useState<string>("pro");
@@ -405,16 +406,21 @@ export default function ScriptGenerator() {
     // Fetch tokens when session changes
     useEffect(() => {
         const fetchCredits = async () => {
-            if (session?.user) {
-                try {
-                    const res = await fetch("/api/credits");
-                    if (res.ok) {
-                        const data = await res.json();
-                        setCredits(data);
-                    }
-                } catch (err) {
-                    console.error("Failed to fetch tokens:", err);
+            if (!session?.user) {
+                setCredits(null);
+                return;
+            }
+            setCreditsLoading(true);
+            try {
+                const res = await fetch("/api/credits");
+                if (res.ok) {
+                    const data = await res.json();
+                    setCredits(data);
                 }
+            } catch (err) {
+                console.error("Failed to fetch tokens:", err);
+            } finally {
+                setCreditsLoading(false);
             }
         };
         fetchCredits();
@@ -1443,7 +1449,9 @@ Aspect Ratio: ${prompt.aspectRatio}`;
     };
 
     const requiredTokens = calculateRequiredTokens();
-    const totalTokens = credits ? credits.freeTokensRemaining + credits.paidTokens : 0;
+    const freeTokensRemaining = credits?.freeTokensRemaining || 0;
+    const paidTokens = credits?.paidTokens || 0;
+    const totalTokens = freeTokensRemaining + paidTokens;
     const estimatedWords = Math.round(formData.duration * 130);
     const tabs: { id: ActiveTab; label: string }[] = [
         { id: "script", label: "Script" },
@@ -1696,15 +1704,51 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                     <History className="w-4 h-4" />
                                     <span className="hidden sm:inline">History</span>
                                 </button>
-                                {credits && (
+                                <div className="hidden md:flex items-center gap-2">
+                                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 min-w-[172px]">
+                                        <CreditCard className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                                        {creditsLoading ? (
+                                            <span className="flex items-center gap-2 text-xs text-slate-500">
+                                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                Loading tokens
+                                            </span>
+                                        ) : (
+                                            <div className="leading-tight">
+                                                <p className="text-[10px] uppercase tracking-wide text-slate-500">Remaining</p>
+                                                <p className="text-sm font-semibold text-slate-900">{totalTokens} tokens</p>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <select
+                                        value={selectedPackageId}
+                                        onChange={(e) => setSelectedPackageId(e.target.value)}
+                                        className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        aria-label="Select token recharge plan"
+                                    >
+                                        {tokenPackages.map((pkg) => (
+                                            <option key={pkg.id} value={pkg.id}>
+                                                {pkg.tokens} tokens - Rs {pkg.price}
+                                            </option>
+                                        ))}
+                                    </select>
+
                                     <button
                                         onClick={() => setShowPaymentModal(true)}
-                                        className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+                                        className="px-3.5 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
                                     >
-                                        <CreditCard className="w-4 h-4 text-slate-500" />
-                                        <span>{totalTokens} tokens</span>
+                                        Recharge
                                     </button>
-                                )}
+                                </div>
+
+                                <button
+                                    onClick={() => setShowPaymentModal(true)}
+                                    className="md:hidden flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+                                    title="Recharge tokens"
+                                >
+                                    <CreditCard className="w-4 h-4 text-slate-500" />
+                                    {creditsLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <span>{totalTokens}</span>}
+                                </button>
                                 <span className="h-6 w-px bg-slate-200 mx-1" aria-hidden />
                                 {session.user?.image ? (
                                     <Image src={session.user.image} alt="" width={32} height={32} className="w-8 h-8 rounded-full ring-2 ring-slate-100" unoptimized />
