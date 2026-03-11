@@ -2,6 +2,25 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
 
+const FREE_TOKENS = 30;
+
+const toCreditsPayload = (credits: {
+    freeScriptsUsed: number;
+    paidCredits: number;
+    totalGenerated: number;
+}) => {
+    const freeTokensRemaining = Math.max(0, FREE_TOKENS - credits.freeScriptsUsed);
+    const totalTokens = freeTokensRemaining + credits.paidCredits;
+    return {
+        freeTokensUsed: credits.freeScriptsUsed,
+        freeTokensRemaining,
+        paidTokens: credits.paidCredits,
+        totalGenerated: credits.totalGenerated,
+        totalTokens,
+        canGenerate: totalTokens >= 10,
+    };
+};
+
 // POST - Verify payment and add tokens
 export async function POST(req: NextRequest) {
     try {
@@ -28,49 +47,75 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
         }
 
-        // Get transaction
-        const transaction = await prisma.transaction.findFirst({
-            where: {
-                razorpayOrderId: razorpay_order_id
+        const result = await prisma.$transaction(async (tx) => {
+            const transaction = await tx.transaction.findFirst({
+                where: { razorpayOrderId: razorpay_order_id },
+            });
+
+            if (!transaction) {
+                return { status: "not_found" as const };
             }
+
+            if (transaction.status === "completed") {
+                return {
+                    status: "already_processed" as const,
+                    userId: transaction.userId,
+                    tokensAdded: 0,
+                };
+            }
+
+            const updated = await tx.transaction.updateMany({
+                where: {
+                    id: transaction.id,
+                    status: "pending",
+                },
+                data: {
+                    razorpayPaymentId: razorpay_payment_id,
+                    status: "completed",
+                },
+            });
+
+            if (updated.count === 0) {
+                return {
+                    status: "already_processed" as const,
+                    userId: transaction.userId,
+                    tokensAdded: 0,
+                };
+            }
+
+            await tx.userCredits.upsert({
+                where: { userId: transaction.userId },
+                create: {
+                    userId: transaction.userId,
+                    freeScriptsUsed: 0,
+                    paidCredits: transaction.creditsPurchased,
+                    totalGenerated: 0,
+                },
+                update: {
+                    paidCredits: { increment: transaction.creditsPurchased },
+                },
+            });
+
+            return {
+                status: "completed" as const,
+                userId: transaction.userId,
+                tokensAdded: transaction.creditsPurchased,
+            };
         });
 
-        if (!transaction) {
+        if (result.status === "not_found") {
             return NextResponse.json({ error: "Transaction not found" }, { status: 404 });
         }
 
-        if (transaction.status === "completed") {
-            return NextResponse.json({ error: "Already processed" }, { status: 400 });
-        }
-
-        // Update transaction
-        await prisma.transaction.update({
-            where: {
-                id: transaction.id
-            },
-            data: {
-                razorpayPaymentId: razorpay_payment_id,
-                status: "completed",
-            }
-        });
-
-        // Add tokens to user (upsert in case credits row doesn't exist)
-        await prisma.userCredits.upsert({
-            where: { userId: transaction.userId },
-            create: {
-                userId: transaction.userId,
-                freeScriptsUsed: 0,
-                paidCredits: transaction.creditsPurchased,
-                totalGenerated: 0,
-            },
-            update: {
-                paidCredits: { increment: transaction.creditsPurchased },
-            },
+        const credits = await prisma.userCredits.findUnique({
+            where: { userId: result.userId },
         });
 
         return NextResponse.json({
             success: true,
-            tokensAdded: transaction.creditsPurchased
+            alreadyProcessed: result.status === "already_processed",
+            tokensAdded: result.tokensAdded,
+            ...(credits ? toCreditsPayload(credits) : {}),
         });
     } catch (error) {
         console.error("Error verifying payment:", error);

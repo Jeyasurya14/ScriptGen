@@ -112,14 +112,14 @@ export async function POST(req: NextRequest) {
                 await tx.referral.create({
                     data: { referrerId: referrer.id, referredId: me.id },
                 });
-                const addCredits = (userId: string, current: number) =>
+                const addCredits = (userId: string) =>
                     tx.userCredits.upsert({
                         where: { userId },
-                        create: { userId, paidCredits: current + REFERRAL_TOKENS, freeScriptsUsed: 0 },
+                        create: { userId, paidCredits: REFERRAL_TOKENS, freeScriptsUsed: 0 },
                         update: { paidCredits: { increment: REFERRAL_TOKENS } },
                     });
-                await addCredits(referrer.id, referrer.credits?.paidCredits ?? 0);
-                await addCredits(me.id, me.credits?.paidCredits ?? 0);
+                await addCredits(referrer.id);
+                await addCredits(me.id);
             });
         } catch (txErr) {
             if (txErr instanceof Prisma.PrismaClientKnownRequestError && txErr.code === "P2002") {

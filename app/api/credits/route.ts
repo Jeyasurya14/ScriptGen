@@ -10,6 +10,17 @@ const FREE_TOKENS = 30;
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+class InsufficientTokensError extends Error {
+    required: number;
+    available: number;
+
+    constructor(required: number, available: number) {
+        super("Insufficient tokens");
+        this.required = required;
+        this.available = available;
+    }
+}
+
 type AuthIdentity = {
     email: string;
     name?: string | null;
@@ -17,13 +28,17 @@ type AuthIdentity = {
 };
 
 const resolveIdentity = async (req: NextRequest): Promise<AuthIdentity | null> => {
-    const session = await getServerSession(authOptions);
-    if (session?.user?.email) {
-        return {
-            email: session.user.email,
-            name: session.user.name,
-            image: session.user.image,
-        };
+    try {
+        const session = await getServerSession(authOptions);
+        if (session?.user?.email) {
+            return {
+                email: session.user.email,
+                name: session.user.name,
+                image: session.user.image,
+            };
+        }
+    } catch (error) {
+        console.error("[credits] resolveIdentity session error:", error);
     }
 
     const secret = process.env.NEXTAUTH_SECRET;
@@ -46,31 +61,152 @@ const resolveIdentity = async (req: NextRequest): Promise<AuthIdentity | null> =
 };
 
 const getOrCreateUserWithCredits = async (identity: AuthIdentity) => {
-    const user = await prisma.user.upsert({
+    let user = await prisma.user.findUnique({
         where: { email: identity.email },
-        update: {
-            ...(identity.name ? { name: identity.name } : {}),
-            ...(identity.image ? { image: identity.image } : {}),
-        },
-        create: {
-            email: identity.email,
-            name: identity.name || null,
-            image: identity.image || null,
-        },
     });
 
-    const credits = await prisma.userCredits.upsert({
+    if (!user) {
+        try {
+            user = await prisma.user.create({
+                data: {
+                    email: identity.email,
+                    name: identity.name || null,
+                    image: identity.image || null,
+                },
+            });
+        } catch {
+            // Handle race where another request created the same user.
+            user = await prisma.user.findUnique({
+                where: { email: identity.email },
+            });
+        }
+    }
+
+    if (!user) {
+        throw new Error("Failed to resolve user");
+    }
+
+    const userNeedsProfileUpdate =
+        (identity.name && identity.name !== user.name) ||
+        (identity.image && identity.image !== user.image);
+
+    if (userNeedsProfileUpdate) {
+        user = await prisma.user.update({
+            where: { id: user.id },
+            data: {
+                ...(identity.name ? { name: identity.name } : {}),
+                ...(identity.image ? { image: identity.image } : {}),
+            },
+        });
+    }
+
+    let credits = await prisma.userCredits.findUnique({
         where: { userId: user.id },
-        create: {
-            userId: user.id,
-            freeScriptsUsed: 0,
-            paidCredits: 0,
-            totalGenerated: 0,
-        },
-        update: {},
     });
+
+    if (!credits) {
+        try {
+            credits = await prisma.userCredits.create({
+                data: {
+                    userId: user.id,
+                    freeScriptsUsed: 0,
+                    paidCredits: 0,
+                    totalGenerated: 0,
+                },
+            });
+        } catch {
+            // Handle race where another request created credits for the same user.
+            credits = await prisma.userCredits.findUnique({
+                where: { userId: user.id },
+            });
+        }
+    }
+
+    if (!credits) {
+        throw new Error("Failed to resolve user credits");
+    }
 
     return { user, credits };
+};
+
+const toCreditsPayload = (credits: {
+    freeScriptsUsed: number;
+    paidCredits: number;
+    totalGenerated: number;
+}) => {
+    const freeTokensRemaining = Math.max(0, FREE_TOKENS - credits.freeScriptsUsed);
+    const totalTokens = freeTokensRemaining + credits.paidCredits;
+    return {
+        freeTokensUsed: credits.freeScriptsUsed,
+        freeTokensRemaining,
+        paidTokens: credits.paidCredits,
+        totalGenerated: credits.totalGenerated,
+        totalTokens,
+        canGenerate: totalTokens >= 10,
+    };
+};
+
+const deductTokensAtomic = async (userId: string, count: number) => {
+    // Optimistic concurrency with bounded retries.
+    for (let attempt = 0; attempt < 3; attempt++) {
+        let credits = await prisma.userCredits.findUnique({
+            where: { userId },
+        });
+
+        if (!credits) {
+            try {
+                credits = await prisma.userCredits.create({
+                    data: {
+                        userId,
+                        freeScriptsUsed: 0,
+                        paidCredits: 0,
+                        totalGenerated: 0,
+                    },
+                });
+            } catch {
+                credits = await prisma.userCredits.findUnique({
+                    where: { userId },
+                });
+            }
+        }
+
+        if (!credits) {
+            throw new Error("Failed to resolve user credits");
+        }
+
+        const freeRemaining = Math.max(0, FREE_TOKENS - credits.freeScriptsUsed);
+        const totalAvailable = freeRemaining + credits.paidCredits;
+        if (totalAvailable < count) {
+            throw new InsufficientTokensError(count, totalAvailable);
+        }
+
+        const deductFree = Math.min(freeRemaining, count);
+        const deductPaid = count - deductFree;
+
+        const updated = await prisma.userCredits.updateMany({
+            where: {
+                id: credits.id,
+                freeScriptsUsed: credits.freeScriptsUsed,
+                paidCredits: credits.paidCredits,
+                totalGenerated: credits.totalGenerated,
+            },
+            data: {
+                freeScriptsUsed: credits.freeScriptsUsed + deductFree,
+                paidCredits: credits.paidCredits - deductPaid,
+                totalGenerated: credits.totalGenerated + count,
+            },
+        });
+
+        if (updated.count === 1) {
+            const latest = await prisma.userCredits.findUnique({
+                where: { userId },
+            });
+            if (!latest) throw new Error("Failed to load updated credits");
+            return latest;
+        }
+    }
+
+    throw new Error("Token deduction conflict. Please retry.");
 };
 
 // GET - Check user tokens
@@ -83,16 +219,7 @@ export async function GET(req: NextRequest) {
 
         const { credits } = await getOrCreateUserWithCredits(identity);
 
-        const freeTokensRemaining = Math.max(0, FREE_TOKENS - credits.freeScriptsUsed);
-        const canGenerate = freeTokensRemaining + credits.paidCredits >= 10;
-
-        return NextResponse.json({
-            freeTokensUsed: credits.freeScriptsUsed,
-            freeTokensRemaining,
-            paidTokens: credits.paidCredits,
-            totalGenerated: credits.totalGenerated,
-            canGenerate,
-        });
+        return NextResponse.json(toCreditsPayload(credits));
     } catch (error) {
         console.error("[credits] GET error:", error);
         return NextResponse.json({ error: sanitizeError(error) }, { status: 500 });
@@ -107,53 +234,28 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const { credits } = await getOrCreateUserWithCredits(identity);
-
         const body = await req.json().catch(() => ({}));
         const parsed = z.object({ count: z.coerce.number().int().min(1).max(200).default(10) }).safeParse(body);
         const count = parsed.success ? parsed.data.count : 10;
+        const { user } = await getOrCreateUserWithCredits(identity);
+        const updatedCredits = await deductTokensAtomic(user.id, count);
 
-        // Check availability
-        const freeRemaining = Math.max(0, FREE_TOKENS - credits.freeScriptsUsed);
-        const totalAvailable = freeRemaining + credits.paidCredits;
-
-        if (totalAvailable < count) {
-            return NextResponse.json({
-                error: "Insufficient tokens",
-                required: count,
-                available: totalAvailable
-            }, { status: 403 });
-        }
-
-        // Deduct logic
-        let newFreeUsed = credits.freeScriptsUsed;
-        let newPaid = credits.paidCredits;
-        let remainingToDeduct = count;
-
-        // 1. Deduct from free first
-        if (freeRemaining > 0) {
-            const deductFree = Math.min(freeRemaining, remainingToDeduct);
-            newFreeUsed += deductFree;
-            remainingToDeduct -= deductFree;
-        }
-
-        // 2. Deduct remaining from paid
-        if (remainingToDeduct > 0) {
-            newPaid -= remainingToDeduct;
-        }
-
-        // Update DB
-        await prisma.userCredits.update({
-            where: { id: credits.id },
-            data: {
-                freeScriptsUsed: newFreeUsed,
-                paidCredits: newPaid,
-                totalGenerated: credits.totalGenerated + count,
-            },
+        return NextResponse.json({
+            success: true,
+            deducted: count,
+            ...toCreditsPayload(updatedCredits),
         });
-
-        return NextResponse.json({ success: true });
     } catch (error) {
+        if (error instanceof InsufficientTokensError) {
+            return NextResponse.json(
+                {
+                    error: "Insufficient tokens",
+                    required: error.required,
+                    available: error.available,
+                },
+                { status: 403 }
+            );
+        }
         console.error("[credits] POST error:", error);
         return NextResponse.json({ error: sanitizeError(error) }, { status: 500 });
     }

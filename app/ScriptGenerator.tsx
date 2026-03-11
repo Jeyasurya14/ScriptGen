@@ -419,6 +419,7 @@ export default function ScriptGenerator() {
             setCredits(null);
             setCreditsLoading(false);
             setCreditsError(null);
+            setCreditsRetryCount(0);
             return;
         }
         setCreditsLoading(true);
@@ -429,6 +430,7 @@ export default function ScriptGenerator() {
                 const data = await res.json();
                 setCredits(data);
                 setCreditsError(null);
+                setCreditsRetryCount(0);
             } else {
                 const data = await res.json().catch(() => ({}));
                 setCreditsError(data?.error || `Failed to load tokens (${res.status})`);
@@ -628,8 +630,7 @@ export default function ScriptGenerator() {
             if (res.ok) {
                 setReferralApplyMessage({ type: "success", text: data.message || `You both got 15 tokens!` });
                 setReferralApplyCode("");
-                const creditsRes = await fetch("/api/credits");
-                if (creditsRes.ok) setCredits(await creditsRes.json());
+                await refreshCredits();
             } else {
                 setReferralApplyMessage({ type: "error", text: data.error || "Invalid referral code" });
             }
@@ -664,10 +665,7 @@ export default function ScriptGenerator() {
                 setPromoCode("");
                 
                 // Refresh credits
-                const creditsRes = await fetch("/api/credits");
-                if (creditsRes.ok) {
-                    setCredits(await creditsRes.json());
-                }
+                await refreshCredits();
                 
                 // Close modal after 2 seconds
                 setTimeout(() => {
@@ -712,10 +710,7 @@ export default function ScriptGenerator() {
                         body: JSON.stringify(response),
                     });
                     if (verifyRes.ok) {
-                        const creditsRes = await fetch("/api/credits");
-                        if (creditsRes.ok) {
-                            setCredits(await creditsRes.json());
-                        }
+                        await refreshCredits();
                         setShowPaymentModal(false);
                         setToastMessage("Tokens added!");
                         setTimeout(() => setToastMessage(null), 2500);
@@ -833,13 +828,17 @@ export default function ScriptGenerator() {
                         : hookSection + (mainSection ? "\n\n" + mainSection : "") + "\n\n" + cleaned + notesPart;
             setScript(sanitizeScriptText(full));
 
-            await fetch("/api/credits", {
+            const deductRes = await fetch("/api/credits", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ count: REGEN_TOKEN_COST }),
             });
-            const creditsRes = await fetch("/api/credits");
-            if (creditsRes.ok) setCredits(await creditsRes.json());
+            if (!deductRes.ok) {
+                const deductData = await deductRes.json().catch(() => ({}));
+                throw new Error(deductData?.error || "Failed to deduct tokens");
+            }
+            const updatedCredits = await deductRes.json().catch(() => null);
+            if (updatedCredits) setCredits(updatedCredits);
         } catch (err: unknown) {
             setError(getErrorMessage(err, "Failed to regenerate. Please try again."));
         } finally {
@@ -982,13 +981,17 @@ export default function ScriptGenerator() {
 
             // Deduct tokens after successful generation
             try {
-                await fetch("/api/credits", {
+                const deductRes = await fetch("/api/credits", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ count: requiredTokens })
                 });
-                const creditsRes = await fetch("/api/credits");
-                if (creditsRes.ok) setCredits(await creditsRes.json());
+                if (!deductRes.ok) {
+                    const deductData = await deductRes.json().catch(() => ({}));
+                    throw new Error(deductData?.error || "Failed to deduct tokens");
+                }
+                const updatedCredits = await deductRes.json().catch(() => null);
+                if (updatedCredits) setCredits(updatedCredits);
             } catch {
                 console.error("Failed to deduct tokens");
             }

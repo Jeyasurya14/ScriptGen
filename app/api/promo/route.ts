@@ -2,12 +2,31 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 
 // Define promo codes and their rewards
 const PROMO_CODES: { [key: string]: { tokens: number; description: string } } = {
     PRODUCTHUNT: { tokens: 100, description: "Product Hunt Launch Special" },
     WELCOME50: { tokens: 50, description: "Welcome Bonus" },
     // Add more codes as needed
+};
+const FREE_TOKENS = 30;
+
+const toCreditsPayload = (credits: {
+    freeScriptsUsed: number;
+    paidCredits: number;
+    totalGenerated: number;
+}) => {
+    const freeTokensRemaining = Math.max(0, FREE_TOKENS - credits.freeScriptsUsed);
+    const totalTokens = freeTokensRemaining + credits.paidCredits;
+    return {
+        freeTokensUsed: credits.freeScriptsUsed,
+        freeTokensRemaining,
+        paidTokens: credits.paidCredits,
+        totalGenerated: credits.totalGenerated,
+        totalTokens,
+        canGenerate: totalTokens >= 10,
+    };
 };
 
 export async function POST(req: NextRequest) {
@@ -32,71 +51,63 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Invalid promo code" }, { status: 400 });
         }
 
-        const user = await prisma.user.findUnique({
+        let user = await prisma.user.findUnique({
             where: { email: session.user.email },
         });
 
         if (!user) {
-            return NextResponse.json({ error: "User not found" }, { status: 404 });
+            try {
+                user = await prisma.user.create({
+                    data: {
+                        email: session.user.email,
+                        name: session.user.name || null,
+                        image: session.user.image || null,
+                    },
+                });
+            } catch {
+                user = await prisma.user.findUnique({
+                    where: { email: session.user.email },
+                });
+            }
         }
 
-        // Check if user already redeemed this code
-        const existingRedemption = await prisma.promoRedemption.findUnique({
-            where: {
-                userId_code: {
-                    userId: user.id,
-                    code: upperCode,
-                },
-            },
-        });
-
-        if (existingRedemption) {
-            return NextResponse.json(
-                { error: "You've already used this promo code" },
-                { status: 400 }
-            );
+        if (!user) {
+            return NextResponse.json({ error: "User not found" }, { status: 500 });
         }
 
         const promoDetails = PROMO_CODES[upperCode];
-
-        // Create user credits if doesn't exist
-        let credits = await prisma.userCredits.findUnique({
-            where: { userId: user.id },
-        });
-
-        if (!credits) {
-            credits = await prisma.userCredits.create({
-                data: {
-                    userId: user.id,
-                    freeScriptsUsed: 0,
-                    paidCredits: 0,
-                    totalGenerated: 0,
-                },
-            });
-        }
-
-        // Add tokens and record redemption in a transaction
-        await prisma.$transaction([
-            prisma.userCredits.update({
-                where: { id: credits.id },
-                data: {
-                    paidCredits: credits.paidCredits + promoDetails.tokens,
-                },
-            }),
-            prisma.promoRedemption.create({
+        const credits = await prisma.$transaction(async (tx) => {
+            await tx.promoRedemption.create({
                 data: {
                     userId: user.id,
                     code: upperCode,
                 },
-            }),
-        ]);
+            });
+
+            return tx.userCredits.upsert({
+                where: { userId: user.id },
+                create: {
+                    userId: user.id,
+                    freeScriptsUsed: 0,
+                    paidCredits: promoDetails.tokens,
+                    totalGenerated: 0,
+                },
+                update: {
+                    paidCredits: { increment: promoDetails.tokens },
+                },
+            });
+        });
 
         return NextResponse.json({
             success: true,
             tokensAdded: promoDetails.tokens,
             description: promoDetails.description,
+            ...toCreditsPayload(credits),
         });
     } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+            return NextResponse.json({ error: "You've already used this promo code" }, { status: 400 });
+        }
         console.error("Error redeeming promo code:", error);
         return NextResponse.json({ error: "Internal error" }, { status: 500 });
     }

@@ -18,6 +18,25 @@ const TOKEN_PACKAGES = [
 
 const getPackage = (id: string) => TOKEN_PACKAGES.find((pkg) => pkg.id === id);
 
+const getOrCreateUser = async (email: string, name?: string | null, image?: string | null) => {
+    let user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+        try {
+            user = await prisma.user.create({
+                data: {
+                    email,
+                    name: name || null,
+                    image: image || null,
+                },
+            });
+        } catch {
+            user = await prisma.user.findUnique({ where: { email } });
+        }
+    }
+    if (!user) throw new Error("Failed to resolve user");
+    return user;
+};
+
 const getRazorpay = () => {
     const keyId = process.env.RAZORPAY_KEY_ID;
     const keySecret = process.env.RAZORPAY_KEY_SECRET;
@@ -68,22 +87,18 @@ export async function POST(req: NextRequest) {
             },
         });
 
-        const user = await prisma.user.findUnique({
-            where: { email: session.user.email },
-        });
+        const user = await getOrCreateUser(session.user.email, session.user.name, session.user.image);
 
         // Store pending transaction
-        if (user) {
-            await prisma.transaction.create({
-                data: {
-                    userId: user.id,
-                    amount: selected.price,
-                    razorpayOrderId: order.id,
-                    creditsPurchased: selected.tokens,
-                    status: "pending",
-                },
-            });
-        }
+        await prisma.transaction.create({
+            data: {
+                userId: user.id,
+                amount: selected.price,
+                razorpayOrderId: order.id,
+                creditsPurchased: selected.tokens,
+                status: "pending",
+            },
+        });
 
         return NextResponse.json({
             orderId: order.id,

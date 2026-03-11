@@ -61,6 +61,26 @@ export const authOptions: NextAuthOptions = {
                     sessionUser.id = userData.id;
                     if (userData.credits) {
                         sessionUser.credits = userData.credits;
+                    } else {
+                        // Backfill missing credits row for legacy users.
+                        try {
+                            const createdCredits = await prisma.userCredits.create({
+                                data: {
+                                    userId: userData.id,
+                                    freeScriptsUsed: 0,
+                                    paidCredits: 0,
+                                    totalGenerated: 0,
+                                },
+                            });
+                            sessionUser.credits = createdCredits;
+                        } catch {
+                            const existingCredits = await prisma.userCredits.findUnique({
+                                where: { userId: userData.id },
+                            });
+                            if (existingCredits) {
+                                sessionUser.credits = existingCredits;
+                            }
+                        }
                     }
                 }
             } catch (error) {
