@@ -1721,61 +1721,55 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                     <History className="w-4 h-4" />
                                     <span className="hidden sm:inline">History</span>
                                 </button>
-                                <div className="hidden md:flex items-center gap-3">
-                                    <div className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-gradient-to-br from-blue-50 via-white to-cyan-50 border border-blue-200/70 shadow-sm">
-                                        <div className="w-9 h-9 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-sm">
+                                <div className="hidden md:flex items-center gap-2">
+                                    <div className="flex items-center gap-2 px-3 h-10 rounded-lg bg-white border border-slate-200 shadow-sm">
+                                        <div className="w-7 h-7 rounded-md bg-blue-600/10 text-blue-700 flex items-center justify-center">
                                             <CreditCard className="w-4 h-4" />
                                         </div>
-                                        <div className="leading-tight min-w-[140px]">
-                                            <p className="text-[10px] uppercase tracking-widest text-blue-700/70">Remaining</p>
+                                        <div className="flex flex-col leading-none min-w-[120px]">
+                                            <span className="text-[10px] uppercase tracking-wide text-slate-500">Remaining</span>
                                             {creditsLoading ? (
-                                                <span className="flex items-center gap-2 text-xs text-slate-500">
+                                                <span className="flex items-center gap-1.5 text-xs text-slate-500">
                                                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
                                                     Syncing...
                                                 </span>
                                             ) : credits ? (
-                                                <>
-                                                    <div className="flex items-baseline gap-2">
-                                                        <span className="text-lg font-semibold text-slate-900">{totalTokens}</span>
-                                                        <span className="text-xs text-slate-500">tokens</span>
-                                                    </div>
-                                                    <p className="text-[11px] text-slate-500">Free {freeTokensRemaining} · Paid {paidTokens}</p>
-                                                </>
+                                                <span className="text-sm font-semibold text-slate-900">
+                                                    {totalTokens} tokens
+                                                </span>
                                             ) : (
-                                                <div className="text-xs text-slate-500">Unavailable</div>
+                                                <span className="text-xs text-slate-500">Unavailable</span>
                                             )}
                                         </div>
                                         <button
                                             onClick={refreshCredits}
-                                            className="p-2 rounded-lg border border-blue-200/70 text-blue-600 hover:bg-blue-50 transition-colors"
+                                            className="ml-1 h-8 w-8 rounded-md border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
                                             title="Refresh tokens"
                                             aria-label="Refresh tokens"
                                         >
-                                            <RefreshCcw className={`w-4 h-4 ${creditsLoading ? "animate-spin" : ""}`} />
+                                            <RefreshCcw className={`w-4 h-4 mx-auto ${creditsLoading ? "animate-spin" : ""}`} />
                                         </button>
                                     </div>
 
-                                    <div className="flex items-center gap-2">
-                                        <select
-                                            value={selectedPackageId}
-                                            onChange={(e) => setSelectedPackageId(e.target.value)}
-                                            className="px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                            aria-label="Select token recharge plan"
-                                        >
-                                            {tokenPackages.map((pkg) => (
-                                                <option key={pkg.id} value={pkg.id}>
-                                                    {pkg.tokens} tokens - Rs {pkg.price}
-                                                </option>
-                                            ))}
-                                        </select>
+                                    <select
+                                        value={selectedPackageId}
+                                        onChange={(e) => setSelectedPackageId(e.target.value)}
+                                        className="h-10 px-3 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        aria-label="Select token recharge plan"
+                                    >
+                                        {tokenPackages.map((pkg) => (
+                                            <option key={pkg.id} value={pkg.id}>
+                                                {pkg.tokens} tokens - Rs {pkg.price}
+                                            </option>
+                                        ))}
+                                    </select>
 
-                                        <button
-                                            onClick={() => setShowPaymentModal(true)}
-                                            className="px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-xl shadow-sm hover:shadow transition-all"
-                                        >
-                                            Recharge
-                                        </button>
-                                    </div>
+                                    <button
+                                        onClick={() => setShowPaymentModal(true)}
+                                        className="h-10 px-4 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors"
+                                    >
+                                        Recharge
+                                    </button>
                                 </div>
 
                                 <div className="md:hidden flex items-center gap-2">
