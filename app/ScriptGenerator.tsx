@@ -30,6 +30,7 @@ import {
     ShieldCheck,
     Tag,
     Share2,
+    RefreshCcw,
 } from "lucide-react";
 
 // Types
@@ -403,28 +404,30 @@ export default function ScriptGenerator() {
         }
     };
 
+    const refreshCredits = async () => {
+        if (!session?.user) {
+            setCredits(null);
+            setCreditsLoading(false);
+            return;
+        }
+        setCreditsLoading(true);
+        try {
+            const res = await fetch("/api/credits");
+            if (res.ok) {
+                const data = await res.json();
+                setCredits(data);
+            }
+        } catch (err) {
+            console.error("Failed to fetch tokens:", err);
+        } finally {
+            setCreditsLoading(false);
+        }
+    };
+
     // Fetch tokens when session changes
     useEffect(() => {
-        const fetchCredits = async () => {
-            if (!session?.user) {
-                setCredits(null);
-                return;
-            }
-            setCreditsLoading(true);
-            try {
-                const res = await fetch("/api/credits");
-                if (res.ok) {
-                    const data = await res.json();
-                    setCredits(data);
-                }
-            } catch (err) {
-                console.error("Failed to fetch tokens:", err);
-            } finally {
-                setCreditsLoading(false);
-            }
-        };
-        fetchCredits();
-    }, [session]);
+        refreshCredits();
+    }, [session?.user?.email]);
 
     // Fetch script history
     const fetchHistory = async () => {
@@ -752,6 +755,10 @@ export default function ScriptGenerator() {
     const REGEN_TOKEN_COST = 10;
     const regenerateSection = async (stage: "hook_intro" | "main_content" | "demo_outro") => {
         if (!session || !script) return;
+        if (creditsLoading || !credits) {
+            setError("Tokens are still loading. Please try again.");
+            return;
+        }
         const available = (credits?.freeTokensRemaining || 0) + (credits?.paidTokens || 0);
         if (available < REGEN_TOKEN_COST) {
             setShowPaymentModal(true);
@@ -802,6 +809,16 @@ export default function ScriptGenerator() {
         if (!isAuthenticated) {
             alert("Please sign in to generate scripts");
             signIn("google", { callbackUrl: "/app" });
+            return;
+        }
+
+        if (creditsLoading) {
+            setError("Loading tokens. Please wait a moment and try again.");
+            return;
+        }
+
+        if (!credits) {
+            setError("Could not load tokens. Refresh the page and try again.");
             return;
         }
 
@@ -1704,51 +1721,83 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                     <History className="w-4 h-4" />
                                     <span className="hidden sm:inline">History</span>
                                 </button>
-                                <div className="hidden md:flex items-center gap-2">
-                                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 min-w-[172px]">
-                                        <CreditCard className="w-4 h-4 text-slate-500 flex-shrink-0" />
-                                        {creditsLoading ? (
-                                            <span className="flex items-center gap-2 text-xs text-slate-500">
-                                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                                Loading tokens
-                                            </span>
-                                        ) : (
-                                            <div className="leading-tight">
-                                                <p className="text-[10px] uppercase tracking-wide text-slate-500">Remaining</p>
-                                                <p className="text-sm font-semibold text-slate-900">{totalTokens} tokens</p>
-                                            </div>
-                                        )}
+                                <div className="hidden md:flex items-center gap-3">
+                                    <div className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-gradient-to-br from-blue-50 via-white to-cyan-50 border border-blue-200/70 shadow-sm">
+                                        <div className="w-9 h-9 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-sm">
+                                            <CreditCard className="w-4 h-4" />
+                                        </div>
+                                        <div className="leading-tight min-w-[140px]">
+                                            <p className="text-[10px] uppercase tracking-widest text-blue-700/70">Remaining</p>
+                                            {creditsLoading ? (
+                                                <span className="flex items-center gap-2 text-xs text-slate-500">
+                                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                    Syncing...
+                                                </span>
+                                            ) : credits ? (
+                                                <>
+                                                    <div className="flex items-baseline gap-2">
+                                                        <span className="text-lg font-semibold text-slate-900">{totalTokens}</span>
+                                                        <span className="text-xs text-slate-500">tokens</span>
+                                                    </div>
+                                                    <p className="text-[11px] text-slate-500">Free {freeTokensRemaining} · Paid {paidTokens}</p>
+                                                </>
+                                            ) : (
+                                                <div className="text-xs text-slate-500">Unavailable</div>
+                                            )}
+                                        </div>
+                                        <button
+                                            onClick={refreshCredits}
+                                            className="p-2 rounded-lg border border-blue-200/70 text-blue-600 hover:bg-blue-50 transition-colors"
+                                            title="Refresh tokens"
+                                            aria-label="Refresh tokens"
+                                        >
+                                            <RefreshCcw className={`w-4 h-4 ${creditsLoading ? "animate-spin" : ""}`} />
+                                        </button>
                                     </div>
 
-                                    <select
-                                        value={selectedPackageId}
-                                        onChange={(e) => setSelectedPackageId(e.target.value)}
-                                        className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        aria-label="Select token recharge plan"
-                                    >
-                                        {tokenPackages.map((pkg) => (
-                                            <option key={pkg.id} value={pkg.id}>
-                                                {pkg.tokens} tokens - Rs {pkg.price}
-                                            </option>
-                                        ))}
-                                    </select>
+                                    <div className="flex items-center gap-2">
+                                        <select
+                                            value={selectedPackageId}
+                                            onChange={(e) => setSelectedPackageId(e.target.value)}
+                                            className="px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            aria-label="Select token recharge plan"
+                                        >
+                                            {tokenPackages.map((pkg) => (
+                                                <option key={pkg.id} value={pkg.id}>
+                                                    {pkg.tokens} tokens - Rs {pkg.price}
+                                                </option>
+                                            ))}
+                                        </select>
 
+                                        <button
+                                            onClick={() => setShowPaymentModal(true)}
+                                            className="px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-xl shadow-sm hover:shadow transition-all"
+                                        >
+                                            Recharge
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="md:hidden flex items-center gap-2">
+                                    <button
+                                        onClick={refreshCredits}
+                                        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 text-slate-700 border border-slate-200"
+                                        title="Refresh tokens"
+                                    >
+                                        <CreditCard className="w-4 h-4 text-slate-500" />
+                                        {creditsLoading ? (
+                                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                        ) : (
+                                            <span className="text-sm font-semibold">{totalTokens}</span>
+                                        )}
+                                    </button>
                                     <button
                                         onClick={() => setShowPaymentModal(true)}
-                                        className="px-3.5 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                                        className="px-3.5 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg"
                                     >
                                         Recharge
                                     </button>
                                 </div>
-
-                                <button
-                                    onClick={() => setShowPaymentModal(true)}
-                                    className="md:hidden flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
-                                    title="Recharge tokens"
-                                >
-                                    <CreditCard className="w-4 h-4 text-slate-500" />
-                                    {creditsLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <span>{totalTokens}</span>}
-                                </button>
                                 <span className="h-6 w-px bg-slate-200 mx-1" aria-hidden />
                                 {session.user?.image ? (
                                     <Image src={session.user.image} alt="" width={32} height={32} className="w-8 h-8 rounded-full ring-2 ring-slate-100" unoptimized />
@@ -1825,7 +1874,7 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                                             />
                                             <button
                                                 onClick={generateScript}
-                                                disabled={loading || !formData.title.trim()}
+                                                disabled={loading || creditsLoading || (!credits && isAuthenticated) || !formData.title.trim()}
                                                 className="sm:w-auto w-full py-3.5 px-8 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 flex-shrink-0 shadow-sm hover:shadow"
                                             >
                                                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
