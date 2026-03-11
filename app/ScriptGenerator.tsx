@@ -223,7 +223,9 @@ export default function ScriptGenerator() {
     const generationAbortRef = useRef<AbortController | null>(null);
 
     // Auth and token state
-    const { data: session } = useSession();
+    const { data: session, status } = useSession();
+    const isAuthLoading = status === "loading";
+    const isAuthenticated = status === "authenticated" && !!session;
     const [credits, setCredits] = useState<{
         freeTokensUsed: number;
         freeTokensRemaining: number;
@@ -791,7 +793,7 @@ export default function ScriptGenerator() {
 
     // Main generate function
     const generateScript = async () => {
-        if (!session) {
+        if (!isAuthenticated) {
             alert("Please sign in to generate scripts");
             signIn("google", { callbackUrl: "/app" });
             return;
@@ -1682,7 +1684,9 @@ Aspect Ratio: ${prompt.aspectRatio}`;
                         <span className="hidden sm:block text-sm font-medium text-slate-600">Script Generator</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        {session ? (
+                        {isAuthLoading ? (
+                            <div className="h-10 w-28 rounded-lg bg-slate-100 animate-pulse" />
+                        ) : isAuthenticated ? (
                             <>
                                 <button
                                     onClick={() => { setShowHistory(true); fetchHistory(); }}
@@ -1726,7 +1730,14 @@ Aspect Ratio: ${prompt.aspectRatio}`;
             </header>
 
             <main className="pt-16 min-h-screen bg-slate-50/80">
-                {!session ? (
+                {isAuthLoading ? (
+                    <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] px-4 py-16 bg-gradient-to-b from-slate-50/80 to-white">
+                        <div className="flex items-center gap-3 text-slate-500">
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                            <span className="text-sm font-medium">Checking sign-in status...</span>
+                        </div>
+                    </div>
+                ) : !isAuthenticated ? (
                     <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] px-4 py-16 bg-gradient-to-b from-slate-50/80 to-white">
                         <div className="w-full max-w-md surface-raised rounded-2xl p-10 text-center shadow-xl border border-slate-200/80">
                             <p className="text-overline mb-3">AI Script Generator</p>

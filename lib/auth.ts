@@ -46,22 +46,28 @@ export const authOptions: NextAuthOptions = {
         async session({ session }) {
             if (!session.user?.email) return session;
 
-            const userData = await prisma.user.findUnique({
-                where: { email: session.user.email },
-                include: { credits: true },
-            });
+            try {
+                const userData = await prisma.user.findUnique({
+                    where: { email: session.user.email },
+                    include: { credits: true },
+                });
 
-            if (userData) {
-                type SessionUserWithCredits = NonNullable<typeof session.user> & {
-                    id?: string;
-                    credits?: typeof userData.credits;
-                };
-                const sessionUser = session.user as SessionUserWithCredits;
-                sessionUser.id = userData.id;
-                if (userData.credits) {
-                    sessionUser.credits = userData.credits;
+                if (userData) {
+                    type SessionUserWithCredits = NonNullable<typeof session.user> & {
+                        id?: string;
+                        credits?: typeof userData.credits;
+                    };
+                    const sessionUser = session.user as SessionUserWithCredits;
+                    sessionUser.id = userData.id;
+                    if (userData.credits) {
+                        sessionUser.credits = userData.credits;
+                    }
                 }
+            } catch (error) {
+                // Do not fail auth session when DB hydration is temporarily unavailable.
+                console.error("Error hydrating session:", error);
             }
+
             return session;
         },
         async jwt({ token, user }) {
