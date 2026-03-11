@@ -71,11 +71,30 @@ export const authOptions: NextAuthOptions = {
             return token;
         },
         async redirect({ url, baseUrl }) {
-            // Allows relative callback URLs
-            if (url.startsWith("/")) return `${baseUrl}${url}`;
-            // Allows callback URLs on the same origin
-            else if (new URL(url).origin === baseUrl) return url;
-            return baseUrl;
+            const appUrl = `${baseUrl}/app`;
+
+            // Allows relative callback URLs.
+            // Treat root callback as post-login app landing page.
+            if (url.startsWith("/")) {
+                return url === "/" ? appUrl : `${baseUrl}${url}`;
+            }
+
+            // Allows callback URLs on the same origin.
+            try {
+                const parsedUrl = new URL(url);
+                if (parsedUrl.origin === baseUrl) {
+                    const isRootPath =
+                        parsedUrl.pathname === "/" &&
+                        !parsedUrl.search &&
+                        !parsedUrl.hash;
+                    return isRootPath ? appUrl : url;
+                }
+            } catch {
+                // Fall through to safe default below.
+            }
+
+            // Safe default after auth.
+            return appUrl;
         },
     },
     pages: {
