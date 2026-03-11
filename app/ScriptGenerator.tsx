@@ -424,7 +424,7 @@ export default function ScriptGenerator() {
         setCreditsLoading(true);
         setCreditsError(null);
         try {
-            const res = await fetch("/api/credits", { credentials: "include" });
+            const res = await fetch("/api/credits", { credentials: "include", cache: "no-store" });
             if (res.ok) {
                 const data = await res.json();
                 setCredits(data);

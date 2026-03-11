@@ -1,52 +1,87 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import { getToken } from "next-auth/jwt";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sanitizeError } from "@/lib/api-utils";
 
 const FREE_TOKENS = 30;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+type AuthIdentity = {
+    email: string;
+    name?: string | null;
+    image?: string | null;
+};
+
+const resolveIdentity = async (req: NextRequest): Promise<AuthIdentity | null> => {
+    const session = await getServerSession(authOptions);
+    if (session?.user?.email) {
+        return {
+            email: session.user.email,
+            name: session.user.name,
+            image: session.user.image,
+        };
+    }
+
+    const secret = process.env.NEXTAUTH_SECRET;
+    if (!secret) return null;
+
+    const token =
+        (await getToken({ req, secret })) ||
+        (await getToken({ req, secret, secureCookie: true })) ||
+        (await getToken({ req, secret, secureCookie: false }));
+
+    if (typeof token?.email === "string") {
+        return {
+            email: token.email,
+            name: typeof token.name === "string" ? token.name : null,
+            image: typeof token.picture === "string" ? token.picture : null,
+        };
+    }
+
+    return null;
+};
+
+const getOrCreateUserWithCredits = async (identity: AuthIdentity) => {
+    const user = await prisma.user.upsert({
+        where: { email: identity.email },
+        update: {
+            ...(identity.name ? { name: identity.name } : {}),
+            ...(identity.image ? { image: identity.image } : {}),
+        },
+        create: {
+            email: identity.email,
+            name: identity.name || null,
+            image: identity.image || null,
+        },
+    });
+
+    const credits = await prisma.userCredits.upsert({
+        where: { userId: user.id },
+        create: {
+            userId: user.id,
+            freeScriptsUsed: 0,
+            paidCredits: 0,
+            totalGenerated: 0,
+        },
+        update: {},
+    });
+
+    return { user, credits };
+};
 
 // GET - Check user tokens
-export async function GET() {
+export async function GET(req: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
-
-        if (!session?.user?.email) {
+        const identity = await resolveIdentity(req);
+        if (!identity) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const user = await prisma.user.findUnique({
-            where: { email: session.user.email },
-        });
-
-        if (!user) {
-            return NextResponse.json({ error: "User not found" }, { status: 404 });
-        }
-
-        let credits = await prisma.userCredits.findUnique({
-            where: { userId: user.id },
-        });
-
-        if (!credits) {
-            // Initialize credits if not exists
-            credits = await prisma.userCredits.create({
-                data: {
-                    userId: user.id,
-                    freeScriptsUsed: 0,
-                    paidCredits: 0,
-                    totalGenerated: 0,
-                },
-            });
-
-            return NextResponse.json({
-                freeTokensUsed: 0,
-                freeTokensRemaining: FREE_TOKENS,
-                paidTokens: 0,
-                totalGenerated: 0,
-                canGenerate: true,
-            });
-        }
+        const { credits } = await getOrCreateUserWithCredits(identity);
 
         const freeTokensRemaining = Math.max(0, FREE_TOKENS - credits.freeScriptsUsed);
         const canGenerate = freeTokensRemaining + credits.paidCredits >= 10;
@@ -67,27 +102,12 @@ export async function GET() {
 // POST - Use tokens (called after successful generation)
 export async function POST(req: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
-
-        if (!session?.user?.email) {
+        const identity = await resolveIdentity(req);
+        if (!identity) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const user = await prisma.user.findUnique({
-            where: { email: session.user.email },
-        });
-
-        if (!user) {
-            return NextResponse.json({ error: "User not found" }, { status: 404 });
-        }
-
-        const credits = await prisma.userCredits.findUnique({
-            where: { userId: user.id },
-        });
-
-        if (!credits) {
-            return NextResponse.json({ error: "No tokens found" }, { status: 404 });
-        }
+        const { credits } = await getOrCreateUserWithCredits(identity);
 
         const body = await req.json().catch(() => ({}));
         const parsed = z.object({ count: z.coerce.number().int().min(1).max(200).default(10) }).safeParse(body);
