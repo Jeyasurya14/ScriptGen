@@ -1,10 +1,6 @@
 import { Suspense } from "react";
-import dynamic from "next/dynamic";
 import type { Metadata } from "next";
-
-const ScriptGenerator = dynamic(() => import("../ScriptGenerator"), {
-  ssr: false,
-});
+import ClientPage from "./ClientPage";
 
 const siteUrl = process.env.NEXTAUTH_URL || "https://scriptgen.learn-made.in";
 
@@ -33,7 +29,7 @@ export default function AppPage() {
           </div>
         </div>
       }>
-        <ScriptGenerator />
+        <ClientPage />
       </Suspense>
     </div>
   );

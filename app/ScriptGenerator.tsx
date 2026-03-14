@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
 import { toast, Toaster } from "react-hot-toast";
