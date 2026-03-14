@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
         const parsed = SaveScriptSchema.safeParse(raw);
         if (!parsed.success) {
             return NextResponse.json(
-                { error: parsed.error.errors, code: 'VALIDATION_ERROR' },
+                { error: parsed.error.issues, code: 'VALIDATION_ERROR' },
                 { status: 422 }
             );
         }

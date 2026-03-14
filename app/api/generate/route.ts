@@ -29,7 +29,7 @@ export async function POST(req: Request) {
         const parseResult = GenerateSchema.safeParse(body);
         if (!parseResult.success) {
             return NextResponse.json(
-                { error: parseResult.error.errors, code: 'VALIDATION_ERROR' },
+                { error: parseResult.error.issues, code: 'VALIDATION_ERROR' },
                 { status: 422 }
             );
         }
