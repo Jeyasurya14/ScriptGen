@@ -1,16 +1,17 @@
 import { z } from "zod";
 
 export const GenerateSchema = z.object({
-  topic: z.string().min(10).max(500),
-  language: z.enum(["English", "Hindi", "Tamil", "Thanglish"]),
+  topic: z.string().min(10, "Topic must be at least 10 characters").max(500),
+  language: z.enum(["english", "hindi", "tamil", "thanglish"]),
   tamilRatio: z.number().min(10).max(90).optional(),
-  vidLength: z.enum(["5", "10", "15", "20"]),
-  contentType: z.enum(["Tutorial", "Story", "Review", "Educational", "Vlog"]),
+  vidLength: z.enum(["short", "medium", "long", "deep-dive"]),
+  contentType: z.enum(["tutorial", "live-build", "review", "explainer", "news"]),
   assets: z.object({
-    generateImages: z.boolean(),
-    includeChapters: z.boolean(),
-    includeBRoll: z.boolean(),
-    includeShorts: z.boolean(),
+    seo: z.boolean(),
+    broll: z.boolean(),
+    shorts: z.boolean(),
+    imagePrompts: z.boolean(),
+    tamilContext: z.boolean(),
   }),
 });
 
@@ -19,7 +20,7 @@ export const PaymentSchema = z.object({
 });
 
 export const ReferralSchema = z.object({
-  code: z.string().min(3).max(20),
+  code: z.string().min(3).max(30),
 });
 
 export type GenerateInput = z.infer<typeof GenerateSchema>;

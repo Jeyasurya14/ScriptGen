@@ -1,6 +1,7 @@
 "use client";
 
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 
 type HomeCtaProps = {
@@ -9,10 +10,19 @@ type HomeCtaProps = {
 };
 
 export default function HomeCta({ children, className }: HomeCtaProps) {
+  const router = useRouter();
+  const { data: session } = useSession();
+
   return (
     <button
       type="button"
-      onClick={() => signIn("google", { callbackUrl: "/app" })}
+      onClick={() => {
+        if (session?.user?.email) {
+          router.push("/generate");
+          return;
+        }
+        signIn("google", { callbackUrl: "/generate" });
+      }}
       className={className}
     >
       {children}

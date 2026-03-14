@@ -1,163 +1,231 @@
-"use client";
-
-import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { FileText, Zap, Globe, Scissors, Clock } from "lucide-react";
-import { Card, CardBody } from "@/components/ui/Card";
+import Link from "next/link";
+import { formatDistanceToNow } from "date-fns";
+import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
+import { authOptions } from "@/lib/auth";
+import { toTokenBalance } from "@/lib/credits";
+import { prisma } from "@/lib/prisma";
 import { Badge } from "@/components/ui/Badge";
-import { SkeletonText } from "@/components/ui/Skeleton";
+import { Button } from "@/components/ui/Button";
+import { Card, CardBody } from "@/components/ui/Card";
 
-interface Script {
-  id: string;
-  title: string;
-  channel_name: string;
-  duration: number;
-  content_type: string;
-  created_at: string;
+function getFirstName(name?: string | null) {
+  if (!name) return "Creator";
+  return name.split(" ")[0] || "Creator";
 }
 
-export default function DashboardPage() {
-  const { data: session } = useSession();
-  const router = useRouter();
-  const [scripts, setScripts] = useState<Script[]>([]);
-  const [loadingScripts, setLoadingScripts] = useState(true);
-  const [credits, setCredits] = useState<any>(null);
-  const [loadingCredits, setLoadingCredits] = useState(true);
+function extractAverageSeoScore(seoData: unknown): number | null {
+  if (!seoData || typeof seoData !== "object") return null;
 
-  useEffect(() => {
-    if (session) {
-      fetchScripts();
-      fetchCredits();
-    }
-  }, [session]);
+  const titles = (seoData as { titles?: Array<{ score?: unknown }> }).titles;
+  if (!Array.isArray(titles) || titles.length === 0) return null;
 
-  const fetchScripts = async () => {
-    try {
-      const res = await fetch("/api/scripts");
-      if (res.ok) {
-        const data = await res.json();
-        setScripts(data.scripts || []);
-      }
-    } catch (e) {
-      console.error("Failed to fetch scripts", e);
-    } finally {
-      setLoadingScripts(false);
-    }
-  };
+  const scores = titles
+    .map((title) => (typeof title?.score === "number" ? title.score : null))
+    .filter((score): score is number => score !== null);
 
-  const fetchCredits = async () => {
-    try {
-      const res = await fetch("/api/credits");
-      if (res.ok) {
-        const data = await res.json();
-        setCredits(data);
-      }
-    } catch (e) {
-      console.error("Failed to fetch credits", e);
-    } finally {
-      setLoadingCredits(false);
-    }
-  };
+  if (scores.length === 0) return null;
+  return Math.round(scores.reduce((total, score) => total + score, 0) / scores.length);
+}
+
+function extractLanguage(seoData: unknown) {
+  if (!seoData || typeof seoData !== "object") return "Unknown";
+  const metaLanguage = (seoData as { meta?: { language?: unknown } }).meta?.language;
+  return typeof metaLanguage === "string" && metaLanguage.length > 0 ? metaLanguage : "Unknown";
+}
+
+function extractShortsCount(shortsData: unknown) {
+  if (!shortsData) return 0;
+  if (Array.isArray(shortsData)) return shortsData.length;
+
+  if (typeof shortsData === "object" && shortsData !== null) {
+    const items = (shortsData as { items?: unknown[] }).items;
+    if (Array.isArray(items)) return items.length;
+  }
+
+  return 0;
+}
+
+function getLanguageBadge(language: string) {
+  const normalized = language.toLowerCase();
+
+  if (normalized === "thanglish") return "border border-accent/20 bg-accent-glow text-accent2";
+  if (normalized === "english") return "border border-sky-400/20 bg-sky-400/10 text-sky-300";
+  if (normalized === "hindi") return "border border-orange-400/20 bg-orange-400/10 text-orange-300";
+  if (normalized === "tamil") return "border border-green/20 bg-green-bg text-green";
+
+  return "border border-border2 bg-surface2 text-muted";
+}
+
+export default async function DashboardPage() {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.email) {
+    redirect("/");
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    include: {
+      credits: true,
+      scripts: {
+        select: {
+          id: true,
+          title: true,
+          seoData: true,
+          shortsData: true,
+          scriptContent: true,
+          createdAt: true,
+        },
+        orderBy: { createdAt: "desc" },
+      },
+    },
+  });
+
+  const scripts = user?.scripts ?? [];
+  const recentScripts = scripts.slice(0, 10);
+  const tokenBalance = user?.credits ? toTokenBalance(user.credits) : null;
+  const now = new Date();
+  const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const weeklyScripts = scripts.filter((script) => script.createdAt >= oneWeekAgo).length;
+
+  const seoScores = scripts
+    .map((script) => extractAverageSeoScore(script.seoData))
+    .filter((score): score is number => score !== null);
+  const averageSeoScore =
+    seoScores.length > 0
+      ? Math.round(seoScores.reduce((total, score) => total + score, 0) / seoScores.length)
+      : 0;
+
+  const shortsExtracted = scripts.reduce((total, script) => total + extractShortsCount(script.shortsData), 0);
+  const tokensRemaining = tokenBalance?.totalTokens ?? 0;
 
   const stats = [
-    { label: "Scripts Generated", value: scripts.length || 0, icon: FileText, color: "text-accent", bg: "bg-accent/10", border: "border-accent/20" },
-    { label: "Tokens Remaining", value: credits?.totalTokens || 0, icon: Zap, color: "text-gold", bg: "bg-gold/10", border: "border-gold/20" },
-    { label: "Avg SEO Score", value: scripts.length > 0 ? "85%" : "0%", icon: Globe, color: "text-green", bg: "bg-green/10", border: "border-green/20" },
-    { label: "Shorts Extracted", value: scripts.length * 2 || 0, icon: Scissors, color: "text-red", bg: "bg-red/10", border: "border-red/20" },
+    {
+      label: "Scripts Generated",
+      value: scripts.length,
+      subtext: `+${weeklyScripts} this week`,
+      accent: "text-accent2",
+    },
+    {
+      label: "Tokens Remaining",
+      value: tokensRemaining,
+      subtext: `~${Math.floor(tokensRemaining / 10)} full scripts left`,
+      accent: "text-gold",
+      low: tokensRemaining < 10,
+    },
+    {
+      label: "Avg SEO Score",
+      value: averageSeoScore,
+      subtext: "Out of 100",
+      accent: "text-green",
+    },
+    {
+      label: "Shorts Extracted",
+      value: shortsExtracted,
+      subtext: "Auto-clipped highlights",
+      accent: "text-red",
+    },
   ];
 
   return (
-    <div className="max-w-[1200px] mx-auto p-6 md:p-10 space-y-10 min-h-screen animate-fade-in">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-head font-bold text-white mb-2">Dashboard</h1>
-        <p className="text-sm text-white/50">Overview of your script generation activity and performance.</p>
+    <div className="mx-auto max-w-7xl p-6 md:p-8">
+      <div className="mb-8">
+        <h1 className="font-head text-3xl font-bold text-white">
+          Good morning, {getFirstName(session.user.name)} 👋
+        </h1>
+        <p className="mt-2 text-sm text-muted">Here&apos;s your content overview.</p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat, i) => (
-          <Card key={i} className="hover:border-white/10">
-            <CardBody className="p-5 flex items-center gap-4">
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center border ${stat.bg} ${stat.border} ${stat.color}`}>
-                <stat.icon size={20} />
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {stats.map((stat) => (
+          <Card key={stat.label}>
+            <CardBody className="space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-[11px] uppercase tracking-[0.18em] text-muted">{stat.label}</p>
+                {stat.low ? <Badge variant="draft" className="text-red">Low balance</Badge> : null}
               </div>
-              <div>
-                <p className="text-xs font-bold text-white/50 uppercase tracking-wider">{stat.label}</p>
-                <div className="text-2xl font-mono font-bold text-white mt-1">
-                  {(loadingScripts && i === 0) || (loadingCredits && i === 1) ? (
-                    <SkeletonText lines={1} className="w-16 h-6 mt-1" />
-                  ) : (
-                    stat.value
-                  )}
+              <p className={`font-head text-4xl font-bold ${stat.accent}`}>
+                {stat.label === "Avg SEO Score" ? `${stat.value}` : stat.value}
+              </p>
+              <p className="text-sm text-muted">{stat.subtext}</p>
+              {stat.label === "Avg SEO Score" ? (
+                <div className="h-2 overflow-hidden rounded-full bg-white/[0.06]">
+                  <div
+                    className="h-full rounded-full bg-[linear-gradient(90deg,#3FFFA2,#7DFFBF)]"
+                    style={{ width: `${Math.min(100, averageSeoScore)}%` }}
+                  />
                 </div>
-              </div>
+              ) : null}
             </CardBody>
           </Card>
         ))}
       </div>
 
-      {/* Recent Scripts Table */}
-      <div className="space-y-4">
-        <h2 className="text-lg font-head font-bold text-white">Recent Scripts</h2>
-        <Card className="border-surface2">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-white/70">
-              <thead className="text-[10px] font-bold uppercase tracking-widest text-white/40 border-b border-surface2 bg-surface2/30">
-                <tr>
-                  <th className="px-6 py-4">Title</th>
-                  <th className="px-6 py-4">Language</th>
-                  <th className="px-6 py-4">SEO Score</th>
-                  <th className="px-6 py-4">Date</th>
-                  <th className="px-6 py-4 text-right">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-surface2">
-                {loadingScripts ? (
-                  Array.from({ length: 3 }).map((_, i) => (
-                    <tr key={i}>
-                      <td className="px-6 py-4"><SkeletonText lines={1} className="w-48" /></td>
-                      <td className="px-6 py-4"><SkeletonText lines={1} className="w-16" /></td>
-                      <td className="px-6 py-4"><SkeletonText lines={1} className="w-12" /></td>
-                      <td className="px-6 py-4"><SkeletonText lines={1} className="w-24" /></td>
-                      <td className="px-6 py-4 text-right"><SkeletonText lines={1} className="w-16 h-5 rounded-full inline-block" /></td>
-                    </tr>
-                  ))
-                ) : scripts.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center text-white/40">
-                      <FileText className="w-10 h-10 mx-auto mb-3 opacity-20" />
-                      No scripts found. Start generating!
-                    </td>
-                  </tr>
-                ) : (
-                  scripts.map((script) => (
-                    <tr 
-                      key={script.id} 
-                      className="hover:bg-surface2/50 transition-colors cursor-pointer group"
-                      onClick={() => router.push(`/generate?id=${script.id}`)}
-                    >
-                      <td className="px-6 py-4 font-bold text-white/90 group-hover:text-accent transition-colors max-w-[200px] truncate">
-                        {script.title || "Untitled Script"}
-                      </td>
-                      <td className="px-6 py-4">English</td>
-                      <td className="px-6 py-4 font-mono font-bold text-green">85%</td>
-                      <td className="px-6 py-4 flex items-center gap-1.5 text-white/50 text-xs">
-                        <Clock size={12} />
-                        {new Date(script.created_at).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <Badge variant="success">DONE</Badge>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+      <section id="recent-scripts" className="mt-10">
+        <div className="mb-4 flex items-center justify-between gap-4">
+          <div>
+            <h2 className="font-head text-2xl font-semibold text-white">Recent Scripts</h2>
+            <p className="text-sm text-muted">Your latest generated work, ready to reopen and refine.</p>
           </div>
-        </Card>
-      </div>
+          <Link href="/generate" className="text-sm font-medium text-accent2 underline-offset-4 hover:underline">
+            View All
+          </Link>
+        </div>
+
+        {recentScripts.length === 0 ? (
+          <Card>
+            <CardBody className="flex flex-col items-center justify-center gap-4 py-16 text-center">
+              <h3 className="font-head text-2xl font-semibold text-white">No scripts yet</h3>
+              <p className="max-w-md text-sm text-muted">
+                Your dashboard will light up as soon as you generate your first script.
+              </p>
+              <Link href="/generate">
+                <Button>Start Generating</Button>
+              </Link>
+            </CardBody>
+          </Card>
+        ) : (
+          <div className="overflow-hidden rounded-3xl border border-border bg-surface">
+            <div className="grid grid-cols-[2fr_1fr_1fr_1fr_80px] border-b border-border px-4 py-3 text-[11px] uppercase tracking-[0.18em] text-muted">
+              <span>Title</span>
+              <span>Language</span>
+              <span>SEO Score</span>
+              <span>Date</span>
+              <span>Status</span>
+            </div>
+
+            {recentScripts.map((script, index) => {
+              const seoScore = extractAverageSeoScore(script.seoData);
+              const language = extractLanguage(script.seoData);
+              const seoTone =
+                seoScore === null ? "text-muted" : seoScore >= 80 ? "text-green" : seoScore >= 60 ? "text-gold" : "text-red";
+              const status = script.scriptContent ? "Done" : "Draft";
+
+              return (
+                <div
+                  key={script.id}
+                  className={`grid grid-cols-[2fr_1fr_1fr_1fr_80px] items-center gap-4 px-4 py-4 text-sm ${index < recentScripts.length - 1 ? "border-b border-border" : ""} hover:bg-surface2/70`}
+                >
+                  <Link href={`/generate?id=${script.id}`} className="truncate font-medium text-white transition hover:text-accent2">
+                    {script.title}
+                  </Link>
+                  <span className={`inline-flex w-fit rounded-full px-2.5 py-1 text-xs font-medium ${getLanguageBadge(language)}`}>
+                    {language}
+                  </span>
+                  <span className={seoTone}>{seoScore ?? "—"}</span>
+                  <span className="text-muted">
+                    {formatDistanceToNow(script.createdAt, { addSuffix: true })}
+                  </span>
+                  <span>
+                    <Badge variant={status === "Done" ? "success" : "draft"}>{status}</Badge>
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

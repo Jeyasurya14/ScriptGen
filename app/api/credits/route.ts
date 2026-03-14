@@ -3,10 +3,9 @@ import { getServerSession } from "next-auth";
 import { getToken } from "next-auth/jwt";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth";
+import { FREE_TOKENS, toTokenBalance } from "@/lib/credits";
 import { prisma } from "@/lib/prisma";
 import { sanitizeError } from "@/lib/api-utils";
-
-const FREE_TOKENS = 30;
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
@@ -127,23 +126,6 @@ const getOrCreateUserWithCredits = async (identity: AuthIdentity) => {
     return { user, credits };
 };
 
-const toCreditsPayload = (credits: {
-    freeScriptsUsed: number;
-    paidCredits: number;
-    totalGenerated: number;
-}) => {
-    const freeTokensRemaining = Math.max(0, FREE_TOKENS - credits.freeScriptsUsed);
-    const totalTokens = freeTokensRemaining + credits.paidCredits;
-    return {
-        freeTokensUsed: credits.freeScriptsUsed,
-        freeTokensRemaining,
-        paidTokens: credits.paidCredits,
-        totalGenerated: credits.totalGenerated,
-        totalTokens,
-        canGenerate: totalTokens >= 10,
-    };
-};
-
 const deductTokensAtomic = async (userId: string, count: number) => {
     for (let attempt = 0; attempt < 3; attempt++) {
         let credits = await prisma.userCredits.findUnique({
@@ -216,7 +198,7 @@ export async function GET(req: NextRequest) {
 
         const { credits } = await getOrCreateUserWithCredits(identity);
 
-        return NextResponse.json(toCreditsPayload(credits));
+        return NextResponse.json(toTokenBalance(credits));
     } catch (error) {
         console.error("[credits] GET error:", error);
         return NextResponse.json(
@@ -251,7 +233,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({
             success: true,
             deducted: count,
-            ...toCreditsPayload(updatedCredits),
+            ...toTokenBalance(updatedCredits),
         });
     } catch (error: unknown) {
         if (error instanceof InsufficientTokensError) {

@@ -1,30 +1,40 @@
 import React from "react";
 
-interface SkeletonProps {
+type SkeletonProps = {
   className?: string;
-}
-
-export const Skeleton = ({ className = "" }: SkeletonProps) => {
-  return (
-    <div
-      className={`animate-pulse bg-surface2 rounded-md ${className}`}
-    />
-  );
 };
 
-export const SkeletonText = ({ lines = 1, className = "" }: { lines?: number; className?: string }) => {
+export function Skeleton({ className = "" }: SkeletonProps) {
+  return (
+    <div
+      className={[
+        "relative overflow-hidden rounded-xl bg-white/[0.06]",
+        "before:absolute before:inset-0 before:bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.08),transparent)] before:bg-[length:200%_100%] before:animate-shimmer",
+        className,
+      ].join(" ")}
+    />
+  );
+}
+
+export function SkeletonText({
+  lines = 1,
+  className = "",
+}: {
+  lines?: number;
+  className?: string;
+}) {
   return (
     <div className={`space-y-2 ${className}`}>
-      {Array.from({ length: lines }).map((_, i) => (
+      {Array.from({ length: lines }).map((_, index) => (
         <Skeleton
-          key={i}
-          className={`h-4 ${i === lines - 1 && lines > 1 ? "w-2/3" : "w-full"}`}
+          key={index}
+          className={`h-4 ${index === lines - 1 && lines > 1 ? "w-2/3" : "w-full"}`}
         />
       ))}
     </div>
   );
-};
+}
 
-export const SkeletonCircle = ({ className = "" }: { className?: string }) => {
+export function SkeletonCircle({ className = "" }: { className?: string }) {
   return <Skeleton className={`rounded-full ${className}`} />;
-};
+}

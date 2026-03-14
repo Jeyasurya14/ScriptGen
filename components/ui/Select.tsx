@@ -1,10 +1,15 @@
 import React, { useId } from "react";
 
-interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+type SelectOption = {
+  label: string;
+  value: string;
+};
+
+type SelectProps = React.SelectHTMLAttributes<HTMLSelectElement> & {
   label?: string;
   error?: string;
-  options: { label: string; value: string }[];
-}
+  options: SelectOption[];
+};
 
 export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
   ({ label, error, options, className = "", id, ...props }, ref) => {
@@ -12,46 +17,43 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
     const selectId = id || generatedId;
 
     return (
-      <div className="w-full space-y-1.5">
-        {label && (
-          <label htmlFor={selectId} className="text-xs font-bold text-white/50 uppercase tracking-wider pl-1 cursor-pointer">
+      <div className="w-full space-y-2">
+        {label ? (
+          <label
+            htmlFor={selectId}
+            className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-muted"
+          >
             {label}
           </label>
-        )}
-        <div className="relative group">
+        ) : null}
+        <div className="relative">
           <select
             ref={ref}
             id={selectId}
-            className={`
-              appearance-none w-full bg-surface2 border border-white/10 rounded-xl px-4 py-3
-              text-sm text-white focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent
-              transition-all duration-200 cursor-pointer pr-10
-              disabled:opacity-50 disabled:cursor-not-allowed
-              ${error ? "border-red/50 focus:border-red" : ""}
-              ${className}
-            `}
+            className={[
+              "w-full appearance-none rounded-xl border border-border2 bg-surface2 px-4 py-3 pr-10 text-sm text-white",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
+              error ? "border-red/40" : "focus:border-accent/40",
+              className,
+            ].join(" ")}
             {...props}
           >
-            {options.map((opt) => (
-              <option key={opt.value} value={opt.value} className="bg-surface text-white">
-                {opt.label}
+            {options.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
               </option>
             ))}
           </select>
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-white/30 group-focus-within:text-accent transition-colors">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+          <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-muted">
+            <svg viewBox="0 0 20 20" fill="none" className="h-4 w-4">
+              <path d="M5 7.5 10 12.5 15 7.5" stroke="currentColor" strokeWidth="1.5" />
             </svg>
-          </div>
+          </span>
         </div>
-        {error && (
-          <p className="text-[10px] font-semibold text-red pl-1 animate-fade-in">
-            {error}
-          </p>
-        )}
+        {error ? <p className="text-xs text-red">{error}</p> : null}
       </div>
     );
-  }
+  },
 );
 
 Select.displayName = "Select";

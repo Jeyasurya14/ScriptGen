@@ -1,113 +1,173 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useSession, signIn } from "next-auth/react";
-import { Zap, Menu, X } from "lucide-react";
-import { useState, useEffect } from "react";
-import { Badge } from "./ui/Badge";
+import { signIn, useSession } from "next-auth/react";
+import { usePathname, useRouter } from "next/navigation";
+import { Menu, X, Zap } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Badge } from "@/components/ui/Badge";
+import { getTokenTotal } from "@/lib/credits";
+
+const appLinks = [
+  { href: "/generate", label: "Generate" },
+  { href: "/dashboard", label: "Dashboard" },
+  { href: "/referral", label: "Referral" },
+];
+
+function getInitials(name?: string | null) {
+  if (!name) return "SG";
+  return name
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
 
 export default function Nav() {
   const pathname = usePathname();
+  const router = useRouter();
   const { data: session } = useSession();
   const [isScrolled, setIsScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const isAppRoute =
+    pathname?.startsWith("/dashboard") ||
+    pathname?.startsWith("/generate") ||
+    pathname?.startsWith("/referral") ||
+    pathname?.startsWith("/tokens") ||
+    pathname?.startsWith("/app");
+
+  const tokenCount =
+    session?.user?.tokenBalance?.totalTokens ??
+    session?.user?.tokens ??
+    getTokenTotal(session?.user?.credits ?? null);
 
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 10);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    const onScroll = () => setIsScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const credits = (session?.user as any)?.credits;
-  const tokenCount = credits?.totalTokens ?? 0;
-  const showBuyTokens = tokenCount < 10;
-
-  // Initials for avatar fallback
-  const getInitials = (name?: string | null) => {
-    if (!name) return "??";
-    return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
-  };
-
   return (
-    <nav 
-      className={`fixed top-0 left-0 right-0 z-[100] h-[60px] transition-all duration-300 border-b ${
-        isScrolled ? "bg-bg/80 backdrop-blur-md border-surface2" : "bg-transparent border-transparent"
-      }`}
+    <nav
+      className={[
+        "fixed inset-x-0 top-0 z-50 border-b transition duration-300",
+        isScrolled || isAppRoute
+          ? "border-border bg-bg/95 backdrop-blur-xl"
+          : "border-transparent bg-transparent",
+      ].join(" ")}
     >
-      <div className="h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-        {/* Left: Logo */}
-        <Link href="/" className="flex items-center gap-2 group">
-          <span className="text-xl">🎬</span>
-          <span className="font-head font-extrabold text-lg tracking-tight text-white group-hover:text-accent transition-colors">
-            ScriptGen
+      <div className="mx-auto flex h-[60px] max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <Link href="/" className="flex items-center gap-2">
+          <span className="text-lg">🎬</span>
+          <span className="font-head text-lg font-extrabold tracking-tight text-white">
+            Script<span className="text-accent2">Gen</span>
           </span>
-          <Badge variant="accent" className="ml-1 scale-75 origin-left">BETA</Badge>
+          <Badge className="hidden sm:inline-flex">Beta</Badge>
         </Link>
 
-        {/* Right: Actions */}
-        <div className="flex items-center gap-4">
-          {session ? (
-            <div className="flex items-center gap-3">
-              {/* Token Pill */}
-              <div className="flex items-center gap-2">
-                <div 
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface border border-gold/20 text-gold font-bold text-xs ${showBuyTokens ? 'animate-pulse' : ''}`}
-                  role="status"
-                  aria-live="polite"
-                  aria-label={`Tokens remaining: ${tokenCount}`}
-                >
-                  <Zap className="w-3.5 h-3.5 fill-gold" aria-hidden="true" />
-                  <span>{tokenCount}</span>
-                </div>
-                {showBuyTokens && (
-                  <Link href="/tokens" className="text-[10px] font-bold text-gold hover:underline hidden sm:block">
-                    Buy Tokens
-                  </Link>
-                )}
-              </div>
-
-              {/* User Avatar */}
-              <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center border-2 border-surface2 overflow-hidden shadow-lg">
-                {session.user?.image ? (
-                  <img src={session.user.image} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-[10px] font-bold text-white">
-                    {getInitials(session.user?.name)}
-                  </span>
-                )}
-              </div>
-            </div>
+        <div className="hidden items-center gap-6 md:flex">
+          {!isAppRoute ? (
+            <>
+              <Link href="/#how-it-works" className="text-sm text-muted transition hover:text-white">
+                How it works
+              </Link>
+              <Link href="/#pricing" className="text-sm text-muted transition hover:text-white">
+                Pricing
+              </Link>
+            </>
           ) : (
-            <button 
-              onClick={() => signIn("google")}
-              className="px-4 py-2 rounded-lg bg-accent hover:bg-accent2 text-white text-sm font-bold transition-all shadow-lg shadow-accent/20"
+            appLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`text-sm transition ${pathname?.startsWith(link.href) ? "text-white" : "text-muted hover:text-white"}`}
+              >
+                {link.label}
+              </Link>
+            ))
+          )}
+        </div>
+
+        <div className="flex items-center gap-3">
+          {session?.user?.email ? (
+            <>
+              <button
+                type="button"
+                onClick={() => router.push("/tokens")}
+                role="status"
+                aria-live="polite"
+                className={`inline-flex items-center gap-2 rounded-full border border-gold/20 bg-gold-bg px-3 py-1.5 text-xs font-semibold text-gold transition hover:border-gold/40 ${tokenCount < 10 ? "animate-pulse-slow" : ""}`}
+              >
+                <Zap className="h-3.5 w-3.5 fill-current" />
+                <span>{tokenCount}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => router.push("/dashboard")}
+                className="flex h-[34px] w-[34px] items-center justify-center overflow-hidden rounded-full border border-border2 bg-[linear-gradient(135deg,#6C63FF,#B06AFF)] text-xs font-semibold text-white"
+                aria-label="Open account"
+              >
+                {session.user.image ? (
+                  <Image
+                    src={session.user.image}
+                    alt={session.user.name || "Profile"}
+                    width={34}
+                    height={34}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  getInitials(session.user.name)
+                )}
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => signIn("google", { callbackUrl: "/generate" })}
+              className="rounded-full border border-accent/40 bg-accent-glow px-4 py-2 text-sm font-semibold text-white transition hover:border-accent hover:bg-accent/20"
             >
-              Sign In
+              Sign in
             </button>
           )}
 
-          {/* Mobile Menu Toggle */}
-          <button 
-            className="md:hidden text-white p-1"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          <button
+            type="button"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-surface text-white md:hidden"
+            onClick={() => setMobileOpen((value) => !value)}
+            aria-label={mobileOpen ? "Close navigation" : "Open navigation"}
           >
-            {mobileMenuOpen ? <X /> : <Menu />}
+            {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </button>
         </div>
       </div>
 
-      {/* Mobile Menu Overlay (Simple) */}
-      {mobileMenuOpen && (
-        <div className="md:hidden absolute top-[60px] left-0 right-0 bg-surface border-b border-surface2 p-6 animate-fade-in shadow-2xl">
-          <div className="flex flex-col gap-4">
-            <Link href="/" onClick={() => setMobileMenuOpen(false)} className="text-sm font-bold text-white/70 hover:text-white">Home</Link>
-            <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="text-sm font-bold text-white/70 hover:text-white">Dashboard</Link>
-            <Link href="/generate" onClick={() => setMobileMenuOpen(false)} className="text-sm font-bold text-white/70 hover:text-white">Generate</Link>
-            <Link href="/referral" onClick={() => setMobileMenuOpen(false)} className="text-sm font-bold text-white/70 hover:text-white">Referral</Link>
+      {mobileOpen ? (
+        <div className="border-t border-border bg-surface px-4 py-4 md:hidden">
+          <div className="flex flex-col gap-3">
+            {[
+              { href: "/", label: "Home" },
+              { href: "/generate", label: "Generate" },
+              { href: "/dashboard", label: "Dashboard" },
+              { href: "/referral", label: "Referral" },
+              { href: "/tokens", label: "Tokens" },
+            ].map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileOpen(false)}
+                className="rounded-xl px-3 py-2 text-sm text-muted transition hover:bg-white/[0.04] hover:text-white"
+              >
+                {link.label}
+              </Link>
+            ))}
           </div>
         </div>
-      )}
+      ) : null}
     </nav>
   );
 }

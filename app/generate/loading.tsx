@@ -1,5 +1,5 @@
 import AppPageSkeleton from "@/components/AppPageSkeleton";
 
 export default function Loading() {
-  return <AppPageSkeleton kind="referral" />;
+  return <AppPageSkeleton kind="generator" />;
 }

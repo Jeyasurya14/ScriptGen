@@ -1,31 +1,27 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import Nav from "./Nav";
-import Sidebar from "./Sidebar";
-import Footer from "./Footer";
+import Footer from "@/components/Footer";
+import Nav from "@/components/Nav";
+import Sidebar from "@/components/Sidebar";
 
 export default function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  
-  // Routes that should have the Sidebar layout
-  const appRoutes = ["/dashboard", "/generate", "/referral", "/tokens", "/scripts", "/templates"];
-  const isAppRoute = appRoutes.some(route => pathname?.startsWith(route)) || pathname === "/app";
+  const isAppRoute =
+    pathname === "/app" ||
+    pathname?.startsWith("/dashboard") ||
+    pathname?.startsWith("/generate") ||
+    pathname?.startsWith("/referral") ||
+    pathname?.startsWith("/tokens");
 
   return (
-    <div className="flex min-h-screen flex-col bg-bg">
+    <div className="flex min-h-screen flex-col bg-bg text-white">
       <Nav />
       <div className="flex flex-1 pt-[60px]">
-        {isAppRoute && <Sidebar />}
-        <main 
-          className={`flex-1 transition-all duration-300 ${
-            isAppRoute ? "md:pl-[220px]" : ""
-          }`}
-        >
-          {children}
-        </main>
+        {isAppRoute ? <Sidebar /> : null}
+        <main className={`min-w-0 flex-1 ${isAppRoute ? "md:pl-[220px]" : ""}`}>{children}</main>
       </div>
-      {!isAppRoute && <Footer />}
+      {isAppRoute ? null : <Footer />}
     </div>
   );
 }

@@ -3,18 +3,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { env } from "@/lib/env";
+import { getTokenPackById, TOKEN_PACKS } from "@/lib/token-packs";
 import { PaymentSchema } from "@/lib/validations";
 import Razorpay from "razorpay";
-
-// Must match tokenPackages in ScriptGenerator.tsx (id, tokens, price in INR)
-const TOKEN_PACKAGES = [
-    { id: "starter", tokens: 100, price: 149, pack: "30" }, // Mapping pack string to package
-    { id: "plus", tokens: 250, price: 299, pack: "100" },
-    { id: "growth", tokens: 500, price: 499, pack: "300" },
-    { id: "pro", tokens: 1000, price: 899, pack: "pro" }, // Fallbacks or additional mappings if needed
-];
-
-const getPackageByPack = (pack: string) => TOKEN_PACKAGES.find((pkg) => pkg.pack === pack);
 
 const getOrCreateUser = async (email: string, name?: string | null, image?: string | null) => {
     let user = await prisma.user.findUnique({ where: { email } });
@@ -63,13 +54,13 @@ export async function POST(req: NextRequest) {
         const parseResult = PaymentSchema.safeParse(body);
         if (!parseResult.success) {
             return NextResponse.json(
-                { error: parseResult.error.issues, code: 'VALIDATION_ERROR' },
+                { error: parseResult.error.issues[0]?.message ?? "Invalid request", code: 'VALIDATION_ERROR' },
                 { status: 422 }
             );
         }
 
         const { pack } = parseResult.data;
-        const selected = getPackageByPack(pack) || TOKEN_PACKAGES[0];
+        const selected = getTokenPackById(pack) || TOKEN_PACKS[0];
         
         if (!selected) {
             return NextResponse.json({ error: "Invalid package" }, { status: 400 });
@@ -87,6 +78,7 @@ export async function POST(req: NextRequest) {
                 email: session.user.email,
                 tokens: selected.tokens.toString(),
                 packageId: selected.id,
+                packageLabel: selected.label,
                 businessName: businessName,
                 website: websiteUrl,
                 businessType: "SaaS",
@@ -112,6 +104,7 @@ export async function POST(req: NextRequest) {
             currency: order.currency,
             keyId: process.env.RAZORPAY_KEY_ID,
             businessName: businessName,
+            pack: selected,
         });
     } catch (error: unknown) {
         console.error("Error creating order:", error);

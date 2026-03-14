@@ -9,5 +9,5 @@ export default function ErrorState({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <AppErrorState title="Failed to load referral page" error={error} reset={reset} />;
+  return <AppErrorState title="Failed to load generator" error={error} reset={reset} />;
 }

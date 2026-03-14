@@ -84,7 +84,7 @@ export default function Blog() {
             <h3 className="text-2xl font-bold text-white mb-3">Ready to generate your first script?</h3>
             <p className="text-slate-400 mb-6">50 free tokens. No credit card required.</p>
             <Link
-              href="/app"
+                href="/generate"
               className="inline-flex px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold hover:from-blue-500 hover:to-blue-400 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all"
             >
               Start free

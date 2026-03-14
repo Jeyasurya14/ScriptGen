@@ -2,101 +2,59 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { 
-  FileEdit, 
-  LayoutDashboard, 
-  Users, 
-  History, 
-  FileStack, 
-  ChevronLeft, 
-  ChevronRight,
-  Sparkles
-} from "lucide-react";
-import { useState } from "react";
-import { Button } from "./ui/Button";
+import { FileEdit, Files, LayoutDashboard, Sparkles, Users } from "lucide-react";
+
+const items = [
+  { label: "Script Generator", href: "/generate", icon: FileEdit },
+  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Referral", href: "/referral", icon: Users },
+  { label: "Recent Scripts", href: "/dashboard#recent-scripts", icon: Files },
+  { label: "Saved Templates", href: "/generate", icon: Sparkles },
+];
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const [isCollapsed, setIsCollapsed] = useState(false);
-
-  const menuItems = [
-    { name: "Script Generator", href: "/generate", icon: FileEdit },
-    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Referral", href: "/referral", icon: Users },
-    { name: "Recent Scripts", href: "/scripts", icon: History },
-    { name: "Saved Templates", href: "/templates", icon: FileStack },
-  ];
 
   return (
-    <aside 
-      className={`fixed left-0 top-[60px] h-[calc(100vh-60px)] bg-surface border-r border-surface2 transition-all duration-300 z-50 flex flex-col ${
-        isCollapsed ? "w-[70px]" : "w-[220px]"
-      } hidden md:flex`}
-    >
-      {/* Collapse Toggle */}
-      <button 
-        onClick={() => setIsCollapsed(!isCollapsed)}
-        className="absolute -right-3 top-4 w-6 h-6 bg-surface2 border border-surface2 rounded-full flex items-center justify-center text-white/50 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-        aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-      >
-        {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
-      </button>
+    <aside className="fixed left-0 top-[60px] hidden h-[calc(100vh-60px)] w-[220px] flex-col border-r border-border bg-surface md:flex">
+      <nav className="flex-1 space-y-1 px-3 py-6">
+        {items.map((item) => {
+          const active =
+            item.href === "/dashboard#recent-scripts"
+              ? pathname?.startsWith("/dashboard")
+              : pathname?.startsWith(item.href);
 
-      {/* Nav Items */}
-      <nav className="flex-1 py-6 px-3 space-y-1.5">
-        {menuItems.map((item) => {
-          const isActive = pathname === item.href;
           return (
-            <Link 
-              key={item.href} 
+            <Link
+              key={item.label}
               href={item.href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group relative ${
-                isActive 
-                  ? "bg-accent/10 text-accent2 shadow-[inset_0_0_20px_rgba(108,99,255,0.05)]" 
-                  : "text-white/60 hover:text-white hover:bg-white/5"
-              }`}
+              className={[
+                "flex items-center gap-3 rounded-2xl border px-3 py-3 text-sm transition",
+                active
+                  ? "border-accent/20 bg-accent-glow text-accent2"
+                  : "border-transparent text-muted hover:border-border hover:bg-white/[0.04] hover:text-white",
+              ].join(" ")}
             >
-              <item.icon size={20} className={isActive ? "text-accent" : "group-hover:text-white"} />
-              {!isCollapsed && (
-                <span className="text-sm font-bold tracking-tight">{item.name}</span>
-              )}
-              {isActive && (
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-accent rounded-r-full shadow-[0_0_10px_rgba(108,99,255,1)]" />
-              )}
+              <item.icon className="h-4 w-4" />
+              <span>{item.label}</span>
             </Link>
           );
         })}
       </nav>
 
-      {/* Upgrade Card */}
-      {!isCollapsed && (
-        <div className="p-4 mt-auto mb-6">
-          <div className="p-4 rounded-2xl bg-gradient-to-br from-surface2 to-surface border border-white/5 relative overflow-hidden group">
-            {/* Gradient Glow */}
-            <div className="absolute -top-12 -right-12 w-24 h-24 bg-accent/20 blur-3xl group-hover:bg-accent/30 transition-all" />
-            
-            <div className="relative z-10">
-              <div className="flex items-center gap-2 text-accent2 mb-2">
-                <Sparkles size={16} />
-                <span className="text-[10px] font-bold uppercase tracking-widest">Go Pro</span>
-              </div>
-              <p className="text-xs text-white/60 mb-3 font-medium">Unlock unlimited scripts and 4K images.</p>
-              <Button size="sm" className="w-full text-[11px] h-8 bg-accent/20 border border-accent/30 hover:bg-accent hover:border-accent">
-                ₹499/mo
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* Mini Upgrade for Collapsed */}
-      {isCollapsed && (
-        <div className="p-3 mb-6 mt-auto">
-          <Link href="/pricing" className="w-11 h-11 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent hover:bg-accent hover:text-white transition-all">
-            <Sparkles size={18} />
+      <div className="p-4">
+        <div className="rounded-3xl border border-accent/20 bg-[linear-gradient(180deg,rgba(108,99,255,0.18),rgba(20,24,38,0.95))] p-4">
+          <p className="text-[11px] uppercase tracking-[0.22em] text-accent2">Go Pro</p>
+          <h3 className="mt-2 font-head text-lg font-semibold text-white">Top up and keep shipping.</h3>
+          <p className="mt-2 text-sm text-muted">Buy more tokens when you are ready for your next batch of scripts.</p>
+          <Link
+            href="/tokens"
+            className="mt-4 inline-flex w-full items-center justify-center rounded-xl border border-accent/30 bg-accent-glow px-4 py-3 text-sm font-semibold text-white transition hover:bg-accent/25"
+          >
+            Buy tokens
           </Link>
         </div>
-      )}
+      </div>
     </aside>
   );
 }

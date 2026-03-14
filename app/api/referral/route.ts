@@ -1,17 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import crypto from "crypto";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ReferralSchema } from "@/lib/validations";
 import { sanitizeError } from "@/lib/api-utils";
 import { Prisma } from "@prisma/client";
+import { buildReferralLink, ensureReferralCodeForUser, REFERRAL_TOKENS } from "@/lib/referrals";
 
 const REFERRAL_DISABLED = false;
-const REFERRAL_TOKENS = 15;
-const CODE_LENGTH = 8;
-const CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // Exclude I,O,0,1 to avoid confusion
-const MAX_CODE_GEN_ATTEMPTS = 10;
 
 function getBaseUrl(req: NextRequest): string {
     if (process.env.NODE_ENV === "production" && process.env.NEXTAUTH_URL) {
@@ -23,18 +19,8 @@ function getBaseUrl(req: NextRequest): string {
     return process.env.NEXTAUTH_URL || "https://scriptgen.app";
 }
 
-/** Cryptographically secure referral code generation */
-function generateReferralCode(): string {
-    const bytes = crypto.randomBytes(CODE_LENGTH);
-    let code = "";
-    for (let i = 0; i < CODE_LENGTH; i++) {
-        code += CODE_CHARS[bytes[i]! % CODE_CHARS.length];
-    }
-    return code;
-}
-
 function isValidReferralCode(raw: string): boolean {
-    if (raw.length < 3 || raw.length > 20) return false; // Aligned with new validation
+    if (raw.length < 3 || raw.length > 30) return false;
     return /^[A-Z0-9]+$/.test(raw);
 }
 
@@ -50,30 +36,9 @@ export async function GET(req: NextRequest) {
     try {
         let user = await prisma.user.findUnique({ where: { email: session.user.email } });
         if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
-        if (!user.referralCode) {
-            for (let attempt = 0; attempt < MAX_CODE_GEN_ATTEMPTS; attempt++) {
-                const code = generateReferralCode();
-                try {
-                    user = await prisma.user.update({
-                        where: { id: user.id },
-                        data: { referralCode: code },
-                    });
-                    break;
-                } catch (updateErr) {
-                    if (updateErr instanceof Prisma.PrismaClientKnownRequestError && updateErr.code === "P2002") {
-                        if (attempt === MAX_CODE_GEN_ATTEMPTS - 1) {
-                            console.error("[referral] GET: max code gen attempts exceeded");
-                            return NextResponse.json({ error: "Failed to generate referral code" }, { status: 500 });
-                        }
-                        continue;
-                    }
-                    throw updateErr;
-                }
-            }
-        }
-        const code = user.referralCode!;
+        const code = await ensureReferralCodeForUser(user.id, user.referralCode);
         const baseUrl = getBaseUrl(req);
-        const link = `${baseUrl}/app?ref=${encodeURIComponent(code)}`;
+        const link = buildReferralLink(baseUrl, code);
         return NextResponse.json({ code, link });
     } catch (e) {
         console.error("[referral] GET error:", e);
@@ -101,7 +66,7 @@ export async function POST(req: NextRequest) {
         const parseResult = ReferralSchema.safeParse(body);
         if (!parseResult.success) {
             return NextResponse.json(
-                { error: parseResult.error.issues, code: 'VALIDATION_ERROR' },
+                { error: parseResult.error.issues[0]?.message ?? "Invalid referral code", code: 'VALIDATION_ERROR' },
                 { status: 422 }
             );
         }

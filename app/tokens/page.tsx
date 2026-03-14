@@ -1,155 +1,204 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { toast, Toaster } from "react-hot-toast";
-import { Zap, ShieldCheck } from "lucide-react";
-import { Card, CardBody, CardFooter } from "@/components/ui/Card";
+import { Check, ShieldCheck, Zap } from "lucide-react";
+import { toast } from "react-hot-toast";
 import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
+import { Card, CardBody } from "@/components/ui/Card";
+import { getTokenTotal } from "@/lib/credits";
+import { TOKEN_PACKS } from "@/lib/token-packs";
 
-interface RazorpayOptions {
-  key: string;
-  amount: number;
-  currency: string;
-  name: string;
-  description: string;
-  order_id: string;
-  handler: (response: any) => void;
-  prefill?: {
-    email?: string | null;
-    name?: string | null;
-  };
-  theme?: { color: string };
+declare global {
+  interface Window {
+    Razorpay?: new (options: Record<string, unknown>) => {
+      open: () => void;
+    };
+  }
+}
+
+const TRUST_BADGES = [
+  "🔒 Razorpay Secured",
+  "⚡ Instant Credit",
+  "♾️ Never Expire",
+  "🇮🇳 INR Pricing",
+];
+
+function loadRazorpayScript() {
+  return new Promise<boolean>((resolve, reject) => {
+    if (document.getElementById("razorpay-script")) {
+      resolve(true);
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.id = "razorpay-script";
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => reject(new Error("Failed to load Razorpay"));
+    document.body.appendChild(script);
+  });
 }
 
 export default function TokensPage() {
-  const { data: session, update: updateSession } = useSession();
   const router = useRouter();
-  const [processing, setProcessing] = useState<string | null>(null);
+  const { data: session, update } = useSession();
+  const [loadingPack, setLoadingPack] = useState<string | null>(null);
 
-  const packs = [
-    { id: "30", tokens: 30, scripts: 3, price: 149 },
-    { id: "100", tokens: 100, scripts: 10, price: 399, popular: true },
-    { id: "300", tokens: 300, scripts: 30, price: 999 },
-  ];
+  const tokenBalance = useMemo(
+    () =>
+      session?.user?.tokenBalance?.totalTokens ??
+      session?.user?.tokens ??
+      getTokenTotal(session?.user?.credits ?? null),
+    [session],
+  );
 
-  const handleBuy = async (packId: string) => {
-    if (!session) {
-      toast.error("Please sign in to buy tokens.");
-      return;
-    }
-    
-    setProcessing(packId);
-    
+  const handlePurchase = async (packId: string) => {
+    setLoadingPack(packId);
+
     try {
-      const res = await fetch("/api/payment/create-order", {
+      const orderRes = await fetch("/api/payment/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ pack: packId }),
       });
-      
-      const order = await res.json();
-      
-      if (!res.ok) {
-        throw new Error(order.error || "Failed to create order");
+
+      const orderPayload = await orderRes.json();
+
+      if (!orderRes.ok) {
+        throw new Error(orderPayload.error || "Failed to create order");
       }
 
-      const options: RazorpayOptions = {
-        key: order.keyId,
-        amount: order.amount,
-        currency: order.currency,
-        name: order.businessName || "ScriptGen",
-        description: `Token Pack`,
-        order_id: order.orderId,
-        handler: async (response) => {
+      await loadRazorpayScript();
+
+      const RazorpayCtor = window.Razorpay;
+      if (!RazorpayCtor) {
+        throw new Error("Razorpay is unavailable");
+      }
+
+      const selectedPack = TOKEN_PACKS.find((pack) => pack.id === packId);
+
+      const rzp = new RazorpayCtor({
+        key: orderPayload.keyId,
+        amount: orderPayload.amount,
+        currency: "INR",
+        name: "ScriptGen",
+        description: `${selectedPack?.label || packId} Token Pack`,
+        order_id: orderPayload.orderId,
+        prefill: {
+          name: session?.user?.name,
+          email: session?.user?.email,
+        },
+        theme: { color: "#6C63FF" },
+        handler: async (response: Record<string, unknown>) => {
           const verifyRes = await fetch("/api/payment/verify", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(response),
           });
-          
+
           if (verifyRes.ok) {
-            await updateSession();
-            toast.success("Tokens added!");
+            await update();
+            toast.success("🎉 Tokens added!");
             router.push("/generate");
           } else {
-            toast.error("Payment verification failed.");
+            toast.error("Payment verification failed. Contact support.");
           }
         },
-        prefill: {
-          email: session?.user?.email,
-          name: session?.user?.name,
+        modal: {
+          ondismiss: () => toast("Payment cancelled", { icon: "👋" }),
         },
-        theme: { color: "#6C63FF" },
-      };
+      });
 
-      const RazorpayCtor = (window as any).Razorpay;
-      if (!RazorpayCtor) throw new Error("Payment SDK unavailable");
-      const razorpay = new RazorpayCtor(options);
-      razorpay.open();
-    } catch (err: any) {
-      toast.error(err.message || "Payment failed");
+      rzp.open();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to initiate payment. Please try again.");
     } finally {
-      setProcessing(null);
+      setLoadingPack(null);
     }
   };
 
   return (
-    <div className="max-w-[1000px] mx-auto p-6 md:p-10 space-y-10 min-h-screen animate-fade-in flex flex-col">
-      <Toaster position="bottom-center" toastOptions={{ style: { background: '#141826', color: '#fff', border: '1px solid #141826' }}} />
-      <script src="https://checkout.razorpay.com/v1/checkout.js" async />
-
-      <div className="text-center space-y-4 max-w-2xl mx-auto">
-        <h1 className="text-3xl md:text-4xl font-head font-bold text-white">Choose your pack</h1>
-        <p className="text-white/60">Generate high-converting YouTube scripts in seconds. One full script with all assets costs exactly 10 tokens.</p>
+    <div className="mx-auto max-w-6xl space-y-8 p-6 md:p-8">
+      <div className="rounded-3xl border border-border bg-surface2/70 px-5 py-4 text-sm text-muted">
+        Your current balance: <span className="font-semibold text-gold">⚡{tokenBalance} tokens</span>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1 items-center">
-        {packs.map((pack) => (
-          <Card 
-            key={pack.id} 
-            className={`relative flex flex-col h-full transform transition-all duration-300 hover:-translate-y-2 ${
-              pack.popular ? "border-accent shadow-[0_0_30px_-10px_rgba(108,99,255,0.4)] md:scale-105" : "border-surface2"
+      <div className="max-w-2xl space-y-3">
+        <h1 className="font-head text-4xl font-extrabold text-white">Top Up Your Tokens</h1>
+        <p className="text-base text-muted">
+          Pay once. Use anytime. Tokens never expire. All prices in INR.
+        </p>
+      </div>
+
+      <div className="grid gap-5 md:grid-cols-3">
+        {TOKEN_PACKS.map((pack) => (
+          <div
+            key={pack.id}
+            className={`relative rounded-[28px] border bg-[linear-gradient(180deg,rgba(20,24,38,0.98),rgba(14,18,32,0.98))] p-6 shadow-[0_24px_70px_rgba(5,7,16,0.24)] ${
+              pack.featured ? "border-2 border-accent" : "border-border"
             }`}
           >
-            {pack.popular && (
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
-                <Badge variant="accent" className="bg-accent text-white px-3 py-1 font-bold shadow-lg">BEST VALUE</Badge>
+            {pack.featured ? (
+              <div className="absolute right-3 top-3 rounded-full bg-accent px-2 py-1 text-[10px] font-bold tracking-[0.12em] text-white">
+                BEST VALUE
               </div>
-            )}
-            <CardBody className="p-8 text-center flex-1 flex flex-col justify-center space-y-4">
-              <div className="w-16 h-16 rounded-full bg-gold/10 flex items-center justify-center text-gold mx-auto mb-2">
-                <Zap size={28} className="fill-current" />
-              </div>
-              <h2 className="text-4xl font-mono font-bold text-white">{pack.tokens}</h2>
-              <p className="text-xs font-bold text-white/40 uppercase tracking-widest">Tokens</p>
-              <p className="text-sm text-white/60 mt-4 border-t border-white/5 pt-4">
-                ~{pack.scripts} full scripts
-              </p>
-            </CardBody>
-            <CardFooter className="p-6 bg-surface2/30 flex flex-col gap-4">
-              <div className="text-center">
-                <span className="text-2xl font-bold text-white">₹{pack.price}</span>
-              </div>
-              <Button 
-                variant={pack.popular ? "primary" : "ghost"} 
-                className={`w-full py-4 rounded-xl ${pack.popular ? "" : "bg-white/5 border-white/10"}`}
-                onClick={() => handleBuy(pack.id)}
-                loading={processing === pack.id}
-                disabled={processing !== null}
-              >
-                Buy Now
-              </Button>
-            </CardFooter>
-          </Card>
+            ) : null}
+
+            <p className="text-[11px] uppercase tracking-[0.2em] text-muted">{pack.label}</p>
+            <div className="mt-4">
+              <p className="font-head text-5xl font-extrabold text-accent2">{pack.tokens}</p>
+              <p className="mt-1 text-sm text-muted">tokens</p>
+            </div>
+            <p className="mt-3 text-sm text-muted">{pack.scripts}</p>
+            <p className="mt-6 font-head text-3xl font-bold text-gold">₹{pack.price}</p>
+
+            <ul className="mt-6 space-y-3 text-sm text-muted">
+              <li className="flex items-start gap-2">
+                <Check className="mt-0.5 h-4 w-4 text-green" />
+                Full 4-stage script generation
+              </li>
+              <li className="flex items-start gap-2">
+                <Check className="mt-0.5 h-4 w-4 text-green" />
+                SEO, B-Roll, Shorts, and image assets
+              </li>
+              <li className="flex items-start gap-2">
+                <Check className="mt-0.5 h-4 w-4 text-green" />
+                One-time payment, no subscription
+              </li>
+            </ul>
+
+            <Button
+              variant={pack.featured ? "primary" : "ghost"}
+              size="lg"
+              className="mt-8 w-full"
+              loading={loadingPack === pack.id}
+              disabled={loadingPack !== null}
+              onClick={() => handlePurchase(pack.id)}
+            >
+              Buy Now
+            </Button>
+          </div>
         ))}
       </div>
 
-      <div className="mt-auto pt-10 text-center flex flex-col items-center gap-2 text-xs text-white/30">
-        <ShieldCheck size={20} className="text-white/20" />
-        <p>Powered by Razorpay. Tokens never expire. All prices include GST.</p>
+      <Card>
+        <CardBody className="flex flex-wrap items-center justify-center gap-3">
+          {TRUST_BADGES.map((badge) => (
+            <span
+              key={badge}
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-surface2 px-3 py-2 text-sm text-muted"
+            >
+              {badge}
+            </span>
+          ))}
+        </CardBody>
+      </Card>
+
+      <div className="flex items-center justify-center gap-2 text-sm text-muted">
+        <ShieldCheck className="h-4 w-4 text-green" />
+        Payments are processed through Razorpay. Token credits are added instantly after verification.
       </div>
     </div>
   );

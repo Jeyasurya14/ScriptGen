@@ -1,28 +1,28 @@
 import React from "react";
 
-interface BadgeProps {
+type BadgeProps = {
   variant?: "success" | "draft" | "accent" | "gold";
   className?: string;
   children: React.ReactNode;
-}
+};
 
-export const Badge = ({
-  variant = "accent",
-  className = "",
-  children
-}: BadgeProps) => {
-  const baseStyles = "px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase inline-flex items-center justify-center";
+const variants: Record<NonNullable<BadgeProps["variant"]>, string> = {
+  success: "border border-green/20 bg-green-bg text-green",
+  draft: "border border-border2 bg-surface2 text-muted",
+  accent: "border border-accent/25 bg-accent-glow text-accent2",
+  gold: "border border-gold/20 bg-gold-bg text-gold",
+};
 
-  const variants = {
-    accent: "bg-accent/10 text-accent border border-accent/20",
-    success: "bg-green/10 text-green border border-green/20",
-    gold: "bg-gold/10 text-gold border border-gold/20",
-    draft: "bg-surface2 text-white/50 border border-white/10",
-  };
-
+export function Badge({ variant = "accent", className = "", children }: BadgeProps) {
   return (
-    <span className={`${baseStyles} ${variants[variant]} ${className}`}>
+    <span
+      className={[
+        "inline-flex items-center justify-center rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em]",
+        variants[variant],
+        className,
+      ].join(" ")}
+    >
       {children}
     </span>
   );
-};
+}

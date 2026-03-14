@@ -49,7 +49,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7,
     },
     {
-      url: `${siteUrl}/app`,
+    url: `${siteUrl}/generate`,
       lastModified: now,
       changeFrequency: "weekly",
       priority: 0.7,

@@ -1,6 +1,7 @@
 import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { prisma } from "@/lib/prisma";
+import { toTokenBalance } from "@/lib/credits";
 
 export const authOptions: NextAuthOptions = {
     providers: [
@@ -54,17 +55,16 @@ export const authOptions: NextAuthOptions = {
                 });
 
                 if (userData) {
-                    type SessionUserWithCredits = NonNullable<typeof session.user> & {
-                        id?: string;
-                        credits?: typeof userData.credits;
-                    };
-                    const sessionUser = session.user as SessionUserWithCredits;
+                    const sessionUser = session.user;
                     
                     // Prioritize database UUID over provider-supplied ID.
                     sessionUser.id = userData.id;
+                    sessionUser.referralCode = userData.referralCode;
                     
                     if (userData.credits) {
                         sessionUser.credits = userData.credits;
+                        sessionUser.tokenBalance = toTokenBalance(userData.credits);
+                        sessionUser.tokens = sessionUser.tokenBalance.totalTokens;
                     } else {
                         // Backfill missing credits row for legacy users.
                         try {
@@ -77,12 +77,16 @@ export const authOptions: NextAuthOptions = {
                                 },
                             });
                             sessionUser.credits = createdCredits;
+                            sessionUser.tokenBalance = toTokenBalance(createdCredits);
+                            sessionUser.tokens = sessionUser.tokenBalance.totalTokens;
                         } catch {
                             const existingCredits = await prisma.userCredits.findUnique({
                                 where: { userId: userData.id },
                             });
                             if (existingCredits) {
                                 sessionUser.credits = existingCredits;
+                                sessionUser.tokenBalance = toTokenBalance(existingCredits);
+                                sessionUser.tokens = sessionUser.tokenBalance.totalTokens;
                             }
                         }
                     }
@@ -104,6 +108,7 @@ export const authOptions: NextAuthOptions = {
                         where: { email: user.email! }
                     });
                     token.id = dbUser ? dbUser.id : user.id;
+                    token.referralCode = dbUser?.referralCode ?? null;
                 } catch {
                     token.id = user.id;
                 }

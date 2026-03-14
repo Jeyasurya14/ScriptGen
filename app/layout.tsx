@@ -1,27 +1,28 @@
 import type { Metadata } from "next";
 import { Syne, DM_Sans } from "next/font/google";
+import { Toaster } from "react-hot-toast";
 import "./globals.css";
 import AuthProvider from "@/components/AuthProvider";
 import LayoutWrapper from "@/components/LayoutWrapper";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const syne = Syne({
-  variable: "--font-syne",
+  variable: "--font-head",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
 });
 
 const dmSans = DM_Sans({
-  variable: "--font-dm-sans",
+  variable: "--font-body",
   subsets: ["latin"],
-  weight: ["400", "500", "700"],
+  weight: ["300", "400", "500"],
 });
 
 const siteUrl = process.env.NEXTAUTH_URL || "https://scriptgen.learn-made.in";
 const siteName = "ScriptGen";
-const siteTitle = "ScriptGen — AI YouTube Script Generator";
+const siteTitle = "ScriptGen — AI YouTube Script Generator for Tamil Creators";
 const siteDescription =
-  "Generate high-converting YouTube scripts with AI in minutes. English, Tamil, Thanglish, Hindi. SEO, chapters, B-roll, shorts. 50 free tokens. Start free.";
+  "Generate production-ready YouTube scripts in Thanglish, Tamil, Hindi, or English. SEO pack, B-Roll list, Shorts extraction, and 4 intelligent AI stages.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -37,23 +38,10 @@ export const metadata: Metadata = {
   description: siteDescription,
   applicationName: siteName,
   keywords: [
-    "script generator",
-    "AI script generator",
-    "YouTube script generator",
-    "AI script writer",
-    "scriptwriter ai",
-    "video script generator free",
-    "free script generator",
-    "AI YouTube script generator",
-    "video script maker",
-    "content script generator",
-    "script writing software",
-    "automated script generator",
-    "Tamil script generator",
-    "Hindi script generator",
-    "multilingual script generator",
-    "YouTube SEO tools",
-    "video content creator",
+    "youtube script generator",
+    "tamil creator tools",
+    "thanglish ai",
+    "scriptgen",
   ],
   authors: [{ name: siteName, url: siteUrl }],
   creator: siteName,
@@ -71,8 +59,8 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     url: siteUrl,
-    title: siteTitle,
-    description: siteDescription,
+    title: "ScriptGen — AI YouTube Script Generator",
+    description: "Built for Tamil YouTube creators. Thanglish engine, SEO pack, 4-stage AI pipeline.",
     siteName,
     locale: "en_IN",
     images: [
@@ -93,15 +81,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${syne.variable} ${dmSans.variable} font-body antialiased bg-bg text-white`}
-      >
+    <html lang="en" className={`${syne.variable} ${dmSans.variable}`}>
+      <body className="bg-bg font-body text-white antialiased">
         <ErrorBoundary>
           <AuthProvider>
             <LayoutWrapper>
               {children}
             </LayoutWrapper>
+            <Toaster
+              position="bottom-right"
+              toastOptions={{
+                style: {
+                  background: "#0E1220",
+                  color: "#F0F2FF",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                },
+              }}
+            />
           </AuthProvider>
         </ErrorBoundary>
       </body>

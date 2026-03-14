@@ -1,29 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { toTokenBalance } from "@/lib/credits";
 import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
-
-const FREE_TOKENS = 30;
-
-const toCreditsPayload = (credits: {
-    freeScriptsUsed: number;
-    paidCredits: number;
-    totalGenerated: number;
-}) => {
-    const freeTokensRemaining = Math.max(0, FREE_TOKENS - credits.freeScriptsUsed);
-    const totalTokens = freeTokensRemaining + credits.paidCredits;
-    return {
-        freeTokensUsed: credits.freeScriptsUsed,
-        freeTokensRemaining,
-        paidTokens: credits.paidCredits,
-        totalGenerated: credits.totalGenerated,
-        totalTokens,
-        canGenerate: totalTokens >= 10,
-    };
-};
 
 // POST - Verify payment and add tokens
 export async function POST(req: NextRequest) {
     try {
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.email) {
+            return NextResponse.json({ error: "Unauthorized", code: "UNAUTHORIZED" }, { status: 401 });
+        }
+
+        const user = await prisma.user.findUnique({
+            where: { email: session.user.email },
+            select: { id: true },
+        });
+
+        if (!user) {
+            return NextResponse.json({ error: "User not found", code: "USER_NOT_FOUND" }, { status: 404 });
+        }
+
         const body = await req.json().catch(() => ({}));
         const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = body;
 
@@ -49,7 +47,7 @@ export async function POST(req: NextRequest) {
 
         const result = await prisma.$transaction(async (tx) => {
             const transaction = await tx.transaction.findFirst({
-                where: { razorpayOrderId: razorpay_order_id },
+                where: { razorpayOrderId: razorpay_order_id, userId: user.id },
             });
 
             if (!transaction) {
@@ -115,7 +113,7 @@ export async function POST(req: NextRequest) {
             success: true,
             alreadyProcessed: result.status === "already_processed",
             tokensAdded: result.tokensAdded,
-            ...(credits ? toCreditsPayload(credits) : {}),
+            ...(credits ? toTokenBalance(credits) : {}),
         });
     } catch (error: unknown) {
         console.error("Error verifying payment:", error);
