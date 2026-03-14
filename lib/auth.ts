@@ -43,10 +43,11 @@ export const authOptions: NextAuthOptions = {
             }
             return true;
         },
-        async session({ session }) {
+        async session({ session, token }) {
             if (!session.user?.email) return session;
 
             try {
+                // Always fetch fresh data from DB to ensure session stays in sync with user's balance.
                 const userData = await prisma.user.findUnique({
                     where: { email: session.user.email },
                     include: { credits: true },
@@ -58,7 +59,10 @@ export const authOptions: NextAuthOptions = {
                         credits?: typeof userData.credits;
                     };
                     const sessionUser = session.user as SessionUserWithCredits;
+                    
+                    // Prioritize database UUID over provider-supplied ID.
                     sessionUser.id = userData.id;
+                    
                     if (userData.credits) {
                         sessionUser.credits = userData.credits;
                     } else {
@@ -90,10 +94,27 @@ export const authOptions: NextAuthOptions = {
 
             return session;
         },
-        async jwt({ token, user }) {
+        async jwt({ token, user, trigger, session }) {
+            // Initial sign-in: Attach database ID if possible.
             if (user) {
-                token.id = user.id;
+                // User object passed here is from the provider. 
+                // We'll prioritize the database UUID if it exists (created in signIn callback).
+                try {
+                    const dbUser = await prisma.user.findUnique({
+                        where: { email: user.email! }
+                    });
+                    token.id = dbUser ? dbUser.id : user.id;
+                } catch {
+                    token.id = user.id;
+                }
             }
+            
+            // Allow manual session updates to trigger a JWT refresh (though session callback handles DB sync).
+            if (trigger === "update" && session) {
+                // This allows us to push updates from the client using useSession().update()
+                return { ...token, ...session };
+            }
+            
             return token;
         },
         async redirect({ url, baseUrl }) {

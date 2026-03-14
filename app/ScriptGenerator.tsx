@@ -231,7 +231,7 @@ export default function ScriptGenerator() {
     const generationAbortRef = useRef<AbortController | null>(null);
 
     // Auth and token state
-    const { data: session, status } = useSession();
+    const { data: session, status, update: updateSession } = useSession();
     const isAuthLoading = status === "loading";
     const isAuthenticated = status === "authenticated" && !!session;
     const [credits, setCredits] = useState<{
@@ -431,6 +431,8 @@ export default function ScriptGenerator() {
                 setCredits(data);
                 setCreditsError(null);
                 setCreditsRetryCount(0);
+                // Refresh next-auth session to keep balance in sync across components/pages
+                updateSession();
             } else {
                 const data = await res.json().catch(() => ({}));
                 setCreditsError(data?.error || `Failed to load tokens (${res.status})`);
@@ -838,7 +840,10 @@ export default function ScriptGenerator() {
                 throw new Error(deductData?.error || "Failed to deduct tokens");
             }
             const updatedCredits = await deductRes.json().catch(() => null);
-            if (updatedCredits) setCredits(updatedCredits);
+            if (updatedCredits) {
+                setCredits(updatedCredits);
+                updateSession();
+            }
         } catch (err: unknown) {
             setError(getErrorMessage(err, "Failed to regenerate. Please try again."));
         } finally {
@@ -991,7 +996,10 @@ export default function ScriptGenerator() {
                     throw new Error(deductData?.error || "Failed to deduct tokens");
                 }
                 const updatedCredits = await deductRes.json().catch(() => null);
-                if (updatedCredits) setCredits(updatedCredits);
+                if (updatedCredits) {
+                setCredits(updatedCredits);
+                updateSession();
+            }
             } catch {
                 console.error("Failed to deduct tokens");
             }
