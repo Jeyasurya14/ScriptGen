@@ -167,6 +167,12 @@ export default function ScriptGenerator() {
   const [currentStage, setCurrentStage] = useState(0);
   const totalStages = 4;
 
+  const tabs: { id: ActiveTab; label: string }[] = [
+    { id: "script", label: "Script" },
+    { id: "seo", label: "SEO Pack" },
+    { id: "assets", label: "Media Assets" },
+  ];
+
   // Form State
   const [topic, setTopic] = useState("");
   const [language, setLanguage] = useState("English");
