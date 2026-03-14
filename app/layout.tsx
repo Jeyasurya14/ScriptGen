@@ -1,28 +1,25 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Inter } from "next/font/google";
+import { Syne, DM_Sans } from "next/font/google";
 import "./globals.css";
 import AuthProvider from "@/components/AuthProvider";
-import Footer from "@/components/Footer";
-import Nav from "@/components/Nav";
+import LayoutWrapper from "@/components/LayoutWrapper";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const syne = Syne({
+  variable: "--font-syne",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const dmSans = DM_Sans({
+  variable: "--font-dm-sans",
   subsets: ["latin"],
-});
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
+  weight: ["400", "500", "700"],
 });
 
 const siteUrl = process.env.NEXTAUTH_URL || "https://scriptgen.learn-made.in";
 const siteName = "ScriptGen";
-const siteTitle = "ScriptGen | YouTube Script Generator – AI Scripts in Minutes";
+const siteTitle = "ScriptGen — AI YouTube Script Generator";
 const siteDescription =
   "Generate high-converting YouTube scripts with AI in minutes. English, Tamil, Thanglish, Hindi. SEO, chapters, B-roll, shorts. 50 free tokens. Start free.";
 
@@ -98,15 +95,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} antialiased`}
+        className={`${syne.variable} ${dmSans.variable} font-body antialiased bg-bg text-white`}
       >
-        <AuthProvider>
-          <div className="flex min-h-screen flex-col">
-            <Nav />
-            <div className="flex-1">{children}</div>
-            <Footer />
-          </div>
-        </AuthProvider>
+        <ErrorBoundary>
+          <AuthProvider>
+            <LayoutWrapper>
+              {children}
+            </LayoutWrapper>
+          </AuthProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

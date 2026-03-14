@@ -3,14 +3,18 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
+import { z } from "zod";
 
 // Define promo codes and their rewards
 const PROMO_CODES: { [key: string]: { tokens: number; description: string } } = {
     PRODUCTHUNT: { tokens: 100, description: "Product Hunt Launch Special" },
     WELCOME50: { tokens: 50, description: "Welcome Bonus" },
-    // Add more codes as needed
 };
 const FREE_TOKENS = 30;
+
+const PromoCodeSchema = z.object({
+    code: z.string().min(1),
+});
 
 const toCreditsPayload = (credits: {
     freeScriptsUsed: number;
@@ -38,15 +42,18 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json().catch(() => ({}));
-        const code = typeof body?.code === "string" ? body.code : "";
-
-        if (!code.trim()) {
-            return NextResponse.json({ error: "Invalid promo code" }, { status: 400 });
+        
+        const parseResult = PromoCodeSchema.safeParse(body);
+        if (!parseResult.success) {
+            return NextResponse.json(
+                { error: parseResult.error.errors, code: 'VALIDATION_ERROR' },
+                { status: 422 }
+            );
         }
 
+        const { code } = parseResult.data;
         const upperCode = code.trim().toUpperCase();
 
-        // Check if promo code exists
         if (!PROMO_CODES[upperCode]) {
             return NextResponse.json({ error: "Invalid promo code" }, { status: 400 });
         }
@@ -104,11 +111,14 @@ export async function POST(req: NextRequest) {
             description: promoDetails.description,
             ...toCreditsPayload(credits),
         });
-    } catch (error) {
+    } catch (error: unknown) {
         if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
             return NextResponse.json({ error: "You've already used this promo code" }, { status: 400 });
         }
         console.error("Error redeeming promo code:", error);
-        return NextResponse.json({ error: "Internal error" }, { status: 500 });
+        return NextResponse.json(
+            { error: error instanceof Error ? error.message : "Internal Server Error", code: 'INTERNAL_ERROR' },
+            { status: 500 }
+        );
     }
 }

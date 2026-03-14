@@ -75,7 +75,6 @@ const getOrCreateUserWithCredits = async (identity: AuthIdentity) => {
                 },
             });
         } catch {
-            // Handle race where another request created the same user.
             user = await prisma.user.findUnique({
                 where: { email: identity.email },
             });
@@ -115,7 +114,6 @@ const getOrCreateUserWithCredits = async (identity: AuthIdentity) => {
                 },
             });
         } catch {
-            // Handle race where another request created credits for the same user.
             credits = await prisma.userCredits.findUnique({
                 where: { userId: user.id },
             });
@@ -147,7 +145,6 @@ const toCreditsPayload = (credits: {
 };
 
 const deductTokensAtomic = async (userId: string, count: number) => {
-    // Optimistic concurrency with bounded retries.
     for (let attempt = 0; attempt < 3; attempt++) {
         let credits = await prisma.userCredits.findUnique({
             where: { userId },
@@ -222,7 +219,10 @@ export async function GET(req: NextRequest) {
         return NextResponse.json(toCreditsPayload(credits));
     } catch (error) {
         console.error("[credits] GET error:", error);
-        return NextResponse.json({ error: sanitizeError(error) }, { status: 500 });
+        return NextResponse.json(
+            { error: sanitizeError(error), code: 'INTERNAL_ERROR' },
+            { status: 500 }
+        );
     }
 }
 
@@ -236,7 +236,15 @@ export async function POST(req: NextRequest) {
 
         const body = await req.json().catch(() => ({}));
         const parsed = z.object({ count: z.coerce.number().int().min(1).max(200).default(10) }).safeParse(body);
-        const count = parsed.success ? parsed.data.count : 10;
+        
+        if (!parsed.success) {
+            return NextResponse.json(
+                { error: parsed.error.errors, code: 'VALIDATION_ERROR' },
+                { status: 422 }
+            );
+        }
+
+        const count = parsed.data.count;
         const { user } = await getOrCreateUserWithCredits(identity);
         const updatedCredits = await deductTokensAtomic(user.id, count);
 
@@ -245,7 +253,7 @@ export async function POST(req: NextRequest) {
             deducted: count,
             ...toCreditsPayload(updatedCredits),
         });
-    } catch (error) {
+    } catch (error: unknown) {
         if (error instanceof InsufficientTokensError) {
             return NextResponse.json(
                 {
@@ -257,6 +265,9 @@ export async function POST(req: NextRequest) {
             );
         }
         console.error("[credits] POST error:", error);
-        return NextResponse.json({ error: sanitizeError(error) }, { status: 500 });
+        return NextResponse.json(
+            { error: error instanceof Error ? error.message : "Internal Server Error", code: 'INTERNAL_ERROR' },
+            { status: 500 }
+        );
     }
 }

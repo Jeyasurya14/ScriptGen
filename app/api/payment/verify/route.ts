@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
         const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = body;
 
         if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
-            return NextResponse.json({ error: "Invalid payment data" }, { status: 400 });
+            return NextResponse.json({ error: "Invalid payment data", code: 'VALIDATION_ERROR' }, { status: 422 });
         }
 
         // Verify signature
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
             .digest("hex");
 
         if (expectedSignature !== razorpay_signature) {
-            return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+            return NextResponse.json({ error: "Invalid signature", code: 'VALIDATION_ERROR' }, { status: 422 });
         }
 
         const result = await prisma.$transaction(async (tx) => {
@@ -117,8 +117,11 @@ export async function POST(req: NextRequest) {
             tokensAdded: result.tokensAdded,
             ...(credits ? toCreditsPayload(credits) : {}),
         });
-    } catch (error) {
+    } catch (error: unknown) {
         console.error("Error verifying payment:", error);
-        return NextResponse.json({ error: "Verification failed" }, { status: 500 });
+        return NextResponse.json(
+            { error: error instanceof Error ? error.message : "Internal Server Error", code: 'INTERNAL_ERROR' },
+            { status: 500 }
+        );
     }
 }

@@ -2,85 +2,109 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Sparkles, Menu } from "lucide-react";
-import { useState } from "react";
+import { useSession, signIn } from "next-auth/react";
+import { Zap, Menu, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Badge } from "./ui/Badge";
 
 export default function Nav() {
   const pathname = usePathname();
+  const { data: session } = useSession();
+  const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  if (pathname?.startsWith("/app")) {
-    return null;
-  }
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 10);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
-  const navLinks = [
-    { href: "/", label: "Home" },
-    { href: "/#how-it-works", label: "How it works" },
-    { href: "/#features", label: "Features" },
-    { href: "/#pricing", label: "Pricing" },
-    { href: "/blog", label: "Resources" },
-  ];
+  const credits = (session?.user as any)?.credits;
+  const tokenCount = credits?.totalTokens ?? 0;
+  const showBuyTokens = tokenCount < 10;
+
+  // Initials for avatar fallback
+  const getInitials = (name?: string | null) => {
+    if (!name) return "??";
+    return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+  };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-slate-200 shadow-[0_1px_3px_rgba(15,23,42,0.04)]" aria-label="Main">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 text-slate-900 font-semibold text-lg tracking-tight">
-            <span className="text-blue-600">ScriptGen</span>
-          </Link>
-          <div className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) => {
-              const isActive = pathname === link.href || (link.href !== "/" && pathname?.startsWith(link.href.replace("/#", "/")));
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${isActive ? "text-slate-900 bg-slate-100" : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"}`}
+    <nav 
+      className={`fixed top-0 left-0 right-0 z-[100] h-[60px] transition-all duration-300 border-b ${
+        isScrolled ? "bg-bg/80 backdrop-blur-md border-surface2" : "bg-transparent border-transparent"
+      }`}
+    >
+      <div className="h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+        {/* Left: Logo */}
+        <Link href="/" className="flex items-center gap-2 group">
+          <span className="text-xl">🎬</span>
+          <span className="font-head font-extrabold text-lg tracking-tight text-white group-hover:text-accent transition-colors">
+            ScriptGen
+          </span>
+          <Badge variant="accent" className="ml-1 scale-75 origin-left">BETA</Badge>
+        </Link>
+
+        {/* Right: Actions */}
+        <div className="flex items-center gap-4">
+          {session ? (
+            <div className="flex items-center gap-3">
+              {/* Token Pill */}
+              <div className="flex items-center gap-2">
+                <div 
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface border border-gold/20 text-gold font-bold text-xs ${showBuyTokens ? 'animate-pulse' : ''}`}
+                  role="status"
+                  aria-live="polite"
+                  aria-label={`Tokens remaining: ${tokenCount}`}
                 >
-                  {link.label}
-                </Link>
-              );
-            })}
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                  <Zap className="w-3.5 h-3.5 fill-gold" aria-hidden="true" />
+                  <span>{tokenCount}</span>
+                </div>
+                {showBuyTokens && (
+                  <Link href="/tokens" className="text-[10px] font-bold text-gold hover:underline hidden sm:block">
+                    Buy Tokens
+                  </Link>
+                )}
+              </div>
+
+              {/* User Avatar */}
+              <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center border-2 border-surface2 overflow-hidden shadow-lg">
+                {session.user?.image ? (
+                  <img src={session.user.image} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-[10px] font-bold text-white">
+                    {getInitials(session.user?.name)}
+                  </span>
+                )}
+              </div>
+            </div>
+          ) : (
+            <button 
+              onClick={() => signIn("google")}
+              className="px-4 py-2 rounded-lg bg-accent hover:bg-accent2 text-white text-sm font-bold transition-all shadow-lg shadow-accent/20"
             >
-              <Menu className="w-5 h-5" />
+              Sign In
             </button>
-            <Link
-              href="/app"
-              className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-sm hover:shadow"
-            >
-              <Sparkles className="w-4 h-4" />
-              Launch App
-            </Link>
-          </div>
+          )}
+
+          {/* Mobile Menu Toggle */}
+          <button 
+            className="md:hidden text-white p-1"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            {mobileMenuOpen ? <X /> : <Menu />}
+          </button>
         </div>
       </div>
 
+      {/* Mobile Menu Overlay (Simple) */}
       {mobileMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 right-0 bg-white border-b border-slate-200 shadow-lg">
-          <div className="max-w-7xl mx-auto px-4 py-4 space-y-1">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-4 py-3 text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-50 rounded-lg"
-              >
-                {link.label}
-              </Link>
-            ))}
-            <Link
-              href="/app"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center justify-center gap-2 mt-4 px-4 py-3.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700"
-            >
-              <Sparkles className="w-4 h-4" />
-              Launch App
-            </Link>
+        <div className="md:hidden absolute top-[60px] left-0 right-0 bg-surface border-b border-surface2 p-6 animate-fade-in shadow-2xl">
+          <div className="flex flex-col gap-4">
+            <Link href="/" onClick={() => setMobileMenuOpen(false)} className="text-sm font-bold text-white/70 hover:text-white">Home</Link>
+            <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="text-sm font-bold text-white/70 hover:text-white">Dashboard</Link>
+            <Link href="/generate" onClick={() => setMobileMenuOpen(false)} className="text-sm font-bold text-white/70 hover:text-white">Generate</Link>
+            <Link href="/referral" onClick={() => setMobileMenuOpen(false)} className="text-sm font-bold text-white/70 hover:text-white">Referral</Link>
           </div>
         </div>
       )}

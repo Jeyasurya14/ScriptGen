@@ -51,14 +51,7 @@ export async function GET() {
             take: 50,
         });
 
-        // Map Prisma camelCase to snake_case if frontend expects it, or keep snake_case in Frontend?
-        // Current frontend expects snake_case based on Supabase implementation?
-        // Let's check the schema. The schema maps fields to snake_case in DB, but Prisma Client uses camelCase.
-        // We might need to transform, or update Frontend types.
-        // The original code returned: select("id, title, channel_name, duration, content_type, created_at")
-        // So I should map it back to snake_case to avoid breaking frontend.
-
-        const formattedScripts = scripts.map((s: typeof scripts[0]) => ({
+        const formattedScripts = scripts.map((s: any) => ({
             id: s.id,
             title: s.title,
             channel_name: s.channelName,
@@ -70,7 +63,10 @@ export async function GET() {
         return NextResponse.json({ scripts: formattedScripts });
     } catch (error) {
         console.error("[scripts] GET error:", error);
-        return NextResponse.json({ error: sanitizeError(error) }, { status: 500 });
+        return NextResponse.json(
+            { error: sanitizeError(error), code: 'INTERNAL_ERROR' },
+            { status: 500 }
+        );
     }
 }
 
@@ -85,8 +81,10 @@ export async function POST(req: NextRequest) {
         const raw = await req.json().catch(() => ({}));
         const parsed = SaveScriptSchema.safeParse(raw);
         if (!parsed.success) {
-            const msg = process.env.NODE_ENV === "production" ? "Invalid script data" : parsed.error.message;
-            return NextResponse.json({ error: msg }, { status: 400 });
+            return NextResponse.json(
+                { error: parsed.error.errors, code: 'VALIDATION_ERROR' },
+                { status: 422 }
+            );
         }
         const body = parsed.data;
 
@@ -115,8 +113,11 @@ export async function POST(req: NextRequest) {
         });
 
         return NextResponse.json({ success: true, scriptId: script.id });
-    } catch (error) {
+    } catch (error: unknown) {
         console.error("[scripts] POST error:", error);
-        return NextResponse.json({ error: sanitizeError(error) }, { status: 500 });
+        return NextResponse.json(
+            { error: error instanceof Error ? error.message : "Internal Server Error", code: 'INTERNAL_ERROR' },
+            { status: 500 }
+        );
     }
 }

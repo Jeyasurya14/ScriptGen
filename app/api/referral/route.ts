@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import crypto from "crypto";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { ReferralSchema } from "@/lib/validations";
 import { sanitizeError } from "@/lib/api-utils";
 import { Prisma } from "@prisma/client";
 
@@ -33,7 +34,7 @@ function generateReferralCode(): string {
 }
 
 function isValidReferralCode(raw: string): boolean {
-    if (raw.length < 4 || raw.length > 16) return false;
+    if (raw.length < 3 || raw.length > 20) return false; // Aligned with new validation
     return /^[A-Z0-9]+$/.test(raw);
 }
 
@@ -82,31 +83,46 @@ export async function GET(req: NextRequest) {
 
 // POST - Apply a referral code (new user uses friend's code)
 export async function POST(req: NextRequest) {
-    if (REFERRAL_DISABLED) {
+    try {
+        if (REFERRAL_DISABLED) {
+            const session = await getServerSession(authOptions);
+            if (!session?.user?.email) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+            return NextResponse.json(
+                { error: "Referral feature is not enabled." },
+                { status: 503 }
+            );
+        }
         const session = await getServerSession(authOptions);
         if (!session?.user?.email) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        return NextResponse.json(
-            { error: "Referral feature is not enabled." },
-            { status: 503 }
-        );
-    }
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    try {
+
         const body = await req.json().catch(() => ({}));
-        const code = typeof body?.code === "string" ? body.code : "";
+        
+        // Use ReferralSchema for validation
+        const parseResult = ReferralSchema.safeParse(body);
+        if (!parseResult.success) {
+            return NextResponse.json(
+                { error: parseResult.error.errors, code: 'VALIDATION_ERROR' },
+                { status: 422 }
+            );
+        }
+
+        const { code } = parseResult.data;
         const raw = code.trim().toUpperCase();
-        if (!raw) return NextResponse.json({ error: "Please enter a referral code" }, { status: 400 });
+        
         if (!isValidReferralCode(raw)) {
             return NextResponse.json({ error: "Invalid referral code format" }, { status: 400 });
         }
+
         const me = await prisma.user.findUnique({ where: { email: session.user.email }, include: { credits: true } });
         if (!me) return NextResponse.json({ error: "User not found" }, { status: 404 });
+        
         const referrer = await prisma.user.findUnique({ where: { referralCode: raw }, include: { credits: true } });
         if (!referrer) return NextResponse.json({ error: "Invalid referral code" }, { status: 400 });
         if (referrer.id === me.id) return NextResponse.json({ error: "You cannot use your own referral code" }, { status: 400 });
+        
         const existing = await prisma.referral.findUnique({ where: { referredId: me.id } });
         if (existing) return NextResponse.json({ error: "You have already used a referral code" }, { status: 400 });
+
         try {
             await prisma.$transaction(async (tx) => {
                 await tx.referral.create({
@@ -127,12 +143,16 @@ export async function POST(req: NextRequest) {
             }
             throw txErr;
         }
+
         return NextResponse.json({
             message: `You both received ${REFERRAL_TOKENS} tokens!`,
             tokens: REFERRAL_TOKENS,
         });
-    } catch (e) {
+    } catch (e: unknown) {
         console.error("[referral] POST error:", e);
-        return NextResponse.json({ error: sanitizeError(e) }, { status: 500 });
+        return NextResponse.json(
+            { error: e instanceof Error ? e.message : "Internal Server Error", code: 'INTERNAL_ERROR' },
+            { status: 500 }
+        );
     }
 }
