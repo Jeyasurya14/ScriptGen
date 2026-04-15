@@ -1,5 +1,6 @@
 import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 import { toTokenBalance } from "@/lib/credits";
 
@@ -9,10 +10,24 @@ export const authOptions: NextAuthOptions = {
             clientId: process.env.GOOGLE_CLIENT_ID || "",
             clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
         }),
+        CredentialsProvider({
+            name: "Test Account",
+            credentials: {
+                email: { label: "Email", type: "email", placeholder: "reviewer@razorpay.com" },
+                password: { label: "Password", type: "password" }
+            },
+            async authorize(credentials) {
+                // Hardcoded test user for Razorpay reviewer
+                if (credentials?.email === "reviewer@razorpay.com" && credentials?.password === "Razorpay@123") {
+                    return { id: "test_reviewer", email: "reviewer@razorpay.com", name: "Razorpay Reviewer" };
+                }
+                return null;
+            }
+        })
     ],
     callbacks: {
         async signIn({ user, account }) {
-            if (account?.provider === "google") {
+            if (account?.provider === "google" || account?.provider === "credentials") {
                 if (!user.email) return false;
 
                 try {
