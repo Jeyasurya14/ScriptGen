@@ -19,7 +19,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
       <Nav />
       <div className="flex flex-1 pt-[60px]">
         {isAppRoute ? <Sidebar /> : null}
-        <main className={`min-w-0 flex-1 ${isAppRoute ? "md:pl-[220px]" : ""}`}>{children}</main>
+        <main className={`min-w-0 flex-1 ${isAppRoute ? "md:pl-[200px]" : ""}`}>{children}</main>
       </div>
       {isAppRoute ? null : <Footer />}
     </div>
