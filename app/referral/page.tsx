@@ -1,71 +1,186 @@
-import { getServerSession } from "next-auth";
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
-import ReferralClient from "@/components/referral/ReferralClient";
-import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { getReferralStats } from "@/lib/referral-stats";
-import { buildReferralLink, ensureReferralCodeForUser } from "@/lib/referrals";
-import type { ReferralStats } from "@/types";
+"use client";
 
-function getBaseUrl(host: string | null, proto: string | null) {
-  if (process.env.NEXTAUTH_URL) return process.env.NEXTAUTH_URL;
-  if (host) return `${proto || "https"}://${host}`;
-  return "https://scriptgen.app";
+import { useEffect, useState } from "react";
+import { Copy, Gift, Share2, Users } from "lucide-react";
+import { toast } from "react-hot-toast";
+import { Button } from "@/components/ui/Button";
+import { Skeleton } from "@/components/ui/Skeleton";
+
+type Stats = { totalReferred: number; tokensEarned: number; activeUsers: number };
+type ReferralData = { code: string; link: string; stats: Stats };
+
+const EMPTY_STATS: Stats = { totalReferred: 0, tokensEarned: 0, activeUsers: 0 };
+
+const steps = [
+  { n: "01", title: "Share your link", body: "Send your referral link to fellow content creators.", icon: Share2 },
+  { n: "02", title: "They sign up", body: "Your friend creates an account through your link.", icon: Users },
+  { n: "03", title: "Both get tokens", body: "You each receive 15 tokens — automatically, instantly.", icon: Gift },
+];
+
+function StatCard({ label, value, color }: { label: string; value: number; color: string }) {
+  return (
+    <div className="bg-bg px-5 py-4">
+      <p className="text-xs text-muted">{label}</p>
+      <p className={`mt-1.5 text-2xl font-bold ${color}`}>{value}</p>
+    </div>
+  );
 }
 
-const EMPTY_STATS: ReferralStats = { totalReferred: 0, tokensEarned: 0, activeUsers: 0 };
+export default function ReferralPage() {
+  const [data, setData] = useState<ReferralData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-export default async function ReferralPage() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.email) redirect("/");
+  useEffect(() => {
+    async function load() {
+      try {
+        const [refRes, statsRes] = await Promise.all([
+          fetch("/api/referral"),
+          fetch("/api/referral/stats"),
+        ]);
 
-  // Separate DB errors from "user not found" so we don't redirect authenticated
-  // users to home just because the DB is temporarily unavailable.
-  let user: { id: string; referralCode: string | null } | null = null;
-  let dbError = false;
+        if (refRes.status === 401) {
+          window.location.href = "/";
+          return;
+        }
 
-  try {
-    user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      select: { id: true, referralCode: true },
-    });
-  } catch (e) {
-    console.error("[referral] DB error fetching user:", e);
-    dbError = true;
-  }
+        const ref = await refRes.json();
+        const stats = await statsRes.json();
 
-  // DB threw → let the error boundary handle it gracefully
-  if (dbError) {
-    throw new Error("Unable to load referral data. Please refresh the page.");
-  }
+        if (!refRes.ok) throw new Error(ref.error || "Failed to load referral data");
 
-  // User genuinely doesn't exist in DB (first sign-in race) → redirect
-  if (!user) redirect("/");
+        setData({
+          code: ref.code ?? "",
+          link: ref.link ?? "",
+          stats: statsRes.ok ? (stats as Stats) : EMPTY_STATS,
+        });
+      } catch (e) {
+        console.error("[referral] load error:", e);
+        setError(e instanceof Error ? e.message : "Failed to load referral data");
+      } finally {
+        setLoading(false);
+      }
+    }
 
-  const headerStore = await headers();
-  const baseUrl = getBaseUrl(
-    headerStore.get("host"),
-    headerStore.get("x-forwarded-proto"),
+    void load();
+  }, []);
+
+  const copy = async (v: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(v);
+      toast.success(`${label} copied.`);
+    } catch {
+      toast.error("Failed to copy.");
+    }
+  };
+
+  return (
+    <div className="mx-auto max-w-3xl px-5 py-8">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-lg font-semibold text-white">Referral Program</h1>
+        <p className="mt-0.5 text-sm text-muted">
+          Invite someone to ScriptGen — you both receive 15 free tokens when they sign up.
+        </p>
+      </div>
+
+      {/* Error state */}
+      {error && !loading && (
+        <div className="mb-6 rounded border border-red/20 bg-red-bg px-4 py-3 text-sm text-red">
+          {error} —{" "}
+          <button
+            type="button"
+            className="underline"
+            onClick={() => { setError(null); setLoading(true); window.location.reload(); }}
+          >
+            Try again
+          </button>
+        </div>
+      )}
+
+      {/* Referral code card */}
+      <div className="mb-8 rounded border border-border bg-surface p-5">
+        {loading ? (
+          <div className="space-y-3">
+            <Skeleton className="h-3 w-28" />
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-3 w-72" />
+            <div className="flex gap-2 pt-1">
+              <Skeleton className="h-8 w-24" />
+              <Skeleton className="h-8 w-24" />
+            </div>
+          </div>
+        ) : data ? (
+          <>
+            <p className="text-xs text-muted">Your referral code</p>
+            <p className="mt-2 font-mono text-2xl font-bold tracking-widest text-white">
+              {data.code || "—"}
+            </p>
+            {data.link && (
+              <p className="mt-1 break-all text-xs text-hint">{data.link}</p>
+            )}
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={!data.code}
+                onClick={() => copy(data.code, "Code")}
+              >
+                <Copy className="h-3 w-3" />
+                Copy code
+              </Button>
+              <Button
+                size="sm"
+                disabled={!data.link}
+                onClick={() => copy(data.link, "Link")}
+              >
+                <Copy className="h-3 w-3" />
+                Copy link
+              </Button>
+            </div>
+          </>
+        ) : null}
+      </div>
+
+      {/* How it works */}
+      <div className="mb-8">
+        <p className="mb-3 text-xs font-medium text-muted">How it works</p>
+        <div className="grid gap-px border border-border bg-border sm:grid-cols-3">
+          {steps.map((step) => (
+            <div key={step.n} className="bg-bg px-5 py-5">
+              <div className="mb-3 flex h-8 w-8 items-center justify-center rounded border border-border bg-surface">
+                <step.icon className="h-3.5 w-3.5 text-muted" />
+              </div>
+              <p className="font-mono text-xs text-accent2">{step.n}</p>
+              <p className="mt-1 text-sm font-medium text-white">{step.title}</p>
+              <p className="mt-1.5 text-xs leading-relaxed text-muted">{step.body}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div>
+        <p className="mb-3 text-xs font-medium text-muted">Your stats</p>
+        <div className="grid gap-px border border-border bg-border sm:grid-cols-3">
+          {loading ? (
+            <>
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="bg-bg px-5 py-4 space-y-2">
+                  <Skeleton className="h-3 w-24" />
+                  <Skeleton className="h-7 w-16" />
+                </div>
+              ))}
+            </>
+          ) : (
+            <>
+              <StatCard label="Total referred"  value={data?.stats.totalReferred ?? 0} color="text-accent2" />
+              <StatCard label="Tokens earned"   value={data?.stats.tokensEarned ?? 0}  color="text-gold" />
+              <StatCard label="Active users"    value={data?.stats.activeUsers ?? 0}   color="text-green" />
+            </>
+          )}
+        </div>
+      </div>
+    </div>
   );
-
-  let code = user.referralCode ?? "";
-  let stats: ReferralStats = EMPTY_STATS;
-
-  try {
-    code = await ensureReferralCodeForUser(user.id, user.referralCode);
-  } catch (e) {
-    console.error("[referral] ensureReferralCode error:", e);
-    code = user.referralCode ?? `REF${user.id.slice(0, 6).toUpperCase()}`;
-  }
-
-  try {
-    stats = await getReferralStats(user.id);
-  } catch (e) {
-    console.error("[referral] getReferralStats error:", e);
-  }
-
-  const link = buildReferralLink(baseUrl, code);
-
-  return <ReferralClient code={code} link={link} stats={stats} />;
 }
