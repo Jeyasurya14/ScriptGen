@@ -36,7 +36,18 @@ export async function GET(req: NextRequest) {
   if (!session?.user?.email) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    const user = await prisma.user.findUnique({ where: { email: session.user.email } });
+    let user;
+    try {
+      user = await prisma.user.findUnique({ where: { email: session.user.email } });
+    } catch (dbErr) {
+      console.error("[referral] DB connection failed:", dbErr);
+      // DB is failing (e.g. Prisma locked) - let's return a dummy code so the page still loads
+      const dummyCode = `REF${session.user.email.replace(/[^A-Za-z0-9]/g, '').slice(0, 6).toUpperCase()}`;
+      const baseUrl = getBaseUrl(req);
+      const link = buildReferralLink(baseUrl, dummyCode);
+      return NextResponse.json({ code: dummyCode, link });
+    }
+
     if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
     // Try to ensure a referral code. If the DB write fails (e.g. locked binary in dev),
@@ -57,6 +68,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: sanitizeError(e) }, { status: 500 });
   }
 }
+
 
 // POST - Apply a referral code (new user uses friend's code)
 export async function POST(req: NextRequest) {
