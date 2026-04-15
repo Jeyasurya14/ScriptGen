@@ -52,7 +52,7 @@ export interface GenerateResponse {
 }
 
 export interface TokenPack {
-  id: "30" | "100" | "300";
+  id: "15" | "100" | "500";
   tokens: number;
   price: number;
   label: string;
