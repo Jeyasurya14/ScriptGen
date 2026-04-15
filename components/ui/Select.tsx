@@ -17,11 +17,11 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
     const selectId = id || generatedId;
 
     return (
-      <div className="w-full space-y-2">
+      <div className="w-full space-y-1.5">
         {label ? (
           <label
             htmlFor={selectId}
-            className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-muted"
+            className="block text-xs font-medium text-muted"
           >
             {label}
           </label>
@@ -31,9 +31,9 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
             ref={ref}
             id={selectId}
             className={[
-              "w-full appearance-none rounded-xl border border-border2 bg-surface2 px-4 py-3 pr-10 text-sm text-white",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
-              error ? "border-red/40" : "focus:border-accent/40",
+              "w-full appearance-none rounded-md border border-border2 bg-surface2 px-3 py-2 pr-8 text-sm text-white",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:ring-offset-bg",
+              error ? "border-red/40" : "focus:border-white/20",
               className,
             ].join(" ")}
             {...props}
@@ -44,7 +44,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
               </option>
             ))}
           </select>
-          <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-muted">
+          <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-muted">
             <svg viewBox="0 0 20 20" fill="none" className="h-4 w-4">
               <path d="M5 7.5 10 12.5 15 7.5" stroke="currentColor" strokeWidth="1.5" />
             </svg>

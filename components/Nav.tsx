@@ -54,21 +54,22 @@ export default function Nav() {
   return (
     <nav
       className={[
-        "fixed inset-x-0 top-0 z-50 border-b transition duration-300",
+        "fixed inset-x-0 top-0 z-50 border-b transition duration-200",
         isScrolled || isAppRoute
-          ? "border-border bg-bg/95 backdrop-blur-xl"
+          ? "border-border bg-bg/95 backdrop-blur-md"
           : "border-transparent bg-transparent",
       ].join(" ")}
     >
-      <div className="mx-auto flex h-[60px] max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-[60px] max-w-5xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <span className="text-lg">🎬</span>
-          <span className="font-head text-lg font-extrabold tracking-tight text-white">
+          <span className="font-head text-base font-bold text-white">
             Script<span className="text-accent2">Gen</span>
           </span>
           <Badge className="hidden sm:inline-flex">Beta</Badge>
         </Link>
 
+        {/* Desktop nav */}
         <div className="hidden items-center gap-6 md:flex">
           {!isAppRoute ? (
             <>
@@ -92,6 +93,7 @@ export default function Nav() {
           )}
         </div>
 
+        {/* Right actions */}
         <div className="flex items-center gap-3">
           {session?.user?.email ? (
             <>
@@ -100,24 +102,24 @@ export default function Nav() {
                 onClick={() => router.push("/tokens")}
                 role="status"
                 aria-live="polite"
-                className={`inline-flex items-center gap-2 rounded-full border border-gold/20 bg-gold-bg px-3 py-1.5 text-xs font-semibold text-gold transition hover:border-gold/40 ${tokenCount < 10 ? "animate-pulse-slow" : ""}`}
+                className="inline-flex items-center gap-1.5 rounded-md border border-gold/20 bg-gold-bg px-2.5 py-1 text-xs font-semibold text-gold transition hover:border-gold/40"
               >
-                <Zap className="h-3.5 w-3.5 fill-current" />
+                <Zap className="h-3 w-3 fill-current" />
                 <span>{tokenCount}</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => router.push("/dashboard")}
-                className="flex h-[34px] w-[34px] items-center justify-center overflow-hidden rounded-full border border-border2 bg-[linear-gradient(135deg,#6C63FF,#B06AFF)] text-xs font-semibold text-white"
+                className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-border2 bg-surface2 text-xs font-semibold text-white"
                 aria-label="Open account"
               >
                 {session.user.image ? (
                   <Image
                     src={session.user.image}
                     alt={session.user.name || "Profile"}
-                    width={34}
-                    height={34}
+                    width={32}
+                    height={32}
                     className="h-full w-full object-cover"
                   />
                 ) : (
@@ -129,7 +131,7 @@ export default function Nav() {
             <button
               type="button"
               onClick={() => signIn("google", { callbackUrl: "/generate" })}
-              className="rounded-full border border-accent/40 bg-accent-glow px-4 py-2 text-sm font-semibold text-white transition hover:border-accent hover:bg-accent/20"
+              className="rounded-md border border-border2 bg-surface px-4 py-2 text-sm font-medium text-white transition hover:border-white/20 hover:bg-surface2"
             >
               Sign in
             </button>
@@ -137,7 +139,7 @@ export default function Nav() {
 
           <button
             type="button"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-surface text-white md:hidden"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-surface text-white md:hidden"
             onClick={() => setMobileOpen((value) => !value)}
             aria-label={mobileOpen ? "Close navigation" : "Open navigation"}
           >
@@ -147,8 +149,8 @@ export default function Nav() {
       </div>
 
       {mobileOpen ? (
-        <div className="border-t border-border bg-surface px-4 py-4 md:hidden">
-          <div className="flex flex-col gap-3">
+        <div className="border-t border-border bg-bg px-4 py-3 md:hidden">
+          <div className="flex flex-col gap-1">
             {[
               { href: "/", label: "Home" },
               { href: "/generate", label: "Generate" },
@@ -160,7 +162,7 @@ export default function Nav() {
                 key={link.href}
                 href={link.href}
                 onClick={() => setMobileOpen(false)}
-                className="rounded-xl px-3 py-2 text-sm text-muted transition hover:bg-white/[0.04] hover:text-white"
+                className="rounded-md px-3 py-2 text-sm text-muted transition hover:bg-surface hover:text-white"
               >
                 {link.label}
               </Link>

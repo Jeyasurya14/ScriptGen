@@ -11,11 +11,11 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
     const textareaId = id || generatedId;
 
     return (
-      <div className="w-full space-y-2">
+      <div className="w-full space-y-1.5">
         {label ? (
           <label
             htmlFor={textareaId}
-            className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-muted"
+            className="block text-xs font-medium text-muted"
           >
             {label}
           </label>
@@ -24,9 +24,9 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           ref={ref}
           id={textareaId}
           className={[
-            "w-full resize-y rounded-xl border border-border2 bg-surface2 px-4 py-3 text-sm text-white placeholder:text-hint",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
-            error ? "border-red/40" : "focus:border-accent/40",
+            "w-full resize-y rounded-md border border-border2 bg-surface2 px-3 py-2.5 text-sm text-white placeholder:text-hint",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:ring-offset-bg",
+            error ? "border-red/40" : "focus:border-white/20",
             className,
           ].join(" ")}
           {...props}

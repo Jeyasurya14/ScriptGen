@@ -8,17 +8,17 @@ type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const variantStyles: Record<NonNullable<ButtonProps["variant"]>, string> = {
   primary:
-    "border border-accent/40 bg-[linear-gradient(135deg,#6C63FF,#B06AFF)] text-white shadow-[0_18px_40px_rgba(108,99,255,0.28)] hover:brightness-110",
+    "border border-accent bg-accent text-white hover:bg-accent/90",
   ghost:
-    "border border-border2 bg-white/[0.02] text-white hover:border-accent/40 hover:bg-white/[0.05]",
+    "border border-border2 bg-surface text-white hover:border-white/20 hover:bg-surface2",
   danger:
     "border border-red/40 bg-red-bg text-red hover:bg-red/15",
 };
 
 const sizeStyles: Record<NonNullable<ButtonProps["size"]>, string> = {
-  sm: "h-9 rounded-lg px-3 text-xs",
-  md: "h-11 rounded-xl px-5 text-sm",
-  lg: "h-12 rounded-xl px-6 text-sm",
+  sm: "h-8 rounded-md px-3 text-xs",
+  md: "h-9 rounded-md px-4 text-sm",
+  lg: "h-10 rounded-md px-5 text-sm",
 };
 
 export function Button({
@@ -33,8 +33,8 @@ export function Button({
   return (
     <button
       className={[
-        "inline-flex items-center justify-center gap-2 whitespace-nowrap font-head font-semibold tracking-[0.01em] transition duration-200",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg",
+        "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition duration-150",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:ring-offset-bg",
         "disabled:cursor-not-allowed disabled:opacity-50",
         variantStyles[variant],
         sizeStyles[size],
@@ -46,7 +46,7 @@ export function Button({
       {loading ? (
         <>
           <span
-            className="h-4 w-4 animate-spin rounded-full border-2 border-current/30 border-t-current"
+            className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current/30 border-t-current"
             aria-hidden="true"
           />
           <span>Processing...</span>
