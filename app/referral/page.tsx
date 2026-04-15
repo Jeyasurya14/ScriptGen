@@ -20,7 +20,11 @@ export default async function ReferralPage() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) redirect("/");
 
-  let user = null;
+  // Separate DB errors from "user not found" so we don't redirect authenticated
+  // users to home just because the DB is temporarily unavailable.
+  let user: { id: string; referralCode: string | null } | null = null;
+  let dbError = false;
+
   try {
     user = await prisma.user.findUnique({
       where: { email: session.user.email },
@@ -28,8 +32,15 @@ export default async function ReferralPage() {
     });
   } catch (e) {
     console.error("[referral] DB error fetching user:", e);
+    dbError = true;
   }
 
+  // DB threw → let the error boundary handle it gracefully
+  if (dbError) {
+    throw new Error("Unable to load referral data. Please refresh the page.");
+  }
+
+  // User genuinely doesn't exist in DB (first sign-in race) → redirect
   if (!user) redirect("/");
 
   const headerStore = await headers();
@@ -45,15 +56,13 @@ export default async function ReferralPage() {
     code = await ensureReferralCodeForUser(user.id, user.referralCode);
   } catch (e) {
     console.error("[referral] ensureReferralCode error:", e);
-    // Generate a temp display code from userId if DB write fails
-    code = user.referralCode ?? user.id.slice(0, 8).toUpperCase();
+    code = user.referralCode ?? `REF${user.id.slice(0, 6).toUpperCase()}`;
   }
 
   try {
     stats = await getReferralStats(user.id);
   } catch (e) {
     console.error("[referral] getReferralStats error:", e);
-    // Fall back to empty stats — don't crash the page
   }
 
   const link = buildReferralLink(baseUrl, code);
