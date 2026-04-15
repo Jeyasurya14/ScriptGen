@@ -12,53 +12,38 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Log the error (integrate Sentry/error tracking here: e.g. Sentry.captureException(error))
     console.error("[ErrorBoundary]", error?.message ?? error, error?.digest);
   }, [error]);
 
   return (
-    <div className="min-h-screen bg-[#030306] flex items-center justify-center p-4">
-      {/* Background effects */}
-      <div className="absolute inset-0 bg-grid opacity-20 pointer-events-none" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#ef4444]/5 rounded-full blur-[150px] pointer-events-none" />
-      
-      <div className="relative max-w-md w-full text-center">
-        {/* Error icon */}
-        <div className="w-24 h-24 mx-auto mb-8 rounded-3xl bg-[#0c0c12] border border-[#ef4444]/20 flex items-center justify-center">
-          <AlertTriangle className="w-12 h-12 text-[#ef4444]" />
+    <div className="flex min-h-screen flex-col items-center justify-center bg-bg p-6 text-center">
+      <div className="w-full max-w-md">
+        <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded border border-red/20 bg-red-bg text-red">
+          <AlertTriangle className="h-5 w-5" />
         </div>
-
-        {/* Error message */}
-        <h1 className="text-3xl font-bold text-white mb-4">
-          Something went wrong
-        </h1>
-        <p className="text-[#a1a1b5] mb-8 leading-relaxed">
-          An unexpected error occurred. Don&apos;t worry, our team has been
-          notified and is working on a fix.
+        <h1 className="text-lg font-semibold text-white">Something went wrong</h1>
+        <p className="mt-2 text-sm text-muted">
+          An unexpected error occurred. Please try again or return to the homepage.
         </p>
-
-        {/* Error details */}
         {error.digest && (
-          <p className="text-xs text-[#6b6b80] mb-8 font-mono">
+          <p className="mt-2 font-mono text-[10px] text-hint">
             Error ID: {error.digest}
           </p>
         )}
-
-        {/* Actions */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+        <div className="mt-6 flex items-center justify-center gap-2">
           <button
+            type="button"
             onClick={reset}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-white font-semibold bg-[#6366f1] hover:bg-[#5558e8] shadow-lg shadow-[#6366f1]/25 hover:shadow-[#6366f1]/40 transition-all duration-200 hover:-translate-y-0.5"
+            className="inline-flex items-center gap-2 rounded border border-border bg-surface px-3 py-2 text-sm font-medium text-muted transition hover:bg-surface2 hover:text-white"
           >
-            <RefreshCw className="w-4 h-4" />
-            <span>Try Again</span>
+            <RefreshCw className="h-3.5 w-3.5" />
+            Try Again
           </button>
-
           <Link
             href="/"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-[#a1a1b5] hover:text-white font-medium bg-white/[0.02] border border-white/[0.06] hover:bg-white/[0.04] hover:border-white/[0.1] transition-all duration-200"
+            className="inline-flex items-center gap-2 rounded bg-accent px-3 py-2 text-sm font-medium text-white transition hover:bg-accent/90"
           >
-            <Home className="w-4 h-4" />
+            <Home className="h-3.5 w-3.5" />
             Go Home
           </Link>
         </div>
