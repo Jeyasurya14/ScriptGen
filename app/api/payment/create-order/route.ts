@@ -106,10 +106,17 @@ export async function POST(req: NextRequest) {
             businessName: businessName,
             pack: selected,
         });
-    } catch (error: unknown) {
+    } catch (error: any) {
+        let errorMessage = error instanceof Error ? error.message : "Internal Server Error";
+        
+        // Handle specific Razorpay API errors (like 401 Unauthorized for bad keys)
+        if (error && typeof error === "object" && error.statusCode && error.error) {
+           errorMessage = `Razorpay Error: ${error.error.description || error.error.code}`;
+        }
+        
         console.error("Error creating order:", error);
         return NextResponse.json(
-            { error: error instanceof Error ? error.message : "Internal Server Error", code: 'INTERNAL_ERROR' },
+            { error: errorMessage, code: 'INTERNAL_ERROR' },
             { status: 500 }
         );
     }
