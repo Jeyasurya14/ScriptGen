@@ -16,7 +16,7 @@ export const GenerateSchema = z.object({
 });
 
 export const PaymentSchema = z.object({
-  pack: z.enum(["30", "100", "300"]),
+  pack: z.enum(["15", "100", "500"]),
 });
 
 export const ReferralSchema = z.object({

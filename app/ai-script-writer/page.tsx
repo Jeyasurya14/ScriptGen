@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import HomeCta from "@/components/HomeCta";
 import { Sparkles, Clock, Search, Layers, Film, Languages, CheckCircle2 } from "lucide-react";
 
-const siteUrl = process.env.NEXTAUTH_URL || "https://scriptgen.learn-made.in";
+const siteUrl = process.env.NEXTAUTH_URL || "https://scriptgen.learnmade.in";
 
 export const metadata: Metadata = {
   title: "AI Script Writer – Automated YouTube Script Writing | ScriptGen",

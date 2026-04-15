@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
         }
         const amount = selected.price * 100; // amount in paise
         const businessName = env.RAZORPAY_BUSINESS_NAME || "ScriptGen";
-        const websiteUrl = env.NEXTAUTH_URL || "https://scriptgen.learn-made.in";
+        const websiteUrl = env.NEXTAUTH_URL || "https://scriptgen.learnmade.in";
 
         // Create Razorpay order
         const order = await razorpay.orders.create({

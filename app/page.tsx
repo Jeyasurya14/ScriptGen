@@ -26,14 +26,32 @@ const steps = [
 ];
 
 const pricing = [
-  { id: "starter", label: "Starter", tokens: 30, price: 149, approx: "~2 scripts" },
-  { id: "value",   label: "Value",   tokens: 100, price: 399, approx: "~7 scripts", featured: true },
-  { id: "creator", label: "Creator", tokens: 300, price: 999, approx: "~22 scripts" },
+  { id: "test-drive", label: "Test Drive", tokens: 15, price: 49, approx: "~1 script" },
+  { id: "value",   label: "Value",   tokens: 100, price: 199, approx: "~7 scripts", featured: true },
+  { id: "creator", label: "Creator", tokens: 500, price: 749, approx: "~35 scripts" },
 ];
 
 export default function HomePage() {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: "ScriptGen",
+    applicationCategory: "BusinessApplication",
+    offers: {
+      "@type": "AggregateOffer",
+      lowPrice: "49.00",
+      highPrice: "749.00",
+      priceCurrency: "INR",
+    },
+    description: "AI-powered YouTube scripting for Tamil creators. Thanglish, SEO, B-Roll, and production-ready outputs across four intelligent stages.",
+  };
+
   return (
     <main className="pt-14">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
 
       {/* ── Hero ─────────────────────────────────────────── */}
       <section className="border-b border-border">

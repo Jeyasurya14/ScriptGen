@@ -2,7 +2,7 @@ import { ChevronLeft, Shield } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
 
-const siteUrl = process.env.NEXTAUTH_URL || "https://scriptgen.learn-made.in";
+const siteUrl = process.env.NEXTAUTH_URL || "https://scriptgen.learnmade.in";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",

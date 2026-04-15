@@ -18,7 +18,7 @@ const dmSans = DM_Sans({
   weight: ["300", "400", "500"],
 });
 
-const siteUrl = process.env.NEXTAUTH_URL || "https://scriptgen.learn-made.in";
+const siteUrl = process.env.NEXTAUTH_URL || "https://scriptgen.learnmade.in";
 const siteName = "ScriptGen";
 const siteTitle = "ScriptGen — AI YouTube Script Generator for Tamil Creators";
 const siteDescription =
@@ -72,6 +72,9 @@ export const metadata: Metadata = {
     title: siteTitle,
     description: siteDescription,
     images: ["/og-scriptgen.png"],
+  },
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
   },
 };
 
