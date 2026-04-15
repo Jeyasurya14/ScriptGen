@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
 
 type Stats = { totalReferred: number; tokensEarned: number; activeUsers: number };
-type ReferralData = { code: string; link: string; stats: Stats };
 
 const EMPTY_STATS: Stats = { totalReferred: 0, tokensEarned: 0, activeUsers: 0 };
 
@@ -27,42 +26,43 @@ function StatCard({ label, value, color }: { label: string; value: number; color
 }
 
 export default function ReferralPage() {
-  const [data, setData] = useState<ReferralData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [code, setCode] = useState<string | null>(null);
+  const [link, setLink] = useState<string>("");
+  const [stats, setStats] = useState<Stats>(EMPTY_STATS);
+  const [codeLoading, setCodeLoading] = useState(true);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [codeError, setCodeError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function load() {
+    // Fetch referral code and stats independently so one failure doesn't block the other
+    void (async () => {
       try {
-        const [refRes, statsRes] = await Promise.all([
-          fetch("/api/referral"),
-          fetch("/api/referral/stats"),
-        ]);
-
-        if (refRes.status === 401) {
-          window.location.href = "/";
-          return;
-        }
-
-        const ref = await refRes.json();
-        const stats = await statsRes.json();
-
-        if (!refRes.ok) throw new Error(ref.error || "Failed to load referral data");
-
-        setData({
-          code: ref.code ?? "",
-          link: ref.link ?? "",
-          stats: statsRes.ok ? (stats as Stats) : EMPTY_STATS,
-        });
+        const res = await fetch("/api/referral");
+        if (res.status === 401) { window.location.href = "/"; return; }
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to load referral code");
+        setCode(data.code ?? "");
+        setLink(data.link ?? "");
       } catch (e) {
-        console.error("[referral] load error:", e);
-        setError(e instanceof Error ? e.message : "Failed to load referral data");
+        setCodeError(e instanceof Error ? e.message : "Failed to load referral code");
       } finally {
-        setLoading(false);
+        setCodeLoading(false);
       }
-    }
+    })();
 
-    void load();
+    void (async () => {
+      try {
+        const res = await fetch("/api/referral/stats");
+        if (res.ok) {
+          const data = await res.json() as Stats;
+          setStats(data);
+        }
+      } catch {
+        // Stats failing is non-critical — keep showing zeros
+      } finally {
+        setStatsLoading(false);
+      }
+    })();
   }, []);
 
   const copy = async (v: string, label: string) => {
@@ -72,6 +72,24 @@ export default function ReferralPage() {
     } catch {
       toast.error("Failed to copy.");
     }
+  };
+
+  const retryCode = () => {
+    setCodeError(null);
+    setCodeLoading(true);
+    void (async () => {
+      try {
+        const res = await fetch("/api/referral");
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to load referral code");
+        setCode(data.code ?? "");
+        setLink(data.link ?? "");
+      } catch (e) {
+        setCodeError(e instanceof Error ? e.message : "Failed to load referral code");
+      } finally {
+        setCodeLoading(false);
+      }
+    })();
   };
 
   return (
@@ -84,23 +102,9 @@ export default function ReferralPage() {
         </p>
       </div>
 
-      {/* Error state */}
-      {error && !loading && (
-        <div className="mb-6 rounded border border-red/20 bg-red-bg px-4 py-3 text-sm text-red">
-          {error} —{" "}
-          <button
-            type="button"
-            className="underline"
-            onClick={() => { setError(null); setLoading(true); window.location.reload(); }}
-          >
-            Try again
-          </button>
-        </div>
-      )}
-
       {/* Referral code card */}
       <div className="mb-8 rounded border border-border bg-surface p-5">
-        {loading ? (
+        {codeLoading ? (
           <div className="space-y-3">
             <Skeleton className="h-3 w-28" />
             <Skeleton className="h-8 w-48" />
@@ -110,36 +114,29 @@ export default function ReferralPage() {
               <Skeleton className="h-8 w-24" />
             </div>
           </div>
-        ) : data ? (
+        ) : codeError ? (
+          <div className="space-y-3">
+            <p className="text-xs text-muted">Your referral code</p>
+            <p className="text-sm text-red">{codeError}</p>
+            <Button variant="ghost" size="sm" onClick={retryCode}>Retry</Button>
+          </div>
+        ) : (
           <>
             <p className="text-xs text-muted">Your referral code</p>
             <p className="mt-2 font-mono text-2xl font-bold tracking-widest text-white">
-              {data.code || "—"}
+              {code || "—"}
             </p>
-            {data.link && (
-              <p className="mt-1 break-all text-xs text-hint">{data.link}</p>
-            )}
+            {link && <p className="mt-1 break-all text-xs text-hint">{link}</p>}
             <div className="mt-4 flex flex-wrap gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={!data.code}
-                onClick={() => copy(data.code, "Code")}
-              >
-                <Copy className="h-3 w-3" />
-                Copy code
+              <Button variant="ghost" size="sm" disabled={!code} onClick={() => copy(code!, "Code")}>
+                <Copy className="h-3 w-3" />Copy code
               </Button>
-              <Button
-                size="sm"
-                disabled={!data.link}
-                onClick={() => copy(data.link, "Link")}
-              >
-                <Copy className="h-3 w-3" />
-                Copy link
+              <Button size="sm" disabled={!link} onClick={() => copy(link, "Link")}>
+                <Copy className="h-3 w-3" />Copy link
               </Button>
             </div>
           </>
-        ) : null}
+        )}
       </div>
 
       {/* How it works */}
@@ -163,10 +160,10 @@ export default function ReferralPage() {
       <div>
         <p className="mb-3 text-xs font-medium text-muted">Your stats</p>
         <div className="grid gap-px border border-border bg-border sm:grid-cols-3">
-          {loading ? (
+          {statsLoading ? (
             <>
               {[0, 1, 2].map((i) => (
-                <div key={i} className="bg-bg px-5 py-4 space-y-2">
+                <div key={i} className="space-y-2 bg-bg px-5 py-4">
                   <Skeleton className="h-3 w-24" />
                   <Skeleton className="h-7 w-16" />
                 </div>
@@ -174,9 +171,9 @@ export default function ReferralPage() {
             </>
           ) : (
             <>
-              <StatCard label="Total referred"  value={data?.stats.totalReferred ?? 0} color="text-accent2" />
-              <StatCard label="Tokens earned"   value={data?.stats.tokensEarned ?? 0}  color="text-gold" />
-              <StatCard label="Active users"    value={data?.stats.activeUsers ?? 0}   color="text-green" />
+              <StatCard label="Total referred" value={stats.totalReferred} color="text-accent2" />
+              <StatCard label="Tokens earned"  value={stats.tokensEarned}  color="text-gold" />
+              <StatCard label="Active users"   value={stats.activeUsers}   color="text-green" />
             </>
           )}
         </div>
