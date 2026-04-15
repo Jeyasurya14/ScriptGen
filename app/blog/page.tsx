@@ -5,13 +5,34 @@ import { BookOpen, ArrowRight } from "lucide-react";
 const siteUrl = process.env.NEXTAUTH_URL || "https://scriptgen.learnmade.in";
 
 export const metadata: Metadata = {
-  title: "Blog – Script Writing Tips & YouTube SEO | ScriptGen",
+  title: "Blog – AI Script Writing, YouTube SEO & Video Content Tips | ScriptGen",
   description:
-    "Learn script writing, YouTube SEO, video content strategy. Free guides on AI script generation, multilingual content, and video optimization.",
+    "Free guides on AI script writing, YouTube SEO, script writer tools, and video content strategy. Learn how to write and generate professional YouTube scripts faster.",
   alternates: { canonical: `${siteUrl}/blog` },
 };
 
 const posts = [
+  {
+    slug: "best-ai-script-generators-2026",
+    title: "Best AI Script Generators in 2026 (Ranked & Reviewed)",
+    excerpt: "Comprehensive comparison of the top AI script generators for YouTube creators. Features, pricing, pros & cons.",
+    date: "Apr 2026",
+    tag: "Comparison",
+  },
+  {
+    slug: "how-to-use-ai-for-youtube-scripts",
+    title: "How to Use AI for YouTube Scripts — Step-by-Step Guide (2026)",
+    excerpt: "Learn exactly how to use AI script generators to write professional YouTube scripts 10× faster.",
+    date: "Mar 2026",
+    tag: "Tutorial",
+  },
+  {
+    slug: "youtube-script-writer-tool",
+    title: "YouTube Script Writer Tool — Best Tools Compared (2026)",
+    excerpt: "What to look for in a YouTube script writer tool. Features checklist, free vs paid, and how to use one.",
+    date: "Mar 2026",
+    tag: "Tools Guide",
+  },
   {
     slug: "how-to-write-youtube-scripts",
     title: "How to Write YouTube Scripts That Keep Viewers Watching",
@@ -36,25 +57,47 @@ const posts = [
 ];
 
 export default function Blog() {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    name: "ScriptGen Blog — AI Script Writing & YouTube SEO",
+    url: `${siteUrl}/blog`,
+    description: "Free guides on AI script writing, YouTube SEO, and video content strategy.",
+    publisher: { "@type": "Organization", name: "ScriptGen", url: siteUrl },
+    blogPost: posts.map((p) => ({
+      "@type": "BlogPosting",
+      headline: p.title,
+      url: `${siteUrl}/blog/${p.slug}`,
+      description: p.excerpt,
+    })),
+  };
+
   return (
     <main className="min-h-screen bg-[#0a0a0f]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       <div className="absolute inset-0 bg-grid-pattern opacity-20 pointer-events-none" />
       <div className="absolute inset-x-0 top-0 h-[400px] bg-radial-glow pointer-events-none" />
-      
+
       <div className="max-w-5xl mx-auto px-6 py-16 sm:py-20 relative">
+        {/* Header */}
         <div className="mb-12">
           <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-medium mb-4">
             <BookOpen className="w-4 h-4" />
             Resources
           </span>
           <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight mb-3">
-            Script Writing & <span className="brand-gradient-text">YouTube SEO</span> Blog
+            AI Script Writing & <span className="brand-gradient-text">YouTube SEO</span> Blog
           </h1>
           <p className="text-slate-400 text-base max-w-xl">
-            Free guides on AI script generation, YouTube optimization, and video content strategy.
+            Free guides on AI script generation, YouTube script writing tools, SEO optimization, and video content strategy for creators.
           </p>
         </div>
 
+        {/* Posts grid */}
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {posts.map((post) => (
             <Link
@@ -77,14 +120,15 @@ export default function Blog() {
           ))}
         </div>
 
+        {/* CTA */}
         <div className="mt-16 p-10 bg-gradient-to-b from-[#111118] to-[#0a0a0f] border border-white/10 rounded-2xl text-center relative overflow-hidden">
           <div className="absolute inset-0 bg-grid-pattern opacity-10" />
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-blue-500/20 rounded-full blur-[100px]" />
           <div className="relative">
             <h3 className="text-2xl font-bold text-white mb-3">Ready to generate your first script?</h3>
-            <p className="text-slate-400 mb-6">50 free tokens. No credit card required.</p>
+            <p className="text-slate-400 mb-6">30 free tokens. No credit card required.</p>
             <Link
-                href="/generate"
+              href="/generate"
               className="inline-flex px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold hover:from-blue-500 hover:to-blue-400 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all"
             >
               Start free

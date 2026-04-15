@@ -20,9 +20,9 @@ const dmSans = DM_Sans({
 
 const siteUrl = process.env.NEXTAUTH_URL || "https://scriptgen.learnmade.in";
 const siteName = "ScriptGen";
-const siteTitle = "ScriptGen — AI YouTube Script Generator for Tamil Creators";
+const siteTitle = "ScriptGen — AI Script Writer & YouTube Script Generator";
 const siteDescription =
-  "Generate production-ready YouTube scripts in Thanglish, Tamil, Hindi, or English. SEO pack, B-Roll list, Shorts extraction, and 4 intelligent AI stages.";
+  "ScriptGen is an AI script writer and YouTube script generator. Generate production-ready video scripts with SEO, B-Roll, Shorts extraction & 4-stage AI pipeline. Free to start. Supports English, Tamil, Thanglish, Hindi.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -38,10 +38,35 @@ export const metadata: Metadata = {
   description: siteDescription,
   applicationName: siteName,
   keywords: [
-    "youtube script generator",
-    "tamil creator tools",
-    "thanglish ai",
-    "scriptgen",
+    // Primary high-volume
+    "AI script writer",
+    "YouTube script writer",
+    "script writer online",
+    "AI script generator",
+    "YouTube script generator",
+    "free script generator",
+    "video script writer",
+    "script writing tool",
+    // Secondary
+    "online script writer",
+    "AI video script generator",
+    "YouTube script writing",
+    "auto script generator",
+    "script generator AI",
+    "content script generator",
+    "YouTube content creator tools",
+    "video script generator free",
+    "AI content writer for YouTube",
+    // Niche / long-tail
+    "tamil script generator",
+    "thanglish AI generator",
+    "tamil youtube creator tools",
+    "thanglish content creator",
+    "hindi script generator",
+    "multilingual script generator",
+    "B-roll script generator",
+    "YouTube SEO script writer",
+    "ScriptGen",
   ],
   authors: [{ name: siteName, url: siteUrl }],
   creator: siteName,
@@ -56,15 +81,18 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
+  alternates: {
+    canonical: siteUrl,
+  },
   openGraph: {
     type: "website",
     url: siteUrl,
-    title: "ScriptGen — AI YouTube Script Generator",
-    description: "Built for Tamil YouTube creators. Thanglish engine, SEO pack, 4-stage AI pipeline.",
+    title: "ScriptGen — AI Script Writer & YouTube Script Generator",
+    description: "AI script writer for YouTube creators. Generate professional scripts with SEO, B-Roll, chapters & Shorts extraction. English, Tamil, Thanglish, Hindi. Free to start.",
     siteName,
     locale: "en_IN",
     images: [
-      { url: "/og-scriptgen.png", width: 1200, height: 630, alt: "ScriptGen – YouTube Script Generator" },
+      { url: "/og-scriptgen.png", width: 1200, height: 630, alt: "ScriptGen – AI YouTube Script Writer" },
     ],
   },
   twitter: {
@@ -72,11 +100,54 @@ export const metadata: Metadata = {
     title: siteTitle,
     description: siteDescription,
     images: ["/og-scriptgen.png"],
+    creator: "@scriptgen_ai",
   },
   verification: {
     google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
   },
 };
+
+// Global Organization + WebSite JSON-LD for AI entity recognition
+const globalJsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "@id": `${siteUrl}/#organization`,
+    name: "ScriptGen",
+    url: siteUrl,
+    logo: {
+      "@type": "ImageObject",
+      url: `${siteUrl}/logo-sg.svg`,
+    },
+    description: "ScriptGen is an AI script writer and YouTube script generator that helps content creators generate production-ready video scripts with SEO, B-Roll suggestions, chapter timestamps, and Shorts extraction.",
+    foundingDate: "2024",
+    sameAs: [
+      "https://twitter.com/scriptgen_ai",
+    ],
+    contactPoint: {
+      "@type": "ContactPoint",
+      contactType: "customer support",
+      availableLanguage: ["English", "Tamil", "Hindi"],
+    },
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": `${siteUrl}/#website`,
+    url: siteUrl,
+    name: "ScriptGen",
+    description: "AI script writer and YouTube script generator. Generate professional video scripts with SEO, B-Roll, chapters, and Shorts extraction.",
+    publisher: { "@id": `${siteUrl}/#organization` },
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `${siteUrl}/generate?q={search_term_string}`,
+      },
+      "query-input": "required name=search_term_string",
+    },
+  },
+];
 
 export default function RootLayout({
   children,
@@ -85,6 +156,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${syne.variable} ${dmSans.variable}`}>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(globalJsonLd) }}
+        />
+      </head>
       <body className="bg-bg font-body text-white antialiased">
         <ErrorBoundary>
           <AuthProvider>
