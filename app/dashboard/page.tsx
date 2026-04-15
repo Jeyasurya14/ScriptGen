@@ -41,16 +41,21 @@ export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) redirect("/");
 
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
-    include: {
-      credits: true,
-      scripts: {
-        select: { id: true, title: true, seoData: true, shortsData: true, scriptContent: true, createdAt: true },
-        orderBy: { createdAt: "desc" },
+  let user = null;
+  try {
+    user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      include: {
+        credits: true,
+        scripts: {
+          select: { id: true, title: true, seoData: true, shortsData: true, scriptContent: true, createdAt: true },
+          orderBy: { createdAt: "desc" },
+        },
       },
-    },
-  });
+    });
+  } catch (e) {
+    console.error("[dashboard] DB error:", e);
+  }
 
   const scripts = user?.scripts ?? [];
   const tokenBalance = user?.credits ? toTokenBalance(user.credits) : null;
