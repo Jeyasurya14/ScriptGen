@@ -7,7 +7,7 @@ import Sidebar from "@/components/Sidebar";
 
 export default function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isAppRoute =
+  const isApp =
     pathname === "/app" ||
     pathname?.startsWith("/dashboard") ||
     pathname?.startsWith("/generate") ||
@@ -17,11 +17,11 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
   return (
     <div className="flex min-h-screen flex-col bg-bg text-white">
       <Nav />
-      <div className="flex flex-1 pt-[60px]">
-        {isAppRoute ? <Sidebar /> : null}
-        <main className={`min-w-0 flex-1 ${isAppRoute ? "md:pl-[200px]" : ""}`}>{children}</main>
+      <div className="flex flex-1 pt-14">
+        {isApp ? <Sidebar /> : null}
+        <main className={`min-w-0 flex-1 ${isApp ? "md:pl-48" : ""}`}>{children}</main>
       </div>
-      {isAppRoute ? null : <Footer />}
+      {isApp ? null : <Footer />}
     </div>
   );
 }

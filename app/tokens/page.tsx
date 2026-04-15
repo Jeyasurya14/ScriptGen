@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Check, ShieldCheck, Zap } from "lucide-react";
+import { Check, ShieldCheck } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { Button } from "@/components/ui/Button";
 import { getTokenTotal } from "@/lib/credits";
@@ -11,24 +11,19 @@ import { TOKEN_PACKS } from "@/lib/token-packs";
 
 declare global {
   interface Window {
-    Razorpay?: new (options: Record<string, unknown>) => {
-      open: () => void;
-    };
+    Razorpay?: new (options: Record<string, unknown>) => { open: () => void };
   }
 }
 
 function loadRazorpayScript() {
   return new Promise<boolean>((resolve, reject) => {
-    if (document.getElementById("razorpay-script")) {
-      resolve(true);
-      return;
-    }
-    const script = document.createElement("script");
-    script.id = "razorpay-script";
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.onload = () => resolve(true);
-    script.onerror = () => reject(new Error("Failed to load Razorpay"));
-    document.body.appendChild(script);
+    if (document.getElementById("razorpay-script")) { resolve(true); return; }
+    const s = document.createElement("script");
+    s.id = "razorpay-script";
+    s.src = "https://checkout.razorpay.com/v1/checkout.js";
+    s.onload = () => resolve(true);
+    s.onerror = () => reject(new Error("Failed to load Razorpay"));
+    document.body.appendChild(s);
   });
 }
 
@@ -38,77 +33,55 @@ export default function TokensPage() {
   const [loadingPack, setLoadingPack] = useState<string | null>(null);
 
   const tokenBalance = useMemo(
-    () =>
-      session?.user?.tokenBalance?.totalTokens ??
-      session?.user?.tokens ??
-      getTokenTotal(session?.user?.credits ?? null),
+    () => session?.user?.tokenBalance?.totalTokens ?? session?.user?.tokens ?? getTokenTotal(session?.user?.credits ?? null),
     [session],
   );
 
   const handlePurchase = async (packId: string) => {
     setLoadingPack(packId);
     try {
-      const orderRes = await fetch("/api/payment/create-order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pack: packId }),
-      });
-      const orderPayload = await orderRes.json();
-      if (!orderRes.ok) throw new Error(orderPayload.error || "Failed to create order");
-
+      const orderRes = await fetch("/api/payment/create-order", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pack: packId }) });
+      const order = await orderRes.json();
+      if (!orderRes.ok) throw new Error(order.error || "Failed to create order");
       await loadRazorpayScript();
-      const RazorpayCtor = window.Razorpay;
-      if (!RazorpayCtor) throw new Error("Razorpay is unavailable");
-
-      const selectedPack = TOKEN_PACKS.find((p) => p.id === packId);
-      const rzp = new RazorpayCtor({
-        key: orderPayload.keyId,
-        amount: orderPayload.amount,
-        currency: "INR",
-        name: "ScriptGen",
-        description: `${selectedPack?.label || packId} Token Pack`,
-        order_id: orderPayload.orderId,
+      const Ctor = window.Razorpay;
+      if (!Ctor) throw new Error("Razorpay unavailable");
+      const pack = TOKEN_PACKS.find((p) => p.id === packId);
+      const rzp = new Ctor({
+        key: order.keyId, amount: order.amount, currency: "INR",
+        name: "ScriptGen", description: `${pack?.label || packId} Token Pack`,
+        order_id: order.orderId,
         prefill: { name: session?.user?.name, email: session?.user?.email },
-        theme: { color: "#6C63FF" },
+        theme: { color: "#6366f1" },
         handler: async (response: Record<string, unknown>) => {
-          const verifyRes = await fetch("/api/payment/verify", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(response),
-          });
-          if (verifyRes.ok) {
-            await update();
-            toast.success("Tokens added!");
-            router.push("/generate");
-          } else {
-            toast.error("Payment verification failed. Contact support.");
-          }
+          const verify = await fetch("/api/payment/verify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(response) });
+          if (verify.ok) { await update(); toast.success("Tokens added successfully."); router.push("/generate"); }
+          else toast.error("Payment verification failed. Contact support.");
         },
-        modal: { ondismiss: () => toast("Payment cancelled") },
+        modal: { ondismiss: () => toast("Payment cancelled.") },
       });
       rzp.open();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to initiate payment.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Payment failed.");
     } finally {
       setLoadingPack(null);
     }
   };
 
   return (
-    <div className="mx-auto max-w-4xl p-6 md:p-8">
+    <div className="mx-auto max-w-3xl px-5 py-8">
+
       {/* Header */}
-      <div className="mb-8 border-b border-border pb-6">
-        <h1 className="text-xl font-semibold text-white">Buy Tokens</h1>
-        <p className="mt-1 text-sm text-muted">
-          Pay once. Tokens never expire. All prices in INR.
-        </p>
+      <div className="mb-8">
+        <h1 className="text-lg font-semibold text-white">Buy Tokens</h1>
+        <p className="mt-0.5 text-sm text-muted">Pay once. No subscription. Tokens never expire.</p>
       </div>
 
-      {/* Balance bar */}
-      <div className="mb-6 flex items-center gap-2 rounded-md border border-border bg-surface px-4 py-3 text-sm">
-        <Zap className="h-4 w-4 text-gold" />
-        <span className="text-muted">Current balance:</span>
-        <span className="font-semibold text-gold">{tokenBalance} tokens</span>
+      {/* Balance */}
+      <div className="mb-6 flex items-center gap-2 rounded border border-border bg-surface px-4 py-3 text-sm">
+        <span className="text-muted">Current balance</span>
+        <span className="font-semibold text-white">{tokenBalance} tokens</span>
+        <span className="ml-auto text-xs text-hint">≈ {Math.floor(tokenBalance / 10)} full scripts</span>
       </div>
 
       {/* Packs */}
@@ -116,35 +89,30 @@ export default function TokensPage() {
         {TOKEN_PACKS.map((pack) => (
           <div
             key={pack.id}
-            className={`relative rounded-lg border p-5 ${
-              pack.featured ? "border-accent bg-accent/5" : "border-border bg-surface"
-            }`}
+            className={`rounded border p-5 ${pack.featured ? "border-accent/40 bg-accent/5" : "border-border bg-surface"}`}
           >
-            {pack.featured ? (
-              <p className="absolute right-3 top-3 rounded-md bg-accent px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
-                Best Value
-              </p>
-            ) : null}
+            {pack.featured && (
+              <span className="mb-3 inline-block rounded bg-accent/20 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent2">
+                Best value
+              </span>
+            )}
 
-            <p className="text-xs font-medium text-muted">{pack.label}</p>
-            <p className="mt-3 text-4xl font-bold text-white">{pack.tokens}</p>
-            <p className="text-xs text-muted">tokens</p>
-            <p className="mt-1 text-xs text-muted">{pack.scripts}</p>
-            <p className="mt-4 text-2xl font-bold text-gold">₹{pack.price}</p>
+            <p className="text-xs text-muted">{pack.label}</p>
+            <p className="mt-2 text-3xl font-bold text-white">{pack.tokens}</p>
+            <p className="text-xs text-muted">tokens · {pack.scripts}</p>
+            <p className="mt-4 text-xl font-semibold text-white">₹{pack.price}</p>
 
-            <ul className="mt-4 space-y-2 text-xs text-muted">
-              <li className="flex items-center gap-2">
-                <Check className="h-3.5 w-3.5 text-green" />
-                Full 4-stage script generation
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="h-3.5 w-3.5 text-green" />
-                SEO, B-Roll, Shorts & image assets
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="h-3.5 w-3.5 text-green" />
-                One-time payment, no subscription
-              </li>
+            <ul className="mt-4 space-y-1.5">
+              {[
+                "Full 4-stage script generation",
+                "SEO, B-Roll, Shorts & image assets",
+                "One-time payment",
+              ].map((item) => (
+                <li key={item} className="flex items-center gap-2 text-xs text-muted">
+                  <Check className="h-3 w-3 shrink-0 text-green" />
+                  {item}
+                </li>
+              ))}
             </ul>
 
             <Button
@@ -153,24 +121,22 @@ export default function TokensPage() {
               className="mt-5 w-full"
               loading={loadingPack === pack.id}
               disabled={loadingPack !== null}
-              onClick={() => handlePurchase(pack.id)}
+              onClick={() => void handlePurchase(pack.id)}
             >
-              Buy Now
+              Buy now
             </Button>
           </div>
         ))}
       </div>
 
-      {/* Trust footer */}
-      <div className="mt-8 flex flex-wrap items-center justify-center gap-4 border-t border-border pt-6 text-xs text-muted">
-        {["🔒 Razorpay Secured", "⚡ Instant Credit", "♾️ Never Expire", "🇮🇳 INR Pricing"].map((badge) => (
-          <span key={badge} className="flex items-center gap-1.5">
-            {badge}
-          </span>
+      {/* Footer */}
+      <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 border-t border-border pt-6 text-xs text-muted">
+        {["Razorpay secured", "Instant credit", "Tokens never expire", "INR pricing"].map((t) => (
+          <span key={t}>{t}</span>
         ))}
       </div>
-      <div className="mt-4 flex items-center justify-center gap-2 text-xs text-muted">
-        <ShieldCheck className="h-3.5 w-3.5 text-green" />
+      <div className="mt-3 flex items-center justify-center gap-1.5 text-xs text-hint">
+        <ShieldCheck className="h-3.5 w-3.5" />
         Token credits are added instantly after payment verification.
       </div>
     </div>

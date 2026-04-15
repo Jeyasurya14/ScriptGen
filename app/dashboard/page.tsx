@@ -9,25 +9,22 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 
 function getFirstName(name?: string | null) {
-  if (!name) return "Creator";
-  return name.split(" ")[0] || "Creator";
+  if (!name) return "there";
+  return name.split(" ")[0] || "there";
 }
 
 function extractAverageSeoScore(seoData: unknown): number | null {
   if (!seoData || typeof seoData !== "object") return null;
   const titles = (seoData as { titles?: Array<{ score?: unknown }> }).titles;
   if (!Array.isArray(titles) || titles.length === 0) return null;
-  const scores = titles
-    .map((title) => (typeof title?.score === "number" ? title.score : null))
-    .filter((score): score is number => score !== null);
-  if (scores.length === 0) return null;
-  return Math.round(scores.reduce((total, score) => total + score, 0) / scores.length);
+  const scores = titles.map((t) => (typeof t?.score === "number" ? t.score : null)).filter((s): s is number => s !== null);
+  return scores.length === 0 ? null : Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
 }
 
 function extractLanguage(seoData: unknown) {
-  if (!seoData || typeof seoData !== "object") return "Unknown";
-  const metaLanguage = (seoData as { meta?: { language?: unknown } }).meta?.language;
-  return typeof metaLanguage === "string" && metaLanguage.length > 0 ? metaLanguage : "Unknown";
+  if (!seoData || typeof seoData !== "object") return null;
+  const lang = (seoData as { meta?: { language?: unknown } }).meta?.language;
+  return typeof lang === "string" && lang.length > 0 ? lang : null;
 }
 
 function extractShortsCount(shortsData: unknown) {
@@ -40,15 +37,6 @@ function extractShortsCount(shortsData: unknown) {
   return 0;
 }
 
-function getLanguageBadge(language: string) {
-  const n = language.toLowerCase();
-  if (n === "thanglish") return "border border-accent/20 bg-accent/10 text-accent2";
-  if (n === "english") return "border border-sky-400/20 bg-sky-400/10 text-sky-300";
-  if (n === "hindi") return "border border-orange-400/20 bg-orange-400/10 text-orange-300";
-  if (n === "tamil") return "border border-green/20 bg-green-bg text-green";
-  return "border border-border2 bg-surface2 text-muted";
-}
-
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) redirect("/");
@@ -58,142 +46,101 @@ export default async function DashboardPage() {
     include: {
       credits: true,
       scripts: {
-        select: {
-          id: true,
-          title: true,
-          seoData: true,
-          shortsData: true,
-          scriptContent: true,
-          createdAt: true,
-        },
+        select: { id: true, title: true, seoData: true, shortsData: true, scriptContent: true, createdAt: true },
         orderBy: { createdAt: "desc" },
       },
     },
   });
 
   const scripts = user?.scripts ?? [];
-  const recentScripts = scripts.slice(0, 10);
   const tokenBalance = user?.credits ? toTokenBalance(user.credits) : null;
   const now = new Date();
-  const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  const weeklyScripts = scripts.filter((s) => s.createdAt >= oneWeekAgo).length;
-
-  const seoScores = scripts
-    .map((s) => extractAverageSeoScore(s.seoData))
-    .filter((sc): sc is number => sc !== null);
-  const averageSeoScore =
-    seoScores.length > 0
-      ? Math.round(seoScores.reduce((t, s) => t + s, 0) / seoScores.length)
-      : 0;
-
-  const shortsExtracted = scripts.reduce((t, s) => t + extractShortsCount(s.shortsData), 0);
-  const tokensRemaining = tokenBalance?.totalTokens ?? 0;
+  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const weeklyCount = scripts.filter((s) => s.createdAt >= weekAgo).length;
+  const seoScores = scripts.map((s) => extractAverageSeoScore(s.seoData)).filter((s): s is number => s !== null);
+  const avgSeo = seoScores.length > 0 ? Math.round(seoScores.reduce((a, b) => a + b, 0) / seoScores.length) : null;
+  const totalShorts = scripts.reduce((t, s) => t + extractShortsCount(s.shortsData), 0);
+  const tokens = tokenBalance?.totalTokens ?? 0;
+  const recentScripts = scripts.slice(0, 10);
 
   const stats = [
-    { label: "Scripts Generated", value: scripts.length, subtext: `+${weeklyScripts} this week`, color: "text-accent2" },
-    { label: "Tokens Remaining", value: tokensRemaining, subtext: `~${Math.floor(tokensRemaining / 10)} scripts left`, color: "text-gold", low: tokensRemaining < 10 },
-    { label: "Avg SEO Score", value: averageSeoScore, subtext: "Out of 100", color: "text-green", showBar: true },
-    { label: "Shorts Extracted", value: shortsExtracted, subtext: "Auto-clipped highlights", color: "text-red" },
+    { label: "Scripts", value: scripts.length, sub: `${weeklyCount} this week` },
+    { label: "Tokens left", value: tokens, sub: `~${Math.floor(tokens / 10)} scripts remaining`, warn: tokens < 10 },
+    { label: "Avg SEO score", value: avgSeo !== null ? avgSeo : "—", sub: "Average across all scripts" },
+    { label: "Shorts extracted", value: totalShorts, sub: "Clip-ready moments" },
   ];
 
   return (
-    <div className="mx-auto max-w-5xl p-6 md:p-8">
+    <div className="mx-auto max-w-5xl px-5 py-8">
+
       {/* Header */}
-      <div className="mb-8 border-b border-border pb-6">
-        <h1 className="text-xl font-semibold text-white">
-          Good morning, {getFirstName(session.user.name)} 👋
-        </h1>
-        <p className="mt-1 text-sm text-muted">Here&apos;s your content overview.</p>
+      <div className="mb-8">
+        <h1 className="text-lg font-semibold text-white">Hello, {getFirstName(session.user.name)}</h1>
+        <p className="mt-0.5 text-sm text-muted">Here&apos;s an overview of your ScriptGen activity.</p>
       </div>
 
-      {/* Stats */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {stats.map((stat) => (
-          <div key={stat.label} className="rounded-lg border border-border bg-surface p-4">
-            <div className="flex items-start justify-between gap-2">
-              <p className="text-xs text-muted">{stat.label}</p>
-              {stat.low ? (
-                <Badge variant="draft" className="text-red">Low</Badge>
-              ) : null}
-            </div>
-            <p className={`mt-2 text-3xl font-bold ${stat.color}`}>{stat.value}</p>
-            <p className="mt-1 text-xs text-muted">{stat.subtext}</p>
-            {stat.showBar ? (
-              <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface2">
-                <div
-                  className="h-full rounded-full bg-green/60"
-                  style={{ width: `${Math.min(100, averageSeoScore)}%` }}
-                />
-              </div>
-            ) : null}
+      {/* Stats row */}
+      <div className="mb-8 grid grid-cols-2 gap-px border border-border bg-border xl:grid-cols-4">
+        {stats.map((s) => (
+          <div key={s.label} className="bg-bg px-5 py-4">
+            <p className="text-xs text-muted">{s.label}</p>
+            <p className="mt-1.5 text-2xl font-semibold text-white">{s.value}</p>
+            <p className="mt-1 text-xs text-hint">{s.sub}</p>
+            {s.warn && <p className="mt-1 text-[10px] font-medium text-gold">Low balance</p>}
           </div>
         ))}
       </div>
 
-      {/* Recent Scripts */}
-      <section className="mt-10">
-        <div className="mb-4 flex items-center justify-between">
-          <div>
-            <h2 className="text-base font-semibold text-white">Recent Scripts</h2>
-            <p className="mt-0.5 text-xs text-muted">Your latest generated work.</p>
-          </div>
-          <Link href="/generate" className="text-xs font-medium text-accent2 hover:underline">
-            New Script →
-          </Link>
+      {/* Recent scripts */}
+      <div>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-white">Recent scripts</h2>
+          <Link href="/generate" className="text-xs text-accent2 hover:underline">New script →</Link>
         </div>
 
         {recentScripts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-lg border border-border bg-surface py-16 text-center">
-            <h3 className="text-base font-semibold text-white">No scripts yet</h3>
-            <p className="mt-2 max-w-sm text-sm text-muted">
-              Generate your first script to see it here.
-            </p>
+          <div className="flex flex-col items-center justify-center rounded border border-border bg-surface py-14 text-center">
+            <p className="text-sm font-medium text-white">No scripts yet</p>
+            <p className="mt-1.5 max-w-xs text-xs text-muted">Generate your first script to see it here.</p>
             <Link href="/generate" className="mt-4">
-              <Button>Start Generating</Button>
+              <Button size="sm">Generate now</Button>
             </Link>
           </div>
         ) : (
-          <div className="overflow-hidden rounded-lg border border-border">
-            {/* Table header */}
-            <div className="grid grid-cols-[2fr_1fr_1fr_1fr_80px] border-b border-border bg-surface px-4 py-2.5 text-xs font-medium text-muted">
+          <div className="overflow-hidden rounded border border-border">
+            {/* Table head */}
+            <div className="grid grid-cols-[1fr_100px_80px_120px_70px] border-b border-border bg-surface px-4 py-2 text-[11px] font-medium text-muted">
               <span>Title</span>
               <span>Language</span>
-              <span>SEO Score</span>
-              <span>Date</span>
+              <span>SEO</span>
+              <span>Created</span>
               <span>Status</span>
             </div>
 
-            {recentScripts.map((script, index) => {
+            {recentScripts.map((script, i) => {
               const seoScore = extractAverageSeoScore(script.seoData);
               const language = extractLanguage(script.seoData);
-              const seoTone =
-                seoScore === null ? "text-muted" : seoScore >= 80 ? "text-green" : seoScore >= 60 ? "text-gold" : "text-red";
-              const status = script.scriptContent ? "Done" : "Draft";
+              const isDone = !!script.scriptContent;
+              const seoColor = seoScore === null ? "text-hint" : seoScore >= 80 ? "text-green" : seoScore >= 60 ? "text-gold" : "text-red";
 
               return (
                 <div
                   key={script.id}
-                  className={`grid grid-cols-[2fr_1fr_1fr_1fr_80px] items-center gap-4 px-4 py-3 text-sm transition hover:bg-surface2 ${index < recentScripts.length - 1 ? "border-b border-border" : ""}`}
+                  className={`grid grid-cols-[1fr_100px_80px_120px_70px] items-center gap-4 px-4 py-3 text-sm transition-colors hover:bg-surface ${i < recentScripts.length - 1 ? "border-b border-border" : ""}`}
                 >
-                  <Link href={`/generate?id=${script.id}`} className="truncate font-medium text-white hover:text-accent2">
+                  <Link href={`/generate?id=${script.id}`} className="truncate text-sm text-white hover:text-accent2">
                     {script.title}
                   </Link>
-                  <span className={`inline-flex w-fit rounded-md px-2 py-0.5 text-xs font-medium ${getLanguageBadge(language)}`}>
-                    {language}
-                  </span>
-                  <span className={`text-sm ${seoTone}`}>{seoScore ?? "—"}</span>
-                  <span className="text-xs text-muted">
-                    {formatDistanceToNow(script.createdAt, { addSuffix: true })}
-                  </span>
-                  <span>
-                    <Badge variant={status === "Done" ? "success" : "draft"}>{status}</Badge>
-                  </span>
+                  <span className="truncate text-xs text-muted capitalize">{language ?? "—"}</span>
+                  <span className={`text-xs font-medium ${seoColor}`}>{seoScore ?? "—"}</span>
+                  <span className="text-xs text-muted">{formatDistanceToNow(script.createdAt, { addSuffix: true })}</span>
+                  <Badge variant={isDone ? "success" : "draft"}>{isDone ? "Done" : "Draft"}</Badge>
                 </div>
               );
             })}
           </div>
         )}
-      </section>
+      </div>
     </div>
   );
 }

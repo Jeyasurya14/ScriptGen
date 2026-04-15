@@ -4,10 +4,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { signIn, useSession } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
-import { Menu, X, Zap } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Badge } from "@/components/ui/Badge";
 import { getTokenTotal } from "@/lib/credits";
+
+const navLinks = [
+  { href: "/#how-it-works", label: "How it works" },
+  { href: "/#pricing", label: "Pricing" },
+];
 
 const appLinks = [
   { href: "/generate", label: "Generate" },
@@ -16,112 +20,83 @@ const appLinks = [
 ];
 
 function getInitials(name?: string | null) {
-  if (!name) return "SG";
-  return name
-    .split(" ")
-    .map((part) => part[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
+  if (!name) return "U";
+  return name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
 }
 
 export default function Nav() {
   const pathname = usePathname();
   const router = useRouter();
   const { data: session } = useSession();
-  const [isScrolled, setIsScrolled] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const isAppRoute =
+  const isApp =
     pathname?.startsWith("/dashboard") ||
     pathname?.startsWith("/generate") ||
     pathname?.startsWith("/referral") ||
-    pathname?.startsWith("/tokens") ||
-    pathname?.startsWith("/app");
+    pathname?.startsWith("/tokens");
 
-  const tokenCount =
+  const tokens =
     session?.user?.tokenBalance?.totalTokens ??
     session?.user?.tokens ??
     getTokenTotal(session?.user?.credits ?? null);
 
   useEffect(() => {
-    const onScroll = () => setIsScrolled(window.scrollY > 8);
-    onScroll();
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
+    const fn = () => setScrolled(window.scrollY > 0);
+    fn();
+    window.addEventListener("scroll", fn);
+    return () => window.removeEventListener("scroll", fn);
   }, []);
 
   return (
-    <nav
-      className={[
-        "fixed inset-x-0 top-0 z-50 border-b transition duration-200",
-        isScrolled || isAppRoute
-          ? "border-border bg-bg/95 backdrop-blur-md"
-          : "border-transparent bg-transparent",
-      ].join(" ")}
-    >
-      <div className="mx-auto flex h-[60px] max-w-5xl items-center justify-between px-4 sm:px-6 lg:px-8">
+    <nav className={`fixed inset-x-0 top-0 z-50 transition-colors duration-200 ${scrolled || isApp ? "border-b border-border bg-bg" : "border-b border-transparent bg-transparent"}`}>
+      <div className="mx-auto flex h-14 max-w-screen-xl items-center justify-between px-5">
+
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2">
-          <span className="font-head text-base font-bold text-white">
-            Script<span className="text-accent2">Gen</span>
-          </span>
-          <Badge className="hidden sm:inline-flex">Beta</Badge>
+        <Link href="/" className="flex items-center gap-2 text-sm font-semibold text-white">
+          <span className="flex h-6 w-6 items-center justify-center rounded bg-accent text-[11px] font-bold text-white">S</span>
+          ScriptGen
+          <span className="rounded bg-surface2 px-1.5 py-0.5 text-[10px] font-medium text-muted">Beta</span>
         </Link>
 
-        {/* Desktop nav */}
-        <div className="hidden items-center gap-6 md:flex">
-          {!isAppRoute ? (
-            <>
-              <Link href="/#how-it-works" className="text-sm text-muted transition hover:text-white">
-                How it works
-              </Link>
-              <Link href="/#pricing" className="text-sm text-muted transition hover:text-white">
-                Pricing
-              </Link>
-            </>
-          ) : (
-            appLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`text-sm transition ${pathname?.startsWith(link.href) ? "text-white" : "text-muted hover:text-white"}`}
-              >
-                {link.label}
-              </Link>
-            ))
-          )}
+        {/* Desktop links */}
+        <div className="hidden items-center gap-1 md:flex">
+          {(isApp ? appLinks : navLinks).map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`rounded px-3 py-1.5 text-sm transition-colors ${
+                pathname?.startsWith(link.href) && isApp
+                  ? "bg-surface text-white"
+                  : "text-muted hover:text-white"
+              }`}
+            >
+              {link.label}
+            </Link>
+          ))}
         </div>
 
-        {/* Right actions */}
-        <div className="flex items-center gap-3">
+        {/* Actions */}
+        <div className="flex items-center gap-2">
           {session?.user?.email ? (
             <>
               <button
                 type="button"
                 onClick={() => router.push("/tokens")}
-                role="status"
-                aria-live="polite"
-                className="inline-flex items-center gap-1.5 rounded-md border border-gold/20 bg-gold-bg px-2.5 py-1 text-xs font-semibold text-gold transition hover:border-gold/40"
+                className="hidden items-center gap-1.5 rounded border border-border px-2.5 py-1 text-xs font-medium text-muted transition hover:border-border2 hover:text-white sm:flex"
               >
-                <Zap className="h-3 w-3 fill-current" />
-                <span>{tokenCount}</span>
+                <span className="h-1.5 w-1.5 rounded-full bg-gold" />
+                {tokens} tokens
               </button>
-
               <button
                 type="button"
                 onClick={() => router.push("/dashboard")}
-                className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-border2 bg-surface2 text-xs font-semibold text-white"
-                aria-label="Open account"
+                className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full border border-border2 bg-surface2 text-[11px] font-semibold text-white"
+                aria-label="Account"
               >
                 {session.user.image ? (
-                  <Image
-                    src={session.user.image}
-                    alt={session.user.name || "Profile"}
-                    width={32}
-                    height={32}
-                    className="h-full w-full object-cover"
-                  />
+                  <Image src={session.user.image} alt="Profile" width={28} height={28} className="h-full w-full object-cover" />
                 ) : (
                   getInitials(session.user.name)
                 )}
@@ -131,45 +106,39 @@ export default function Nav() {
             <button
               type="button"
               onClick={() => signIn("google", { callbackUrl: "/generate" })}
-              className="rounded-md border border-border2 bg-surface px-4 py-2 text-sm font-medium text-white transition hover:border-white/20 hover:bg-surface2"
+              className="rounded border border-border bg-surface px-3 py-1.5 text-sm font-medium text-white transition hover:bg-surface2"
             >
               Sign in
             </button>
           )}
 
+          {/* Mobile menu toggle */}
           <button
             type="button"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-surface text-white md:hidden"
-            onClick={() => setMobileOpen((value) => !value)}
-            aria-label={mobileOpen ? "Close navigation" : "Open navigation"}
+            onClick={() => setMobileOpen((v) => !v)}
+            className="flex h-8 w-8 items-center justify-center rounded border border-border text-muted hover:text-white md:hidden"
+            aria-label="Toggle menu"
           >
             {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </button>
         </div>
       </div>
 
-      {mobileOpen ? (
-        <div className="border-t border-border bg-bg px-4 py-3 md:hidden">
-          <div className="flex flex-col gap-1">
-            {[
-              { href: "/", label: "Home" },
-              { href: "/generate", label: "Generate" },
-              { href: "/dashboard", label: "Dashboard" },
-              { href: "/referral", label: "Referral" },
-              { href: "/tokens", label: "Tokens" },
-            ].map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setMobileOpen(false)}
-                className="rounded-md px-3 py-2 text-sm text-muted transition hover:bg-surface hover:text-white"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div>
+      {/* Mobile drawer */}
+      {mobileOpen && (
+        <div className="border-t border-border bg-bg px-5 py-3 md:hidden">
+          {[...navLinks, ...appLinks].map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              onClick={() => setMobileOpen(false)}
+              className="block rounded px-2 py-2 text-sm text-muted hover:text-white"
+            >
+              {link.label}
+            </Link>
+          ))}
         </div>
-      ) : null}
+      )}
     </nav>
   );
 }

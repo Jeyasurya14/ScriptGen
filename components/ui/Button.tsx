@@ -1,24 +1,22 @@
 import React from "react";
 
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "primary" | "ghost" | "danger";
+  variant?: "primary" | "secondary" | "ghost" | "danger";
   size?: "sm" | "md" | "lg";
   loading?: boolean;
 };
 
-const variantStyles: Record<NonNullable<ButtonProps["variant"]>, string> = {
-  primary:
-    "border border-accent bg-accent text-white hover:bg-accent/90",
-  ghost:
-    "border border-border2 bg-surface text-white hover:border-white/20 hover:bg-surface2",
-  danger:
-    "border border-red/40 bg-red-bg text-red hover:bg-red/15",
+const variants: Record<NonNullable<ButtonProps["variant"]>, string> = {
+  primary:   "bg-accent text-white border-transparent hover:bg-accent/90",
+  secondary: "bg-surface2 text-white border-border hover:bg-surface border-transparent hover:border-border",
+  ghost:     "bg-transparent text-muted border-border hover:bg-surface hover:text-white",
+  danger:    "bg-red-bg text-red border-red/30 hover:bg-red/15",
 };
 
-const sizeStyles: Record<NonNullable<ButtonProps["size"]>, string> = {
-  sm: "h-8 rounded-md px-3 text-xs",
-  md: "h-9 rounded-md px-4 text-sm",
-  lg: "h-10 rounded-md px-5 text-sm",
+const sizes: Record<NonNullable<ButtonProps["size"]>, string> = {
+  sm: "h-7 rounded px-2.5 text-xs gap-1.5",
+  md: "h-8 rounded px-3 text-sm gap-2",
+  lg: "h-9 rounded px-4 text-sm gap-2",
 };
 
 export function Button({
@@ -33,11 +31,11 @@ export function Button({
   return (
     <button
       className={[
-        "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition duration-150",
+        "inline-flex items-center justify-center whitespace-nowrap border font-medium transition-colors duration-150",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:ring-offset-bg",
-        "disabled:cursor-not-allowed disabled:opacity-50",
-        variantStyles[variant],
-        sizeStyles[size],
+        "disabled:cursor-not-allowed disabled:opacity-40",
+        variants[variant],
+        sizes[size],
         className,
       ].join(" ")}
       disabled={disabled || loading}
@@ -45,15 +43,10 @@ export function Button({
     >
       {loading ? (
         <>
-          <span
-            className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current/30 border-t-current"
-            aria-hidden="true"
-          />
-          <span>Processing...</span>
+          <span className="h-3 w-3 animate-spin rounded-full border border-current/20 border-t-current" aria-hidden />
+          <span>Processing…</span>
         </>
-      ) : (
-        children
-      )}
+      ) : children}
     </button>
   );
 }

@@ -1,49 +1,61 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { FileEdit, LayoutDashboard, Users, Zap } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { LayoutDashboard, LayoutGrid, Users, Zap } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { getTokenTotal } from "@/lib/credits";
 
 const items = [
-  { label: "Generate", href: "/generate", icon: FileEdit },
+  { label: "Generate", href: "/generate", icon: LayoutGrid },
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Referral", href: "/referral", icon: Users },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { data: session } = useSession();
+
+  const tokens =
+    session?.user?.tokenBalance?.totalTokens ??
+    session?.user?.tokens ??
+    getTokenTotal(session?.user?.credits ?? null);
 
   return (
-    <aside className="fixed left-0 top-[60px] hidden h-[calc(100vh-60px)] w-[200px] flex-col border-r border-border bg-bg md:flex">
-      <nav className="flex-1 space-y-0.5 px-3 py-4">
+    <aside className="fixed left-0 top-14 hidden h-[calc(100vh-56px)] w-48 flex-col border-r border-border bg-bg md:flex">
+      <nav className="flex-1 px-2 py-3">
         {items.map((item) => {
           const active = pathname?.startsWith(item.href);
           return (
             <Link
-              key={item.label}
+              key={item.href}
               href={item.href}
-              className={[
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition",
+              className={`mb-0.5 flex items-center gap-2.5 rounded px-2.5 py-2 text-sm transition-colors ${
                 active
-                  ? "bg-surface text-white"
-                  : "text-muted hover:bg-surface hover:text-white",
-              ].join(" ")}
+                  ? "bg-surface2 text-white"
+                  : "text-muted hover:bg-surface hover:text-white"
+              }`}
             >
               <item.icon className="h-4 w-4 shrink-0" />
-              <span>{item.label}</span>
+              {item.label}
             </Link>
           );
         })}
       </nav>
 
-      <div className="border-t border-border p-4">
-        <Link
-          href="/tokens"
-          className="flex w-full items-center justify-center gap-2 rounded-md border border-border2 bg-surface px-3 py-2 text-sm font-medium text-white transition hover:border-white/20 hover:bg-surface2"
+      {/* Token status */}
+      <div className="border-t border-border p-3">
+        <div
+          className="flex cursor-pointer items-center justify-between rounded border border-border bg-surface px-3 py-2 text-xs transition hover:bg-surface2"
+          onClick={() => router.push("/tokens")}
         >
-          <Zap className="h-3.5 w-3.5 text-gold" />
-          Buy Tokens
-        </Link>
+          <span className="text-muted">Tokens</span>
+          <div className="flex items-center gap-1 font-medium text-white">
+            <Zap className="h-3 w-3 text-gold" />
+            {tokens}
+          </div>
+        </div>
       </div>
     </aside>
   );

@@ -10,178 +10,186 @@ export const metadata: Metadata = {
 };
 
 const features = [
-  ["Smart Hook Engine", "Stronger first 30 seconds so retention starts higher."],
-  ["SEO Pack", "Titles, descriptions, and tags shaped for search and clicks."],
-  ["Thanglish Engine", "Natural Tamil-English flow with adjustable language ratio."],
-  ["Shorts Extraction", "Pull clip-ready moments from your long-form script."],
-  ["AI Image Prompts", "DALL-E-ready visuals mapped to the timeline."],
-  ["Production Notes", "Editing, music, and B-Roll guidance in one pass."],
+  ["4-Stage Script Pipeline", "Hook → Content → Outro → Production Notes, generated sequentially for a coherent long-form script."],
+  ["Thanglish Engine", "Fine-tune Tamil/English ratio from 10% to 90% to match your channel voice."],
+  ["SEO Pack", "AI-generated titles with CTR scores, meta description, and 20+ searchable tags."],
+  ["B-Roll & Chapters", "Timestamped B-Roll suggestions and YouTube chapter markers in one pass."],
+  ["Shorts Extraction", "Clip-ready viral moments pulled directly from your long-form script."],
+  ["AI Image Prompts", "DALL-E–ready visual prompts mapped to your script timeline."],
 ];
 
 const steps = [
-  { number: "01", title: "Hook & Intro", description: "Retention-optimized opening that stops the scroll" },
-  { number: "02", title: "Main Content", description: "Deep structured sections with code explanations" },
-  { number: "03", title: "Demo & Outro", description: "Practical walkthrough with high-conversion CTA" },
-  { number: "04", title: "Production Notes", description: "B-Roll cues, music mapping, editing timeline" },
+  { n: "01", title: "Hook & Intro", body: "Retention-optimized opening that stops the scroll in the first 30 seconds." },
+  { n: "02", title: "Main Content", body: "Structured deep-dive with code explanations, context, and examples." },
+  { n: "03", title: "Demo & Outro", body: "Practical walkthrough with a high-conversion call-to-action." },
+  { n: "04", title: "Production Notes", body: "B-Roll cues, music mapping, and editing timeline for your editor." },
 ];
 
 const pricing = [
-  { label: "Starter", tokens: 30, price: 149, scripts: "~2 scripts", featured: false },
-  { label: "Value", tokens: 100, price: 399, scripts: "~7 scripts", featured: true },
-  { label: "Creator", tokens: 300, price: 999, scripts: "~22 scripts", featured: false },
+  { id: "starter", label: "Starter", tokens: 30, price: 149, approx: "~2 scripts" },
+  { id: "value",   label: "Value",   tokens: 100, price: 399, approx: "~7 scripts", featured: true },
+  { id: "creator", label: "Creator", tokens: 300, price: 999, approx: "~22 scripts" },
 ];
 
 export default function HomePage() {
   return (
-    <main>
-      {/* ── Hero ───────────────────────────────────────────── */}
+    <main className="pt-14">
+
+      {/* ── Hero ─────────────────────────────────────────── */}
       <section className="border-b border-border">
-        <div className="mx-auto max-w-5xl px-4 py-24 sm:px-6 lg:px-8">
-          <p className="text-xs uppercase tracking-[0.2em] text-accent2">
-            AI Script Generator · Tamil Creators
-          </p>
-          <h1 className="mt-5 font-head text-4xl font-bold leading-tight text-white sm:text-5xl">
-            Write better YouTube scripts,<br />
-            <span className="text-accent2">faster than ever.</span>
-          </h1>
-          <p className="mt-5 max-w-xl text-base text-muted">
-            ScriptGen builds production-ready YouTube scripts across four intelligent AI stages — Hook, Content, Outro, and Production Notes. Built for Tamil & Thanglish creators.
-          </p>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <HomeCta className="inline-flex items-center gap-2 rounded-lg bg-accent px-6 py-3 text-sm font-semibold text-white transition hover:bg-accent/90">
-              Get Started Free
-              <ArrowRight className="h-4 w-4" />
-            </HomeCta>
-            <Link
-              href="#how-it-works"
-              className="inline-flex items-center gap-2 rounded-lg border border-border2 px-6 py-3 text-sm font-semibold text-muted transition hover:border-white/20 hover:text-white"
-            >
-              See How It Works
-            </Link>
+        <div className="mx-auto max-w-screen-xl px-5 py-20 md:py-28">
+          <div className="max-w-2xl">
+            <p className="mb-3 text-xs font-medium text-muted">AI YouTube Script Generator · Tamil Creators</p>
+            <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl md:text-5xl">
+              Write your next script,<br />faster and in your language.
+            </h1>
+            <p className="mt-4 max-w-lg text-sm leading-relaxed text-muted">
+              ScriptGen generates production-ready YouTube scripts in 4 sequential AI stages — Hook, Content, Outro, and Production Notes. Built natively for Tamil and Thanglish creators.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <HomeCta className="inline-flex items-center gap-2 rounded bg-accent px-4 py-2 text-sm font-medium text-white transition hover:bg-accent/90">
+                Get Started Free
+                <ArrowRight className="h-3.5 w-3.5" />
+              </HomeCta>
+              <Link
+                href="#how-it-works"
+                className="inline-flex items-center gap-2 rounded border border-border px-4 py-2 text-sm font-medium text-muted transition hover:border-border2 hover:text-white"
+              >
+                See how it works
+              </Link>
+            </div>
+            <p className="mt-3 text-xs text-hint">Free to start — 30 tokens on signup, no credit card required.</p>
           </div>
-          <p className="mt-4 text-xs text-hint">No credit card needed · 30 free tokens on signup</p>
         </div>
       </section>
 
-      {/* ── How It Works ───────────────────────────────────── */}
+      {/* ── How it works ─────────────────────────────────── */}
       <section id="how-it-works" className="border-b border-border">
-        <div className="mx-auto max-w-5xl px-4 py-20 sm:px-6 lg:px-8">
-          <p className="text-xs uppercase tracking-[0.2em] text-accent2">The Process</p>
-          <h2 className="mt-4 font-head text-2xl font-bold text-white">4 stages. One complete script.</h2>
-          <div className="mt-10 grid gap-px border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mx-auto max-w-screen-xl px-5 py-16">
+          <p className="mb-8 text-xs font-medium uppercase tracking-widest text-muted">Process</p>
+          <div className="grid gap-px border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
             {steps.map((step) => (
-              <div key={step.number} className="bg-bg p-6">
-                <p className="font-head text-3xl font-extrabold text-accent2">{step.number}</p>
-                <h3 className="mt-4 text-sm font-semibold text-white">{step.title}</h3>
-                <p className="mt-2 text-sm text-muted">{step.description}</p>
+              <div key={step.n} className="bg-bg px-6 py-7">
+                <span className="text-xs font-mono font-medium text-accent2">{step.n}</span>
+                <h3 className="mt-3 text-sm font-semibold text-white">{step.title}</h3>
+                <p className="mt-2 text-xs leading-relaxed text-muted">{step.body}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── Features ───────────────────────────────────────── */}
+      {/* ── Features ─────────────────────────────────────── */}
       <section className="border-b border-border">
-        <div className="mx-auto max-w-5xl px-4 py-20 sm:px-6 lg:px-8">
-          <p className="text-xs uppercase tracking-[0.2em] text-accent2">Features</p>
-          <h2 className="mt-4 font-head text-2xl font-bold text-white">Everything in one pass.</h2>
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {features.map(([title, description]) => (
-              <div key={title} className="rounded-lg border border-border bg-surface p-5">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-accent/10">
-                    <Check className="h-4 w-4 text-accent2" />
+        <div className="mx-auto max-w-screen-xl px-5 py-16">
+          <p className="mb-8 text-xs font-medium uppercase tracking-widest text-muted">Features</p>
+          <div className="grid gap-px border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
+            {features.map(([title, body]) => (
+              <div key={title} className="bg-bg px-6 py-6">
+                <div className="flex items-start gap-3">
+                  <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent2" />
+                  <div>
+                    <p className="text-sm font-medium text-white">{title}</p>
+                    <p className="mt-1.5 text-xs leading-relaxed text-muted">{body}</p>
                   </div>
-                  <p className="text-sm font-semibold text-white">{title}</p>
                 </div>
-                <p className="mt-3 text-sm text-muted">{description}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── Language ───────────────────────────────────────── */}
+      {/* ── Language support ─────────────────────────────── */}
       <section className="border-b border-border">
-        <div className="mx-auto max-w-5xl px-4 py-20 sm:px-6 lg:px-8">
-          <p className="text-xs uppercase tracking-[0.2em] text-accent2">Language Support</p>
-          <h2 className="mt-4 font-head text-2xl font-bold text-white">Built for regional creators.</h2>
-          <div className="mt-8 flex flex-wrap gap-2">
-            {["English", "Hindi / Hinglish", "Tamil", "Thanglish ✨"].map((lang) => (
+        <div className="mx-auto max-w-screen-xl px-5 py-16">
+          <p className="mb-4 text-xs font-medium uppercase tracking-widest text-muted">Language Support</p>
+          <h2 className="mb-8 text-xl font-semibold text-white">Built for regional creators</h2>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { label: "English",          active: false },
+              { label: "Hindi / Hinglish", active: false },
+              { label: "Tamil",            active: false },
+              { label: "Thanglish",        active: true  },
+            ].map(({ label, active }) => (
               <span
-                key={lang}
-                className={`rounded-md border px-4 py-2 text-sm font-medium ${
-                  lang.includes("Thanglish")
+                key={label}
+                className={`rounded border px-3 py-1.5 text-xs font-medium ${
+                  active
                     ? "border-accent/30 bg-accent/10 text-accent2"
-                    : "border-border2 bg-surface text-muted"
+                    : "border-border bg-surface text-muted"
                 }`}
               >
-                {lang}
+                {label}
               </span>
             ))}
           </div>
+          <p className="mt-4 text-xs text-hint">
+            Thanglish mode lets you set a Tamil/English ratio — from code-heavy English to full Tamil, with everything in between.
+          </p>
         </div>
       </section>
 
-      {/* ── Pricing ────────────────────────────────────────── */}
+      {/* ── Pricing ──────────────────────────────────────── */}
       <section id="pricing" className="border-b border-border">
-        <div className="mx-auto max-w-5xl px-4 py-20 sm:px-6 lg:px-8">
-          <p className="text-xs uppercase tracking-[0.2em] text-accent2">Pricing</p>
-          <h2 className="mt-4 font-head text-2xl font-bold text-white">Simple token pricing.</h2>
-          <p className="mt-2 text-sm text-muted">Pay once. No subscription. Tokens never expire.</p>
-          <div className="mt-10 grid gap-4 sm:grid-cols-3">
+        <div className="mx-auto max-w-screen-xl px-5 py-16">
+          <p className="mb-4 text-xs font-medium uppercase tracking-widest text-muted">Pricing</p>
+          <h2 className="mb-2 text-xl font-semibold text-white">Pay once, use anytime</h2>
+          <p className="mb-10 text-sm text-muted">No subscription. Tokens never expire. All prices in INR.</p>
+
+          <div className="grid max-w-3xl gap-4 sm:grid-cols-3">
             {pricing.map((tier) => (
               <div
-                key={tier.label}
-                className={`rounded-lg border p-6 ${
+                key={tier.id}
+                className={`rounded border p-5 ${
                   tier.featured
-                    ? "border-accent bg-accent/5"
+                    ? "border-accent/50 bg-accent/5"
                     : "border-border bg-surface"
                 }`}
               >
                 {tier.featured && (
-                  <p className="mb-4 inline-block rounded-md bg-accent px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-white">
+                  <p className="mb-3 w-fit rounded bg-accent/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent2">
                     Best Value
                   </p>
                 )}
-                <p className="text-sm font-semibold text-white">{tier.label}</p>
-                <p className="mt-4 font-head text-4xl font-extrabold text-white">{tier.tokens}</p>
-                <p className="text-sm text-muted">tokens</p>
-                <p className="mt-4 font-head text-2xl font-bold text-gold">₹{tier.price}</p>
-                <p className="mt-1 text-xs text-muted">{tier.scripts}</p>
+                <p className="text-xs text-muted">{tier.label}</p>
+                <p className="mt-2 text-3xl font-bold text-white">{tier.tokens}</p>
+                <p className="text-xs text-muted">tokens · {tier.approx}</p>
+                <p className="mt-4 text-lg font-semibold text-white">₹{tier.price}</p>
                 <Link
                   href="/tokens"
-                  className={`mt-6 block rounded-lg border px-4 py-2.5 text-center text-sm font-semibold transition ${
+                  className={`mt-4 block rounded border py-2 text-center text-xs font-medium transition ${
                     tier.featured
                       ? "border-accent bg-accent text-white hover:bg-accent/90"
-                      : "border-border2 text-white hover:border-white/20"
+                      : "border-border text-muted hover:border-border2 hover:text-white"
                   }`}
                 >
-                  Buy Tokens
+                  Get started
                 </Link>
               </div>
             ))}
           </div>
-          <p className="mt-4 text-xs text-hint">All prices in INR including GST. Powered by Razorpay.</p>
+          <p className="mt-5 text-xs text-hint">All prices in INR including GST · Secured by Razorpay</p>
         </div>
       </section>
 
-      {/* ── CTA ────────────────────────────────────────────── */}
+      {/* ── CTA ──────────────────────────────────────────── */}
       <section>
-        <div className="mx-auto max-w-5xl px-4 py-20 sm:px-6 lg:px-8">
-          <div className="rounded-lg border border-border bg-surface p-10 text-center">
-            <h2 className="font-head text-2xl font-bold text-white">Ready to write your next script?</h2>
-            <p className="mt-3 text-sm text-muted">Start with 30 free tokens. No credit card required.</p>
+        <div className="mx-auto max-w-screen-xl px-5 py-16">
+          <div className="flex flex-col items-start justify-between gap-6 rounded border border-border bg-surface p-8 sm:flex-row sm:items-center">
+            <div>
+              <h2 className="text-lg font-semibold text-white">Ready to write your next script?</h2>
+              <p className="mt-1 text-sm text-muted">Start with 30 free tokens. No credit card required.</p>
+            </div>
             <Link
               href="/generate"
-              className="mt-6 inline-flex items-center gap-2 rounded-lg bg-accent px-6 py-3 text-sm font-semibold text-white transition hover:bg-accent/90"
+              className="inline-flex shrink-0 items-center gap-2 rounded bg-accent px-4 py-2 text-sm font-medium text-white transition hover:bg-accent/90"
             >
-              Start Free
-              <ArrowRight className="h-4 w-4" />
+              Start Free <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
         </div>
       </section>
+
     </main>
   );
 }
