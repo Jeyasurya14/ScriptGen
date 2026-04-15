@@ -37,7 +37,7 @@ export default function ReferralPage() {
     // Fetch referral code and stats independently so one failure doesn't block the other
     void (async () => {
       try {
-        const res = await fetch("/api/referral");
+        const res = await fetch("/api/referral", { cache: "no-store" });
         if (res.status === 401) { window.location.href = "/"; return; }
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Failed to load referral code");
@@ -52,7 +52,7 @@ export default function ReferralPage() {
 
     void (async () => {
       try {
-        const res = await fetch("/api/referral/stats");
+        const res = await fetch("/api/referral/stats", { cache: "no-store" });
         if (res.ok) {
           const data = await res.json() as Stats;
           setStats(data);
@@ -79,7 +79,7 @@ export default function ReferralPage() {
     setCodeLoading(true);
     void (async () => {
       try {
-        const res = await fetch("/api/referral");
+        const res = await fetch("/api/referral", { cache: "no-store" });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Failed to load referral code");
         setCode(data.code ?? "");

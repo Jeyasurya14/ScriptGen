@@ -41,7 +41,6 @@ export async function GET(req: NextRequest) {
       user = await prisma.user.findUnique({ where: { email: session.user.email } });
     } catch (dbErr) {
       console.error("[referral] DB connection failed:", dbErr);
-      // DB is failing (e.g. Prisma locked) - let's return a dummy code so the page still loads
       const dummyCode = `REF${session.user.email.replace(/[^A-Za-z0-9]/g, '').slice(0, 6).toUpperCase()}`;
       const baseUrl = getBaseUrl(req);
       const link = buildReferralLink(baseUrl, dummyCode);
@@ -50,8 +49,6 @@ export async function GET(req: NextRequest) {
 
     if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-    // Try to ensure a referral code. If the DB write fails (e.g. locked binary in dev),
-    // fall back to whatever code already exists rather than returning 500.
     let code = user.referralCode ?? "";
     try {
       code = await ensureReferralCodeForUser(user.id, user.referralCode);
@@ -63,12 +60,12 @@ export async function GET(req: NextRequest) {
     const baseUrl = getBaseUrl(req);
     const link = code ? buildReferralLink(baseUrl, code) : "";
     return NextResponse.json({ code, link });
-  } catch (e) {
+  } catch (e: any) {
+    import("fs").then(fs => fs.appendFileSync("debug.log", `\n[referral] throw: ${String(e.stack || e.message || e)}`));
     console.error("[referral] GET error:", e);
-    return NextResponse.json({ error: sanitizeError(e) }, { status: 500 });
+    return NextResponse.json({ error: String(e.message || e) }, { status: 500 });
   }
 }
-
 
 // POST - Apply a referral code (new user uses friend's code)
 export async function POST(req: NextRequest) {
