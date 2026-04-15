@@ -5,6 +5,7 @@ import "./globals.css";
 import AuthProvider from "@/components/AuthProvider";
 import LayoutWrapper from "@/components/LayoutWrapper";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { GoogleAnalytics } from '@next/third-parties/google';
 
 const syne = Syne({
   variable: "--font-head",
@@ -185,6 +186,9 @@ export default function RootLayout({
           </AuthProvider>
         </ErrorBoundary>
       </body>
+      {process.env.NEXT_PUBLIC_GA_ID && (
+        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
+      )}
     </html>
   );
 }

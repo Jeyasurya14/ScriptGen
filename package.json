@@ -10,6 +10,7 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@next/third-parties": "^16.2.3",
     "@prisma/client": "^5.22.0",
     "date-fns": "^4.1.0",
     "jspdf": "^4.0.0",
