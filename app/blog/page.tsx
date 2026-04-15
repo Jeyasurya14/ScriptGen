@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { BookOpen, ArrowRight } from "lucide-react";
 
-const siteUrl = process.env.NEXTAUTH_URL || "https://scriptgen.learnmade.in";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || "https://scriptgen.learnmade.in";
 
 export const metadata: Metadata = {
   title: "Blog – AI Script Writing, YouTube SEO & Video Content Tips | ScriptGen",

@@ -18,7 +18,10 @@ const dmSans = DM_Sans({
   weight: ["300", "400", "500"],
 });
 
-const siteUrl = process.env.NEXTAUTH_URL || "https://scriptgen.learnmade.in";
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  process.env.NEXTAUTH_URL ||
+  "https://scriptgen.learnmade.in";
 const siteName = "ScriptGen";
 const siteTitle = "ScriptGen — AI Script Writer & YouTube Script Generator";
 const siteDescription =

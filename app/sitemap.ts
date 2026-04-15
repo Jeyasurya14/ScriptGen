@@ -1,6 +1,12 @@
 import type { MetadataRoute } from "next";
 
-const siteUrl = process.env.NEXTAUTH_URL || "https://scriptgen.learnmade.in";
+// Use a dedicated site URL var so the sitemap never picks up NEXTAUTH_URL
+// mismatches set by the hosting provider (e.g. Vercel auto-sets NEXTAUTH_URL).
+// Set NEXT_PUBLIC_SITE_URL in your production env dashboard.
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  process.env.NEXTAUTH_URL ||
+  "https://scriptgen.learnmade.in";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();

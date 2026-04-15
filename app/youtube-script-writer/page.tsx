@@ -3,7 +3,7 @@ import Link from "next/link";
 import HomeCta from "@/components/HomeCta";
 import { Sparkles, Clock, Search, Layers, Film, Languages, CheckCircle2, ArrowRight, ChevronDown } from "lucide-react";
 
-const siteUrl = process.env.NEXTAUTH_URL || "https://scriptgen.learnmade.in";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || "https://scriptgen.learnmade.in";
 
 export const metadata: Metadata = {
   title: "YouTube Script Writer — AI Script Writing Tool | ScriptGen",

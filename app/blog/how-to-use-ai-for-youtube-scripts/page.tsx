@@ -3,7 +3,7 @@ import Link from "next/link";
 import HomeCta from "@/components/HomeCta";
 import { ChevronLeft, CheckCircle2, Lightbulb, Zap, ArrowRight } from "lucide-react";
 
-const siteUrl = process.env.NEXTAUTH_URL || "https://scriptgen.learnmade.in";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || "https://scriptgen.learnmade.in";
 
 export const metadata: Metadata = {
   title: "How to Use AI for YouTube Scripts — Step-by-Step Guide (2026) | ScriptGen Blog",

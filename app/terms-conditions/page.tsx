@@ -2,7 +2,7 @@ import { ChevronLeft, FileText } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
 
-const siteUrl = process.env.NEXTAUTH_URL || "https://scriptgen.learnmade.in";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || "https://scriptgen.learnmade.in";
 
 export const metadata: Metadata = {
   title: "Terms and Conditions",

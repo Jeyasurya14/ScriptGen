@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import HomeCta from "@/components/HomeCta";
 import { Gift, CheckCircle2, Sparkles, Globe2, FileDown, Film, LogIn, Pencil, Zap, Download } from "lucide-react";
 
-const siteUrl = process.env.NEXTAUTH_URL || "https://scriptgen.learnmade.in";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || "https://scriptgen.learnmade.in";
 
 export const metadata: Metadata = {
   title: "Free Script Generator – No Credit Card Required | ScriptGen",
